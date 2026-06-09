@@ -8,6 +8,8 @@ website:
       - href: index.qmd
         text: Home
       - about.qmd
+      - href: SQL_Scrolly.qmd
+        text: backgroun
 
 format:
   html:
