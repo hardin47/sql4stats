@@ -1,0 +1,45 @@
+---
+title: "Untitled"
+format: html
+---
+
+# SQL Joins
+When executing a SQL query, joins operate on two distinct levels: the logical join (what you define in SQL syntax) and the physical join (how the query optimizer actually executes it behind the scenes). Understanding both layers is important — it can help you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks.
+### Logical Joins
+Logical joins are what most SQL developers are familiar with. They describe which rows to return and are expressed directly in your query syntax:
+Inner join – returns only rows with matching values in both tables.
+Left / Right / Full outer join – returns matched rows plus unmatched rows from one or both sides of the join.
+Cross join – returns the full Cartesian product of both tables (every possible row combination).
+### Physical Joins
+Independently of which logical join you write, the query optimizer decides how to execute it under the hood. When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented, and several physical join types may be selected during this implementation depending on your query engine. PostgreSQL allows for the most granular control over physical join execution settings. 
+The three main physical join strategies are nested loops, merge, and hash. Understanding which join the optimizer uses is essential to improving the query’s efficiency. 
+
+
+## Nested Loop Join
+The nested loop join is the simplest physical strategy to understand. For simplicity, we will focus on two-table inner joins. First, assume neither table is sorted. First, the smaller table is designated as the “outer” table and the larger table as “inner”. Staying at a fixed row in the outer table, the engine performs a sequential scan on the inner table until it finds a match, records that match, moves onto the next row of the outer table, scans the entire inner table for matches, so on and so forth. This is why nested loop joins can cause catastrophically long runtimes with unsorted input tables – if table A has m rows and table B has n rows, the worst-case time complexity is O(m*n). However, you can improve performance by indexing or sorting the inner table so that the engine no longer has to scan the entire inner table on each pass (the search can end early once all instances of the join key are found). 
+
+## Merge (Sort-Merge) Join
+A merge join is one of the most efficient joins — assuming the two datasets you want to join are pre-sorted. However, this requirement can cause performance issues since sorting the data first can drastically impact overall computation. Additionally, merge joins require at least one equijoin predicate.
+The algorithm works by maintaining a pointer on each sorted dataset and traversing both in the same direction simultaneously. As matches are found, they are stored. Once there isn't a match, the pointer at the smallest value advances. This continues until all rows have been processed. 
+
+The sort-merge process itself breaks into two phases:
+
+### Sort 
+The dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms (indexes are often faster). 
+### Merge – the sorted runs are combined into a final joined result.
+A key advantage over nested loops is its cost profile: unlike the nested loops join where the total cost may be proportional to the product of the number of rows in the input tables, with a merge join each table is read at most once and the total cost is proportional to the sum of the number of rows in the inputs. 
+It's worth noting that performance may vary when dealing with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations. 
+## Hash Join
+To understand the hash join, it’s first important to know what a hash table is. Essentially, a hash table is a data structure that stores information in key-value pairs for more efficient lookups. It is an array of a predetermined size, where a small, representative piece of information (key)  “hashes” (corresponds) to a specific index in the array. To find specific values within the data, then, you only need to hash the key to extract the relevant information. 
+A hash join relies on hashing and operates in two distinct phases: the build phase and the probe phase. 
+### Build Phase
+The typically smaller of the two tables (the "build" input) is scanned, and a hash table is constructed using the values of the join key. Each entry stores a tuple from the build input along with its hash value, distributing data evenly across different "buckets."
+### Probe Phase 
+The larger table (the "probe" input) is scanned next. The join key is hashed using the same function as in the build phase for each tuple. The hash value is then used to check the corresponding bucket in the hash table for matches. If a match is found, the tuples from both inputs are combined. 
+
+Hash Collisions are a potential edge case to be aware of. A hash collision occurs when two or more distinct join key values hash to the same bucket. When a collision happens, the system must check each value in the bucket to determine if a true match exists. Depending on the number of collisions and bucket size, this can slow down the join operation — however, collisions are typically kept to a minimum with a well-distributed hash function.
+
+Hash joins are commonly used for larger table joins, as the algorithm's time complexity is linear at O(N + M). 
+
+# When Does the Optimizer Choose Each Strategy?
+In theory, both hash and merge joins perform well with large tables. A query engine will typically use a hash join when dealing with large, unsorted datasets and equality joins, especially if one table fits in memory. In contrast, a merge join is often used when both tables are pre-sorted on the join key or when performing range-based joins, as it minimizes memory usage and avoids the extra I/O work of creating a hash table. Nested loops, while the least scalable, can outperform both on small datasets or when a good index is available on the inner table, since they require the least overhead. 

@@ -10,6 +10,8 @@ website:
       - about.qmd
       - href: SQL_Scrolly.qmd
         text: background
+      - href: joins.qmd
+        text: joins
 
 format:
   html:
