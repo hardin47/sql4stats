@@ -5,11 +5,13 @@ format: html
 
 
 When executing a SQL query, joins operate on two distinct levels: the logical join (what you define in SQL syntax) and the physical join (how the query optimizer actually executes it behind the scenes). Understanding both layers is important — it can help you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks.
+
 ### Logical Joins
 Logical joins are what most SQL developers are familiar with. They describe which rows to return and are expressed directly in your query syntax:
 Inner join – returns only rows with matching values in both tables.
 Left / Right / Full outer join – returns matched rows plus unmatched rows from one or both sides of the join.
 Cross join – returns the full Cartesian product of both tables (every possible row combination).
+
 ### Physical Joins
 Independently of which logical join you write, the query optimizer decides how to execute it under the hood. When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented, and several physical join types may be selected during this implementation depending on your query engine. PostgreSQL allows for the most granular control over physical join execution settings. 
 The three main physical join strategies are nested loops, merge, and hash. Understanding which join the optimizer uses is essential to improving the query’s efficiency. 

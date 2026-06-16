@@ -124,7 +124,9 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#nested-loop-join" id="toc-nested-loop-join" class="nav-link active" data-scroll-target="#nested-loop-join">Nested Loop Join</a></li>
+  <li><a href="#logical-joins" id="toc-logical-joins" class="nav-link active" data-scroll-target="#logical-joins">Logical Joins</a></li>
+  <li><a href="#physical-joins" id="toc-physical-joins" class="nav-link" data-scroll-target="#physical-joins">Physical Joins</a></li>
+  <li><a href="#nested-loop-join" id="toc-nested-loop-join" class="nav-link" data-scroll-target="#nested-loop-join">Nested Loop Join</a></li>
   <li><a href="#merge-sort-merge-join" id="toc-merge-sort-merge-join" class="nav-link" data-scroll-target="#merge-sort-merge-join">Merge (Sort-Merge) Join</a>
   <ul class="collapse">
   <li><a href="#sort" id="toc-sort" class="nav-link" data-scroll-target="#sort">Sort</a></li>
@@ -161,7 +163,15 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>When executing a SQL query, joins operate on two distinct levels: the logical join (what you define in SQL syntax) and the physical join (how the query optimizer actually executes it behind the scenes). Understanding both layers is important — it can help you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks. ### Logical Joins Logical joins are what most SQL developers are familiar with. They describe which rows to return and are expressed directly in your query syntax: Inner join – returns only rows with matching values in both tables. Left / Right / Full outer join – returns matched rows plus unmatched rows from one or both sides of the join. Cross join – returns the full Cartesian product of both tables (every possible row combination). ### Physical Joins Independently of which logical join you write, the query optimizer decides how to execute it under the hood. When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented, and several physical join types may be selected during this implementation depending on your query engine. PostgreSQL allows for the most granular control over physical join execution settings. The three main physical join strategies are nested loops, merge, and hash. Understanding which join the optimizer uses is essential to improving the query’s efficiency.</p>
+<p>When executing a SQL query, joins operate on two distinct levels: the logical join (what you define in SQL syntax) and the physical join (how the query optimizer actually executes it behind the scenes). Understanding both layers is important — it can help you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks.</p>
+<section id="logical-joins" class="level3">
+<h3 class="anchored" data-anchor-id="logical-joins">Logical Joins</h3>
+<p>Logical joins are what most SQL developers are familiar with. They describe which rows to return and are expressed directly in your query syntax: Inner join – returns only rows with matching values in both tables. Left / Right / Full outer join – returns matched rows plus unmatched rows from one or both sides of the join. Cross join – returns the full Cartesian product of both tables (every possible row combination).</p>
+</section>
+<section id="physical-joins" class="level3">
+<h3 class="anchored" data-anchor-id="physical-joins">Physical Joins</h3>
+<p>Independently of which logical join you write, the query optimizer decides how to execute it under the hood. When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented, and several physical join types may be selected during this implementation depending on your query engine. PostgreSQL allows for the most granular control over physical join execution settings. The three main physical join strategies are nested loops, merge, and hash. Understanding which join the optimizer uses is essential to improving the query’s efficiency.</p>
+</section>
 <section id="nested-loop-join" class="level2">
 <h2 class="anchored" data-anchor-id="nested-loop-join">Nested Loop Join</h2>
 <p>The nested loop join is the simplest physical strategy to understand. For simplicity, we will focus on two-table inner joins. First, assume neither table is sorted. First, the smaller table is designated as the “outer” table and the larger table as “inner”. Staying at a fixed row in the outer table, the engine performs a sequential scan on the inner table until it finds a match, records that match, moves onto the next row of the outer table, scans the entire inner table for matches, so on and so forth. This is why nested loop joins can cause catastrophically long runtimes with unsorted input tables – if table A has m rows and table B has n rows, the worst-case time complexity is O(m*n). However, you can improve performance by indexing or sorting the inner table so that the engine no longer has to scan the entire inner table on each pass (the search can end early once all instances of the join key are found).</p>
