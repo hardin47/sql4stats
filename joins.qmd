@@ -26,14 +26,18 @@ The sort-merge process itself breaks into two phases:
 
 ### Sort 
 The dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms (indexes are often faster). 
+
 ### Merge – the sorted runs are combined into a final joined result.
 A key advantage over nested loops is its cost profile: unlike the nested loops join where the total cost may be proportional to the product of the number of rows in the input tables, with a merge join each table is read at most once and the total cost is proportional to the sum of the number of rows in the inputs. 
 It's worth noting that performance may vary when dealing with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations. 
+
 ## Hash Join
 To understand the hash join, it’s first important to know what a hash table is. Essentially, a hash table is a data structure that stores information in key-value pairs for more efficient lookups. It is an array of a predetermined size, where a small, representative piece of information (key)  “hashes” (corresponds) to a specific index in the array. To find specific values within the data, then, you only need to hash the key to extract the relevant information. 
 A hash join relies on hashing and operates in two distinct phases: the build phase and the probe phase. 
+
 ### Build Phase
 The typically smaller of the two tables (the "build" input) is scanned, and a hash table is constructed using the values of the join key. Each entry stores a tuple from the build input along with its hash value, distributing data evenly across different "buckets."
+
 ### Probe Phase 
 The larger table (the "probe" input) is scanned next. The join key is hashed using the same function as in the build phase for each tuple. The hash value is then used to check the corresponding bucket in the hash table for matches. If a match is found, the tuples from both inputs are combined. 
 

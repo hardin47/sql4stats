@@ -128,6 +128,12 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#merge-sort-merge-join" id="toc-merge-sort-merge-join" class="nav-link" data-scroll-target="#merge-sort-merge-join">Merge (Sort-Merge) Join</a>
   <ul class="collapse">
   <li><a href="#sort" id="toc-sort" class="nav-link" data-scroll-target="#sort">Sort</a></li>
+  <li><a href="#merge-the-sorted-runs-are-combined-into-a-final-joined-result." id="toc-merge-the-sorted-runs-are-combined-into-a-final-joined-result." class="nav-link" data-scroll-target="#merge-the-sorted-runs-are-combined-into-a-final-joined-result.">Merge – the sorted runs are combined into a final joined result.</a></li>
+  </ul></li>
+  <li><a href="#hash-join" id="toc-hash-join" class="nav-link" data-scroll-target="#hash-join">Hash Join</a>
+  <ul class="collapse">
+  <li><a href="#build-phase" id="toc-build-phase" class="nav-link" data-scroll-target="#build-phase">Build Phase</a></li>
+  <li><a href="#probe-phase" id="toc-probe-phase" class="nav-link" data-scroll-target="#probe-phase">Probe Phase</a></li>
   </ul></li>
   <li><a href="#when-does-the-optimizer-choose-each-strategy" id="toc-when-does-the-optimizer-choose-each-strategy" class="nav-link" data-scroll-target="#when-does-the-optimizer-choose-each-strategy">When Does the Optimizer Choose Each Strategy?</a></li>
   </ul>
@@ -166,7 +172,23 @@ ul.task-list li input[type="checkbox"] {
 <p>The sort-merge process itself breaks into two phases:</p>
 <section id="sort" class="level3">
 <h3 class="anchored" data-anchor-id="sort">Sort</h3>
-<p>The dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms (indexes are often faster). ### Merge – the sorted runs are combined into a final joined result. A key advantage over nested loops is its cost profile: unlike the nested loops join where the total cost may be proportional to the product of the number of rows in the input tables, with a merge join each table is read at most once and the total cost is proportional to the sum of the number of rows in the inputs. It’s worth noting that performance may vary when dealing with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations. ## Hash Join To understand the hash join, it’s first important to know what a hash table is. Essentially, a hash table is a data structure that stores information in key-value pairs for more efficient lookups. It is an array of a predetermined size, where a small, representative piece of information (key) “hashes” (corresponds) to a specific index in the array. To find specific values within the data, then, you only need to hash the key to extract the relevant information. A hash join relies on hashing and operates in two distinct phases: the build phase and the probe phase. ### Build Phase The typically smaller of the two tables (the “build” input) is scanned, and a hash table is constructed using the values of the join key. Each entry stores a tuple from the build input along with its hash value, distributing data evenly across different “buckets.” ### Probe Phase The larger table (the “probe” input) is scanned next. The join key is hashed using the same function as in the build phase for each tuple. The hash value is then used to check the corresponding bucket in the hash table for matches. If a match is found, the tuples from both inputs are combined.</p>
+<p>The dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms (indexes are often faster).</p>
+</section>
+<section id="merge-the-sorted-runs-are-combined-into-a-final-joined-result." class="level3">
+<h3 class="anchored" data-anchor-id="merge-the-sorted-runs-are-combined-into-a-final-joined-result.">Merge – the sorted runs are combined into a final joined result.</h3>
+<p>A key advantage over nested loops is its cost profile: unlike the nested loops join where the total cost may be proportional to the product of the number of rows in the input tables, with a merge join each table is read at most once and the total cost is proportional to the sum of the number of rows in the inputs. It’s worth noting that performance may vary when dealing with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations.</p>
+</section>
+</section>
+<section id="hash-join" class="level2">
+<h2 class="anchored" data-anchor-id="hash-join">Hash Join</h2>
+<p>To understand the hash join, it’s first important to know what a hash table is. Essentially, a hash table is a data structure that stores information in key-value pairs for more efficient lookups. It is an array of a predetermined size, where a small, representative piece of information (key) “hashes” (corresponds) to a specific index in the array. To find specific values within the data, then, you only need to hash the key to extract the relevant information. A hash join relies on hashing and operates in two distinct phases: the build phase and the probe phase.</p>
+<section id="build-phase" class="level3">
+<h3 class="anchored" data-anchor-id="build-phase">Build Phase</h3>
+<p>The typically smaller of the two tables (the “build” input) is scanned, and a hash table is constructed using the values of the join key. Each entry stores a tuple from the build input along with its hash value, distributing data evenly across different “buckets.”</p>
+</section>
+<section id="probe-phase" class="level3">
+<h3 class="anchored" data-anchor-id="probe-phase">Probe Phase</h3>
+<p>The larger table (the “probe” input) is scanned next. The join key is hashed using the same function as in the build phase for each tuple. The hash value is then used to check the corresponding bucket in the hash table for matches. If a match is found, the tuples from both inputs are combined.</p>
 <p>Hash Collisions are a potential edge case to be aware of. A hash collision occurs when two or more distinct join key values hash to the same bucket. When a collision happens, the system must check each value in the bucket to determine if a true match exists. Depending on the number of collisions and bucket size, this can slow down the join operation — however, collisions are typically kept to a minimum with a well-distributed hash function.</p>
 <p>Hash joins are commonly used for larger table joins, as the algorithm’s time complexity is linear at O(N + M).</p>
 </section>
