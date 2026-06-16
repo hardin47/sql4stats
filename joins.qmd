@@ -1,9 +1,9 @@
 ---
-title: "Untitled"
+title: "SQL Joins"
 format: html
 ---
 
-# SQL Joins
+
 When executing a SQL query, joins operate on two distinct levels: the logical join (what you define in SQL syntax) and the physical join (how the query optimizer actually executes it behind the scenes). Understanding both layers is important — it can help you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks.
 ### Logical Joins
 Logical joins are what most SQL developers are familiar with. They describe which rows to return and are expressed directly in your query syntax:
