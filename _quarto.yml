@@ -12,6 +12,8 @@ website:
         text: background
       - href: joins.qmd
         text: joins
+      - href: parquet.qmd
+        text: parquet files
 
 format:
   html:
