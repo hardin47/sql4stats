@@ -1,0 +1,711 @@
+---
+title: "SQL Upload Guide: From CSVs to a Relational Database"
+subtitle: "Building and Keying a SQL Database, Worked Through a SNL Dataset"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show the code"
+---
+
+## Why Should a Statistician Care About SQL Databases?
+
+If you do statistics or data science, your default instinct when handed a pile of CSVs is probably to load each one into R or Python and start joining data frames in memory. That, however, leads to issues including files are too big to fit comfortably in RAM, re-running the same `read_csv()` calls every session, or you need ten different summary tables and don't want to re-derive each one by hand every time.
+
+A relational database solves these problems by moving the *structure* of your data out of your analysis script and into the data itself. Instead of a folder of CSVs that only mean something in light of whatever script last touched them, you get a single, queryable system where the relationships between tables, the rules about what counts as valid data, and the logic for combining tables all live in one place.
+
+Concretely, that gets you:
+
+**Speed and memory efficiency at scale.** A database engine reads only the columns and rows a query actually needs, rather than loading entire files into memory first.
+
+**A single source of truth.** Once data lives in a database, every person and every script that connects to it sees the same version.
+
+**Enforced data integrity.** A database can refuse to let you insert nonsense: a row that references an actor who doesn't exist, a duplicate ID where uniqueness is required. This is the part we'll spend the most time on below: *keys* are the mechanism that makes this enforcement possible, and they're worth understanding even if you never write SQL again after this guide.
+
+**Reusable, composable queries.** SQL's `JOIN` machinery lets you combine tables on demand, rather than writing bespoke merge logic in R every time you need a different combination of variables.
+
+We'll walk through all of this concretely, using a real dataset: every cast member, host, sketch, and impression from *Saturday Night Live*, scraped from a public repository and loaded into a MariaDB server.
+
+---
+
+## Part 1: Getting Data Into a Database
+
+### Where the Data Comes From
+
+For this guide, the source data comes from the [snldb](https://github.com/hhllcks/snldb) GitHub repository, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of *this* scraper don't matter much beyond this guide. What matters is the general pattern: **most real-world data starts out as scraped, exported, or otherwise messy flat files**, and getting it into a proper database is itself a meaningful step.
+
+```{.bash}
+pip install -r requirements.txt
+./crawl_single_episode.sh   # test run: one episode
+./crawl_all.sh               # full crawl: every episode
+python convert_json_to_csv.py
+```
+
+After running this, you end up with a folder of `.csv` files, one per entity type (actors, episodes, sketches, and so on). This is the starting point most statisticians actually encounter: a pile of CSVs, related to each other in ways that exist only in your head (or a README), not yet enforced anywhere.
+
+### Connecting R to a SQL Server
+
+The general pattern for connecting to *any* SQL database from R is the same regardless of which database engine (MySQL, MariaDB, PostgreSQL, SQL Server) sits on the other end: you load a driver package, supply connection credentials, and get back a connection object that every subsequent query uses.
+
+```{r}
+#| eval: false
+library(DBI)
+library(RMariaDB)
+library(readr)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(janitor)
+```
+
+A practice worth adopting immediately, regardless of what data you're working with: **never write credentials directly into a script.** Store them as environment variables in a `.Renviron` file (which should never be committed to version control), and read them in with `Sys.getenv()`.
+
+```{r}
+#| eval: false
+SQL_USER <- Sys.getenv("SQL_USER")
+SQL_PWD  <- Sys.getenv("SQL_PWD")
+SQL_HOST <- Sys.getenv("SQL_HOST")
+SQL_DB   <- "snl"
+```
+
+```{r}
+#| eval: false
+Sys.setenv(MySQL_TLS_DISABLE_PEER_VERIFICATION = 1)
+
+con_snl <- DBI::dbConnect(
+  RMySQL::MySQL(),
+  host = SQL_HOST,
+  user = SQL_USER,
+  password = SQL_PWD,
+  dbname = SQL_DB,
+  load_data_local_infile = FALSE
+)
+
+DBI::dbListTables(con_snl)
+```
+
+`dbListTables()` is worth calling immediately after every connection, regardless of context. It's the fastest way to confirm the connection actually succeeded and to see what already exists on the server before you touch anything.
+
+### Locating and Validating Source Files Before Upload
+
+Before uploading anything, it's worth building the habit of checking that your source files are what you think they are. This step generalizes far beyond SNL data: any time you're about to bulk-load files into a database, a quick sanity pass catches problems while they're still cheap to fix.
+
+```{r}
+#| eval: false
+csv_folder <- "~/Desktop/Summer 2026/snldb/output"
+
+csv_files <- list.files(
+  path = csv_folder,
+  pattern = "\\.csv$",
+  full.names = TRUE
+)
+
+csv_files
+length(csv_files)
+
+if (length(csv_files) == 0) {
+  stop("No CSV files found. Check csv_folder path.")
+}
+```
+
+```{r}
+#| eval: false
+csv_check <- map_dfr(csv_files, function(file_path) {
+  df <- read_csv(file_path, show_col_types = FALSE)
+  
+  tibble(
+    file = basename(file_path),
+    rows = nrow(df),
+    columns = ncol(df)
+  )
+})
+
+csv_check
+```
+
+This produces a small summary table — file name, row count, column count — for every file about to be uploaded. It seems like a small thing, but it's the cheapest possible defense against uploading an empty file, a truncated file, or a file you grabbed from the wrong folder.
+
+### From File Names to Table Names
+
+SQL table names have stricter rules than file names: no spaces, no leading numbers, no arbitrary punctuation. Rather than handling this ad hoc for every file, it's worth writing one small helper function that any future project can reuse:
+
+```{r}
+#| eval: false
+clean_table_name <- function(file_path) {
+  file_path |>
+    basename() |>
+    str_remove("\\.csv$") |>
+    janitor::make_clean_names()
+}
+```
+
+`janitor::make_clean_names()` does the heavy lifting — lowercasing, replacing spaces and punctuation with underscores, and resolving duplicate names — which is exactly the kind of small, boring utility worth keeping in your personal toolkit across projects, independent of what the data actually is.
+
+### Uploading in Chunks, Not All at Once
+
+The temptation with a clean CSV is to dump the whole thing into the database in a single `INSERT` statement. In practice, this is often slower and less stable than chunking the upload — especially over a network connection to a remote server, where one enormous statement either times out or simply gets rejected outright. Therefore, the safest way is to upload data in chunks.
+
+```{r}
+#| eval: false
+upload_csv_to_sql <- function(file_path) {
+  table_name <- clean_table_name(file_path)
+  
+  message("Reading ", basename(file_path), "...")
+  
+  df <- readr::read_csv(file_path, show_col_types = FALSE) |>
+    janitor::clean_names()
+  
+  message("Rows in CSV: ", nrow(df))
+  message("Columns in CSV: ", ncol(df))
+  
+  if (nrow(df) == 0) {
+    stop("CSV has 0 rows: ", basename(file_path))
+  }
+  
+  message("Uploading as table `", table_name, "`...")
+  
+  DBI::dbExecute(con_snl, paste0("DROP TABLE IF EXISTS `", table_name, "`;"))
+  
+  DBI::dbCreateTable(
+    conn = con_snl,
+    name = table_name,
+    fields = df
+  )
+  
+  chunk_size <- 250
+  n <- nrow(df)
+  starts <- seq(1, n, by = chunk_size)
+  
+  for (start in starts) {
+    end <- min(start + chunk_size - 1, n)
+    chunk <- df[start:end, ]
+    
+    insert_sql <- DBI::sqlAppendTable(
+      con_snl,
+      table = DBI::Id(table = table_name),
+      values = chunk,
+      row.names = FALSE
+    )
+    
+    DBI::dbExecute(con_snl, insert_sql)
+    
+    message("Uploaded rows ", start, " to ", end, " of ", n)
+  }
+  
+  row_count <- DBI::dbGetQuery(
+    con_snl,
+    paste0("SELECT COUNT(*) AS n_rows FROM `", table_name, "`;")
+  )
+  
+  message("Finished uploading `", table_name, "` with ", row_count$n_rows, " rows.")
+  
+  tibble::tibble(
+    table_name = table_name,
+    uploaded_rows = row_count$n_rows
+  )
+}
+```
+
+A few choices here are worth calling out because they generalize to any upload pipeline, not just this one:
+
+The function **drops and recreates the table** before uploading, rather than appending to whatever might already be there. This makes the script *idempotent*: you can re-run it as many times as you want, and you'll always end up with a clean, current copy of the data, rather than accumulating duplicate rows on every re-run.
+
+The **row-count confirmation at the end** closes the loop. This is important to verify that the row count of the uploaded tables aligns with what you already knew the CSV had from the earlier validation step.
+
+```{r}
+#| eval: false
+upload_results <- purrr::map_dfr(csv_files, upload_csv_to_sql)
+upload_results
+```
+
+At this point, every CSV is now a SQL table, with column types automatically inferred.
+
+---
+
+## Part 2: What Makes a Relational Database "Relational" — Keys
+
+Loading data into tables gets you tables in a SQL *server*, but not yet a SQL *database* in the meaningful sense. What turns a set of unrelated tables into an actual relational database is the presence of **keys**: the formal mechanism that encodes how tables relate to each other and what counts as a valid row.
+
+This is the part of the process most worth understanding deeply, because the concepts here — primary keys, foreign keys, referential integrity — apply identically whether you're working with SNL sketches, clinical trial data, survey panels, or financial transactions.
+
+### Two Types of Keys in SQL
+
+A **primary key** is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed. When no single existing column satisfies these conditions, two common solutions are a composite key (combining multiple columns whose combination is unique, even if no individual column is) or a surrogate key (an artificial, often auto-incrementing column added purely to give each row a unique identifier).
+
+A **foreign key** is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental. The database itself guarantees the relationship is valid, rather than relying on the assumption that the matching columns happen to line up correctly.
+
+
+### Inspecting the Database Before Changing Anything
+
+Before assigning any keys, the first move with any unfamiliar (or freshly uploaded) database is to look at what's actually there.
+
+```{r}
+#| eval: false
+DBI::dbListTables(con_snl)
+```
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "DESCRIBE actors;")
+DBI::dbGetQuery(con_snl, "DESCRIBE appearances;")
+DBI::dbGetQuery(con_snl, "DESCRIBE casts;")
+DBI::dbGetQuery(con_snl, "DESCRIBE characters;")
+DBI::dbGetQuery(con_snl, "DESCRIBE episodes;")
+DBI::dbGetQuery(con_snl, "DESCRIBE hosts;")
+DBI::dbGetQuery(con_snl, "DESCRIBE impressions;")
+DBI::dbGetQuery(con_snl, "DESCRIBE seasons;")
+DBI::dbGetQuery(con_snl, "DESCRIBE sketches;")
+DBI::dbGetQuery(con_snl, "DESCRIBE tenure;")
+DBI::dbGetQuery(con_snl, "DESCRIBE titles;")
+```
+
+`DESCRIBE` shows you each table's columns, their current data types, whether they accept missing values, and any keys already defined. This is the equivalent of running `str()` or `glimpse()` on a data frame in R. This is the first thing you should do before drawing any conclusions about the data's structure.
+
+### The Three Requirements for a Valid Primary Key
+
+For a column to serve as a primary key, it has to satisfy three conditions, and they don't depend on what your data is about:
+
+1. **No missing values.** A key that's sometimes absent can't reliably identify every row.
+2. **Every value is unique.** If a value repeats, it can't distinguish between the rows that share it.
+3. **It represents a natural identifier for the entity.** This one is more judgment-based. Choosing a column that *means* something as an identifier (an actor's ID, a patient's ID, a transaction's ID) rather than an arbitrary column that happens to be unique by coincidence.
+
+For the SNL data, the natural candidates were the existing ID columns scraped along with the data: `actors.aid`, `characters.charid`, `episodes.epid`, `impressions.impid`, `seasons.sid`, `sketches.skid`, and `titles.tid`. This is a common situation where *the data often arrives with implicit identifiers already in place*.
+
+### Checking Candidates Before Committing
+
+Rather than trust that an ID column satisfies the three conditions above, it's worth checking directly. This test of comparing total rows, non-missing values, and distinct values is a general-purpose validity check you can reuse for any candidate key, in any dataset:
+
+```{r}
+#| eval: false
+check_key <- function(table, col) {
+  DBI::dbGetQuery(con_snl, paste0("
+    SELECT 
+      '", table, "' AS table_name,
+      '", col, "' AS column_name,
+      COUNT(*) AS total_rows,
+      COUNT(`", col, "`) AS non_missing,
+      COUNT(DISTINCT `", col, "`) AS distinct_values,
+      SUM(`", col, "` IS NULL) AS missing_values
+    FROM `", table, "`;
+  "))
+}
+
+primary_key_checks <- dplyr::bind_rows(
+  check_key("actors", "aid"),
+  check_key("characters", "charid"),
+  check_key("episodes", "epid"),
+  check_key("impressions", "impid"),
+  check_key("seasons", "sid"),
+  check_key("sketches", "skid"),
+  check_key("titles", "tid")
+)
+
+primary_key_checks
+```
+
+If `total_rows`, `non_missing`, and `distinct_values` are all equal, and `missing_values` is zero, the column passes the test. If any of those don't line up, that's valuable information *before* you commit to a key and this column likely should not become a primary key.
+
+### Identifying Foreign Key Relationships
+
+Once primary keys are settled, the next question is: which columns in other tables refer back to those primary keys? This is fundamentally a modeling question about your data's structure, and answering it well requires understanding what each table actually represents. Often times you can identify columns in tables that have the same name.
+
+For the SNL database, this looked like: `appearances` links to actors, titles, characters, impressions, episodes, and seasons (an appearance is the intersection of all of these: a specific actor performing in a specific sketch, in a specific episode); `casts` links actors to seasons; `episodes` belongs to a season; `hosts` links hosts to episodes; `titles` links to episodes, seasons, and sketches; and `tenure` links back to actors.
+
+
+### Checking for Orphans Before Enforcing Anything
+
+A foreign key constraint, once created, *requires* that every value in the child column exists in the parent table. But real-world data is messy, and it's common to have values that don't satisfy this, called **orphan values**. SQL won't let you create the constraint until they're resolved, so it's necessary to find them first before trying to make a foreign key that won't be accepted.
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "
+  SELECT c.*
+  FROM casts c
+  LEFT JOIN episodes e
+    ON c.first_epid = e.epid
+  WHERE c.first_epid IS NOT NULL
+    AND e.epid IS NULL;
+")
+
+DBI::dbGetQuery(con_snl, "
+  SELECT h.*
+  FROM hosts h
+  LEFT JOIN actors a
+    ON h.aid = a.aid
+  WHERE h.aid IS NOT NULL
+    AND a.aid IS NULL;
+")
+```
+
+This `LEFT JOIN ... WHERE parent.key IS NULL` pattern directly answers "which rows in my child table don't have a matching parent?" regardless of what the entities actually are.
+
+In the SNL data, this surfaced two genuine problems: some `casts.first_epid` values didn't match any real episode, and one `hosts.aid` value didn't match any real actor. Scraped and merged data routinely has small inconsistencies like this, and finding them is the entire point of this check.
+
+### Deciding How to Handle Orphans
+
+Once you've found orphan values, you have to decide what to do about them. The options generally are: correct the value if you can determine what it *should* have been, delete the row if it's clearly invalid, or set the offending value to `NULL` if you can't confidently do either of the first two.
+
+```{r}
+#| eval: false
+DBI::dbExecute(con_snl, "
+  UPDATE casts c
+  LEFT JOIN episodes e
+    ON c.first_epid = e.epid
+  SET c.first_epid = NULL
+  WHERE c.first_epid IS NOT NULL
+    AND e.epid IS NULL;
+")
+
+DBI::dbExecute(con_snl, "
+  UPDATE hosts h
+  LEFT JOIN actors a
+    ON h.aid = a.aid
+  SET h.aid = NULL
+  WHERE h.aid IS NOT NULL
+    AND a.aid IS NULL;
+")
+```
+
+Setting the value to `NULL` here is a deliberately conservative choice: rather than guessing at what the "correct" episode or actor should have been (and risking a false relationship that looks valid but isn't), the missing-link information is preserved as openly missing.
+
+### Verifying the Fix
+
+The same orphan-check pattern from before doubles as a verification step after the fix.
+
+```{r}
+#| eval: false
+check_fk <- function(child_table, child_col, parent_table, parent_col) {
+  DBI::dbGetQuery(con_snl, paste0("
+    SELECT 
+      '", child_table, ".", child_col, " -> ", parent_table, ".", parent_col, "' AS relationship,
+      COUNT(*) AS orphan_count
+    FROM `", child_table, "` c
+    LEFT JOIN `", parent_table, "` p
+      ON c.`", child_col, "` = p.`", parent_col, "`
+    WHERE c.`", child_col, "` IS NOT NULL
+      AND p.`", parent_col, "` IS NULL;
+  "))
+}
+
+fk_checks <- dplyr::bind_rows(
+  check_fk("appearances", "aid", "actors", "aid"),
+  check_fk("appearances", "tid", "titles", "tid"),
+  check_fk("appearances", "charid", "characters", "charid"),
+  check_fk("appearances", "impid", "impressions", "impid"),
+  check_fk("appearances", "epid", "episodes", "epid"),
+  check_fk("appearances", "sid", "seasons", "sid"),
+  
+  check_fk("casts", "aid", "actors", "aid"),
+  check_fk("casts", "sid", "seasons", "sid"),
+  check_fk("casts", "first_epid", "episodes", "epid"),
+  check_fk("casts", "last_epid", "episodes", "epid"),
+  
+  check_fk("episodes", "sid", "seasons", "sid"),
+  
+  check_fk("hosts", "epid", "episodes", "epid"),
+  check_fk("hosts", "aid", "actors", "aid"),
+  
+  check_fk("titles", "epid", "episodes", "epid"),
+  check_fk("titles", "skid", "sketches", "skid"),
+  check_fk("titles", "sid", "seasons", "sid"),
+  
+  check_fk("tenure", "aid", "actors", "aid")
+)
+
+fk_checks
+```
+
+The test is applied across every candidate relationship, now we can see if each foreign key relationship is valid.
+
+### A Required Technical Prerequisite: Storage Engine and Data Types
+
+Before constraints can actually be created, two technical prerequisites in MySQL/MariaDB specifically need attention.
+
+**Storage engine.** Foreign keys require a storage engine that supports them: InnoDB, in MySQL/MariaDB's case. Tables created through bulk CSV import sometimes default to a different engine, so this needs to be checked and corrected:
+
+```{r}
+#| eval: false
+tables <- DBI::dbListTables(con_snl)
+
+for (table in tables) {
+  DBI::dbExecute(con_snl, paste0("ALTER TABLE `", table, "` ENGINE = InnoDB;"))
+}
+```
+
+**Matching data types.** A foreign key constraint requires the child column and the parent column to have *compatible* types. Since automatic type inference during upload is often too loose these need to be tightened up first and have their variable type altered.
+
+```{r}
+#| eval: false
+# Primary key columns
+DBI::dbExecute(con_snl, "ALTER TABLE actors MODIFY aid VARCHAR(255) NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE characters MODIFY charid INT NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE episodes MODIFY epid INT NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE impressions MODIFY impid INT NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE seasons MODIFY sid INT NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE sketches MODIFY skid INT NOT NULL;")
+DBI::dbExecute(con_snl, "ALTER TABLE titles MODIFY tid INT NOT NULL;")
+```
+
+```{r}
+#| eval: false
+# appearances
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY aid VARCHAR(255);")
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY tid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY charid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY impid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY epid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE appearances MODIFY sid INT;")
+
+# casts
+DBI::dbExecute(con_snl, "ALTER TABLE casts MODIFY aid VARCHAR(255);")
+DBI::dbExecute(con_snl, "ALTER TABLE casts MODIFY sid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE casts MODIFY first_epid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE casts MODIFY last_epid INT;")
+
+# episodes
+DBI::dbExecute(con_snl, "ALTER TABLE episodes MODIFY sid INT;")
+
+# hosts
+DBI::dbExecute(con_snl, "ALTER TABLE hosts MODIFY epid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE hosts MODIFY aid VARCHAR(255);")
+
+# titles
+DBI::dbExecute(con_snl, "ALTER TABLE titles MODIFY epid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE titles MODIFY skid INT;")
+DBI::dbExecute(con_snl, "ALTER TABLE titles MODIFY sid INT;")
+
+# tenure
+DBI::dbExecute(con_snl, "ALTER TABLE tenure MODIFY aid VARCHAR(255);")
+```
+
+Notice that `actors.aid` is a `VARCHAR`, not an integer — in the original scraped data, actor IDs are text-based codes rather than plain numbers. Every column referencing it (`appearances.aid`, `casts.aid`, `hosts.aid`, `tenure.aid`) has to match that type exactly. This is a generalizable rule: **a foreign key's type is dictated by whatever the primary key it references actually is**.
+
+### Creating the Primary Keys
+
+With types corrected and orphans resolved, creating the primary keys themselves is mechanically simple:
+
+```{r}
+#| eval: false
+DBI::dbExecute(con_snl, "ALTER TABLE actors ADD PRIMARY KEY (aid);")
+DBI::dbExecute(con_snl, "ALTER TABLE characters ADD PRIMARY KEY (charid);")
+DBI::dbExecute(con_snl, "ALTER TABLE episodes ADD PRIMARY KEY (epid);")
+DBI::dbExecute(con_snl, "ALTER TABLE impressions ADD PRIMARY KEY (impid);")
+DBI::dbExecute(con_snl, "ALTER TABLE seasons ADD PRIMARY KEY (sid);")
+DBI::dbExecute(con_snl, "ALTER TABLE sketches ADD PRIMARY KEY (skid);")
+DBI::dbExecute(con_snl, "ALTER TABLE titles ADD PRIMARY KEY (tid);")
+DBI::dbExecute(con_snl, "ALTER TABLE casts ADD PRIMARY KEY (aid, sid);")
+DBI::dbExecute(con_snl, "ALTER TABLE tenure ADD PRIMARY KEY (aid);")
+```
+
+Two of these deserve a second look, because they illustrate situations that come up constantly in real data modeling.
+
+**Composite keys.** `casts` uses `(aid, sid)` — actor ID *and* season ID together — as its primary key, rather than any single column. This makes sense once you think about what a row in `casts` represents: one actor's membership in one season. Neither `aid` nor `sid` alone is unique (an actor appears across many seasons; a season has many actors), but the *combination* is.
+
+**No natural unique identifier at all.** Some tables don't have *any* column or combination of existing columns that's guaranteed unique. `appearances`, in this case, since a single actor could in principle appear multiple times in the same sketch in the same episode, with no existing column distinguishing those occurrences. The solution is a **surrogate key**: a new column, with no real-world meaning, that exists purely to give every row a unique handle.
+
+```{r}
+#| eval: false
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD COLUMN appearance_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+")
+```
+
+`AUTO_INCREMENT` means the database assigns each new row the next sequential integer automatically. Surrogate keys like this are extremely common in practice; in fact, in many production database designs, *every* table gets an auto-incrementing surrogate key by default, specifically to sidestep this exact problem before it ever comes up.
+
+### When the "Obvious" Key Doesn't Quite Work
+
+The original plan for `hosts` was a composite key of `(epid, aid)`: the same logic as `casts`. But a primary key, by definition, cannot contain missing values in *any* of its component columns. So before committing to that plan, it's worth checking:
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "
+  SELECT
+    SUM(epid IS NULL) AS missing_epid,
+    SUM(aid IS NULL) AS missing_aid
+  FROM hosts;
+")
+```
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "
+  SELECT *
+  FROM hosts
+  WHERE aid IS NULL;
+")
+```
+
+This check found exactly one row with a missing `aid`, likely a host who isn't (or wasn't, at the time of scraping) a cast member with an actor ID on file. Because of that single missing value, `(epid, aid)` is disqualified as a primary key outright; SQL would refuse to create it. The fix is the same surrogate-key pattern as before:
+
+```{r}
+#| eval: false
+DBI::dbExecute(con_snl, "
+  ALTER TABLE hosts
+  ADD COLUMN host_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+")
+```
+
+**A key design that looks correct in theory can be invalidated by a single bad value in practice**, and it's much better to discover that during a deliberate check than to discover it as a cryptic constraint-creation error later. Always verify potential keys before you commit.
+
+### Creating the Foreign Keys
+
+With primary keys, type compatibility, and orphan values all resolved, the foreign key constraints themselves can finally be added:
+
+```{r}
+#| eval: false
+# appearances foreign keys
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_actor
+  FOREIGN KEY (aid) REFERENCES actors(aid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_title
+  FOREIGN KEY (tid) REFERENCES titles(tid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_character
+  FOREIGN KEY (charid) REFERENCES characters(charid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_impression
+  FOREIGN KEY (impid) REFERENCES impressions(impid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_episode
+  FOREIGN KEY (epid) REFERENCES episodes(epid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE appearances
+  ADD CONSTRAINT fk_appearances_season
+  FOREIGN KEY (sid) REFERENCES seasons(sid);
+")
+
+# casts foreign keys
+DBI::dbExecute(con_snl, "
+  ALTER TABLE casts
+  ADD CONSTRAINT fk_casts_actor
+  FOREIGN KEY (aid) REFERENCES actors(aid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE casts
+  ADD CONSTRAINT fk_casts_season
+  FOREIGN KEY (sid) REFERENCES seasons(sid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE casts
+  ADD CONSTRAINT fk_casts_first_episode
+  FOREIGN KEY (first_epid) REFERENCES episodes(epid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE casts
+  ADD CONSTRAINT fk_casts_last_episode
+  FOREIGN KEY (last_epid) REFERENCES episodes(epid);
+")
+
+# episodes foreign key
+DBI::dbExecute(con_snl, "
+  ALTER TABLE episodes
+  ADD CONSTRAINT fk_episodes_season
+  FOREIGN KEY (sid) REFERENCES seasons(sid);
+")
+
+# hosts foreign keys
+DBI::dbExecute(con_snl, "
+  ALTER TABLE hosts
+  ADD CONSTRAINT fk_hosts_episode
+  FOREIGN KEY (epid) REFERENCES episodes(epid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE hosts
+  ADD CONSTRAINT fk_hosts_actor
+  FOREIGN KEY (aid) REFERENCES actors(aid);
+")
+
+# titles foreign keys
+DBI::dbExecute(con_snl, "
+  ALTER TABLE titles
+  ADD CONSTRAINT fk_titles_episode
+  FOREIGN KEY (epid) REFERENCES episodes(epid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE titles
+  ADD CONSTRAINT fk_titles_sketch
+  FOREIGN KEY (skid) REFERENCES sketches(skid);
+")
+
+DBI::dbExecute(con_snl, "
+  ALTER TABLE titles
+  ADD CONSTRAINT fk_titles_season
+  FOREIGN KEY (sid) REFERENCES seasons(sid);
+")
+
+# tenure foreign key
+DBI::dbExecute(con_snl, "
+  ALTER TABLE tenure
+  ADD CONSTRAINT fk_tenure_actor
+  FOREIGN KEY (aid) REFERENCES actors(aid);
+")
+```
+
+This is the moment the database actually becomes "relational" in the formal sense. From this point forward, the database itself,enforces these relationships.
+
+### Confirming the Final Structure
+
+Finally, it's worth confirming what was actually built, both as a sanity check and as documentation you (or a collaborator) can return to later.
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "
+  SELECT 
+    table_name,
+    column_name,
+    constraint_name,
+    referenced_table_name,
+    referenced_column_name
+  FROM information_schema.key_column_usage
+  WHERE table_schema = 'snl'
+  ORDER BY table_name, constraint_name, ordinal_position;
+")
+```
+
+```{r}
+#| eval: false
+DBI::dbGetQuery(con_snl, "
+  SELECT 
+    table_name,
+    GROUP_CONCAT(column_name ORDER BY ordinal_position SEPARATOR ', ') AS primary_key
+  FROM information_schema.key_column_usage
+  WHERE table_schema = 'snl'
+    AND constraint_name = 'PRIMARY'
+  GROUP BY table_name
+  ORDER BY table_name;
+")
+```
+
+Querying `information_schema` on every standard SQL database shows its own structure through this same metadata schema, so this exact query pattern (perhaps with a different `table_schema` name) works for inspecting keys in any database you encounter, not just this one.
+
+---
+
+## Practical Takeaways
+
+
+idk atm
+

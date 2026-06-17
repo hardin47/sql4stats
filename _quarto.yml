@@ -16,6 +16,8 @@ website:
         text: parquet files
       - href: crosstab_pivot_comp.qmd
         text: SQL Pivoting
+      - href: sql_upload_guide.qmd
+        text: SQL Upload Demo
 
 format:
   html:

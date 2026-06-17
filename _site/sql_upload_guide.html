@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>SQL Upload Guide: From CSVs to a Relational Database</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="sql_upload_guide_files/libs/clipboard/clipboard.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/popper.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/anchor.min.js"></script>
+<link href="sql_upload_guide_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="sql_upload_guide_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="sql_upload_guide_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="sql_upload_guide_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="sql_upload_guide_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#why-should-a-statistician-care-about-sql-databases" id="toc-why-should-a-statistician-care-about-sql-databases" class="nav-link active" data-scroll-target="#why-should-a-statistician-care-about-sql-databases">Why Should a Statistician Care About SQL Databases?</a></li>
+  <li><a href="#part-1-getting-data-into-a-database" id="toc-part-1-getting-data-into-a-database" class="nav-link" data-scroll-target="#part-1-getting-data-into-a-database">Part 1: Getting Data Into a Database</a>
+  <ul class="collapse">
+  <li><a href="#where-the-data-comes-from" id="toc-where-the-data-comes-from" class="nav-link" data-scroll-target="#where-the-data-comes-from">Where the Data Comes From</a></li>
+  <li><a href="#connecting-r-to-a-sql-server" id="toc-connecting-r-to-a-sql-server" class="nav-link" data-scroll-target="#connecting-r-to-a-sql-server">Connecting R to a SQL Server</a></li>
+  <li><a href="#locating-and-validating-source-files-before-upload" id="toc-locating-and-validating-source-files-before-upload" class="nav-link" data-scroll-target="#locating-and-validating-source-files-before-upload">Locating and Validating Source Files Before Upload</a></li>
+  <li><a href="#from-file-names-to-table-names" id="toc-from-file-names-to-table-names" class="nav-link" data-scroll-target="#from-file-names-to-table-names">From File Names to Table Names</a></li>
+  <li><a href="#uploading-in-chunks-not-all-at-once" id="toc-uploading-in-chunks-not-all-at-once" class="nav-link" data-scroll-target="#uploading-in-chunks-not-all-at-once">Uploading in Chunks, Not All at Once</a></li>
+  </ul></li>
+  <li><a href="#part-2-what-makes-a-relational-database-relational-keys" id="toc-part-2-what-makes-a-relational-database-relational-keys" class="nav-link" data-scroll-target="#part-2-what-makes-a-relational-database-relational-keys">Part 2: What Makes a Relational Database “Relational” — Keys</a>
+  <ul class="collapse">
+  <li><a href="#two-types-of-keys-in-sql" id="toc-two-types-of-keys-in-sql" class="nav-link" data-scroll-target="#two-types-of-keys-in-sql">Two Types of Keys in SQL</a></li>
+  <li><a href="#inspecting-the-database-before-changing-anything" id="toc-inspecting-the-database-before-changing-anything" class="nav-link" data-scroll-target="#inspecting-the-database-before-changing-anything">Inspecting the Database Before Changing Anything</a></li>
+  <li><a href="#the-three-requirements-for-a-valid-primary-key" id="toc-the-three-requirements-for-a-valid-primary-key" class="nav-link" data-scroll-target="#the-three-requirements-for-a-valid-primary-key">The Three Requirements for a Valid Primary Key</a></li>
+  <li><a href="#checking-candidates-before-committing" id="toc-checking-candidates-before-committing" class="nav-link" data-scroll-target="#checking-candidates-before-committing">Checking Candidates Before Committing</a></li>
+  <li><a href="#identifying-foreign-key-relationships" id="toc-identifying-foreign-key-relationships" class="nav-link" data-scroll-target="#identifying-foreign-key-relationships">Identifying Foreign Key Relationships</a></li>
+  <li><a href="#checking-for-orphans-before-enforcing-anything" id="toc-checking-for-orphans-before-enforcing-anything" class="nav-link" data-scroll-target="#checking-for-orphans-before-enforcing-anything">Checking for Orphans Before Enforcing Anything</a></li>
+  <li><a href="#deciding-how-to-handle-orphans" id="toc-deciding-how-to-handle-orphans" class="nav-link" data-scroll-target="#deciding-how-to-handle-orphans">Deciding How to Handle Orphans</a></li>
+  <li><a href="#verifying-the-fix" id="toc-verifying-the-fix" class="nav-link" data-scroll-target="#verifying-the-fix">Verifying the Fix</a></li>
+  <li><a href="#a-required-technical-prerequisite-storage-engine-and-data-types" id="toc-a-required-technical-prerequisite-storage-engine-and-data-types" class="nav-link" data-scroll-target="#a-required-technical-prerequisite-storage-engine-and-data-types">A Required Technical Prerequisite: Storage Engine and Data Types</a></li>
+  <li><a href="#creating-the-primary-keys" id="toc-creating-the-primary-keys" class="nav-link" data-scroll-target="#creating-the-primary-keys">Creating the Primary Keys</a></li>
+  <li><a href="#when-the-obvious-key-doesnt-quite-work" id="toc-when-the-obvious-key-doesnt-quite-work" class="nav-link" data-scroll-target="#when-the-obvious-key-doesnt-quite-work">When the “Obvious” Key Doesn’t Quite Work</a></li>
+  <li><a href="#creating-the-foreign-keys" id="toc-creating-the-foreign-keys" class="nav-link" data-scroll-target="#creating-the-foreign-keys">Creating the Foreign Keys</a></li>
+  <li><a href="#confirming-the-final-structure" id="toc-confirming-the-final-structure" class="nav-link" data-scroll-target="#confirming-the-final-structure">Confirming the Final Structure</a></li>
+  </ul></li>
+  <li><a href="#practical-takeaways" id="toc-practical-takeaways" class="nav-link" data-scroll-target="#practical-takeaways">Practical Takeaways</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">SQL Upload Guide: From CSVs to a Relational Database</h1>
+<p class="subtitle lead">Building and Keying a SQL Database, Worked Through a SNL Dataset</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="why-should-a-statistician-care-about-sql-databases" class="level2">
+<h2 class="anchored" data-anchor-id="why-should-a-statistician-care-about-sql-databases">Why Should a Statistician Care About SQL Databases?</h2>
+<p>If you do statistics or data science, your default instinct when handed a pile of CSVs is probably to load each one into R or Python and start joining data frames in memory. That, however, leads to issues including files are too big to fit comfortably in RAM, re-running the same <code>read_csv()</code> calls every session, or you need ten different summary tables and don’t want to re-derive each one by hand every time.</p>
+<p>A relational database solves these problems by moving the <em>structure</em> of your data out of your analysis script and into the data itself. Instead of a folder of CSVs that only mean something in light of whatever script last touched them, you get a single, queryable system where the relationships between tables, the rules about what counts as valid data, and the logic for combining tables all live in one place.</p>
+<p>Concretely, that gets you:</p>
+<p><strong>Speed and memory efficiency at scale.</strong> A database engine reads only the columns and rows a query actually needs, rather than loading entire files into memory first.</p>
+<p><strong>A single source of truth.</strong> Once data lives in a database, every person and every script that connects to it sees the same version.</p>
+<p><strong>Enforced data integrity.</strong> A database can refuse to let you insert nonsense: a row that references an actor who doesn’t exist, a duplicate ID where uniqueness is required. This is the part we’ll spend the most time on below: <em>keys</em> are the mechanism that makes this enforcement possible, and they’re worth understanding even if you never write SQL again after this guide.</p>
+<p><strong>Reusable, composable queries.</strong> SQL’s <code>JOIN</code> machinery lets you combine tables on demand, rather than writing bespoke merge logic in R every time you need a different combination of variables.</p>
+<p>We’ll walk through all of this concretely, using a real dataset: every cast member, host, sketch, and impression from <em>Saturday Night Live</em>, scraped from a public repository and loaded into a MariaDB server.</p>
+<hr>
+</section>
+<section id="part-1-getting-data-into-a-database" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-getting-data-into-a-database">Part 1: Getting Data Into a Database</h2>
+<section id="where-the-data-comes-from" class="level3">
+<h3 class="anchored" data-anchor-id="where-the-data-comes-from">Where the Data Comes From</h3>
+<p>For this guide, the source data comes from the <a href="https://github.com/hhllcks/snldb">snldb</a> GitHub repository, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of <em>this</em> scraper don’t matter much beyond this guide. What matters is the general pattern: <strong>most real-world data starts out as scraped, exported, or otherwise messy flat files</strong>, and getting it into a proper database is itself a meaningful step.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_single_episode.sh</span>   <span class="co"># test run: one episode</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_all.sh</span>               <span class="co"># full crawl: every episode</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> convert_json_to_csv.py</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>After running this, you end up with a folder of <code>.csv</code> files, one per entity type (actors, episodes, sketches, and so on). This is the starting point most statisticians actually encounter: a pile of CSVs, related to each other in ways that exist only in your head (or a README), not yet enforced anywhere.</p>
+</section>
+<section id="connecting-r-to-a-sql-server" class="level3">
+<h3 class="anchored" data-anchor-id="connecting-r-to-a-sql-server">Connecting R to a SQL Server</h3>
+<p>The general pattern for connecting to <em>any</em> SQL database from R is the same regardless of which database engine (MySQL, MariaDB, PostgreSQL, SQL Server) sits on the other end: you load a driver package, supply connection credentials, and get back a connection object that every subsequent query uses.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RMariaDB)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>A practice worth adopting immediately, regardless of what data you’re working with: <strong>never write credentials directly into a script.</strong> Store them as environment variables in a <code>.Renviron</code> file (which should never be committed to version control), and read them in with <code>Sys.getenv()</code>.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SQL_USER <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"SQL_USER"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>SQL_PWD  <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"SQL_PWD"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>SQL_HOST <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"SQL_HOST"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>SQL_DB   <span class="ot">&lt;-</span> <span class="st">"snl"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">MySQL_TLS_DISABLE_PEER_VERIFICATION =</span> <span class="dv">1</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>con_snl <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  RMySQL<span class="sc">::</span><span class="fu">MySQL</span>(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">host =</span> SQL_HOST,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user =</span> SQL_USER,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> SQL_PWD,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname =</span> SQL_DB,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">load_data_local_infile =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbListTables</span>(con_snl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>dbListTables()</code> is worth calling immediately after every connection, regardless of context. It’s the fastest way to confirm the connection actually succeeded and to see what already exists on the server before you touch anything.</p>
+</section>
+<section id="locating-and-validating-source-files-before-upload" class="level3">
+<h3 class="anchored" data-anchor-id="locating-and-validating-source-files-before-upload">Locating and Validating Source Files Before Upload</h3>
+<p>Before uploading anything, it’s worth building the habit of checking that your source files are what you think they are. This step generalizes far beyond SNL data: any time you’re about to bulk-load files into a database, a quick sanity pass catches problems while they’re still cheap to fix.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>csv_folder <span class="ot">&lt;-</span> <span class="st">"~/Desktop/Summer 2026/snldb/output"</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>csv_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> csv_folder,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">full.names =</span> <span class="cn">TRUE</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>csv_files</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(csv_files)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(csv_files) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"No CSV files found. Check csv_folder path."</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>csv_check <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(csv_files, <span class="cf">function</span>(file_path) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(file_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">file =</span> <span class="fu">basename</span>(file_path),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">rows =</span> <span class="fu">nrow</span>(df),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">columns =</span> <span class="fu">ncol</span>(df)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>csv_check</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This produces a small summary table — file name, row count, column count — for every file about to be uploaded. It seems like a small thing, but it’s the cheapest possible defense against uploading an empty file, a truncated file, or a file you grabbed from the wrong folder.</p>
+</section>
+<section id="from-file-names-to-table-names" class="level3">
+<h3 class="anchored" data-anchor-id="from-file-names-to-table-names">From File Names to Table Names</h3>
+<p>SQL table names have stricter rules than file names: no spaces, no leading numbers, no arbitrary punctuation. Rather than handling this ad hoc for every file, it’s worth writing one small helper function that any future project can reuse:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>clean_table_name <span class="ot">&lt;-</span> <span class="cf">function</span>(file_path) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  file_path <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">basename</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_remove</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    janitor<span class="sc">::</span><span class="fu">make_clean_names</span>()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>janitor::make_clean_names()</code> does the heavy lifting — lowercasing, replacing spaces and punctuation with underscores, and resolving duplicate names — which is exactly the kind of small, boring utility worth keeping in your personal toolkit across projects, independent of what the data actually is.</p>
+</section>
+<section id="uploading-in-chunks-not-all-at-once" class="level3">
+<h3 class="anchored" data-anchor-id="uploading-in-chunks-not-all-at-once">Uploading in Chunks, Not All at Once</h3>
+<p>The temptation with a clean CSV is to dump the whole thing into the database in a single <code>INSERT</code> statement. In practice, this is often slower and less stable than chunking the upload — especially over a network connection to a remote server, where one enormous statement either times out or simply gets rejected outright. Therefore, the safest way is to upload data in chunks.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>upload_csv_to_sql <span class="ot">&lt;-</span> <span class="cf">function</span>(file_path) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  table_name <span class="ot">&lt;-</span> <span class="fu">clean_table_name</span>(file_path)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Reading "</span>, <span class="fu">basename</span>(file_path), <span class="st">"..."</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(file_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Rows in CSV: "</span>, <span class="fu">nrow</span>(df))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Columns in CSV: "</span>, <span class="fu">ncol</span>(df))</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(df) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"CSV has 0 rows: "</span>, <span class="fu">basename</span>(file_path))</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Uploading as table `"</span>, table_name, <span class="st">"`..."</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="fu">paste0</span>(<span class="st">"DROP TABLE IF EXISTS `"</span>, table_name, <span class="st">"`;"</span>))</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  DBI<span class="sc">::</span><span class="fu">dbCreateTable</span>(</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">conn =</span> con_snl,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> table_name,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">fields =</span> df</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  chunk_size <span class="ot">&lt;-</span> <span class="dv">250</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  starts <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">1</span>, n, <span class="at">by =</span> chunk_size)</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (start <span class="cf">in</span> starts) {</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    end <span class="ot">&lt;-</span> <span class="fu">min</span>(start <span class="sc">+</span> chunk_size <span class="sc">-</span> <span class="dv">1</span>, n)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    chunk <span class="ot">&lt;-</span> df[start<span class="sc">:</span>end, ]</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    insert_sql <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">sqlAppendTable</span>(</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>      con_snl,</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">table =</span> DBI<span class="sc">::</span><span class="fu">Id</span>(<span class="at">table =</span> table_name),</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">values =</span> chunk,</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, insert_sql)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Uploaded rows "</span>, start, <span class="st">" to "</span>, end, <span class="st">" of "</span>, n)</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>  row_count <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    con_snl,</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"SELECT COUNT(*) AS n_rows FROM `"</span>, table_name, <span class="st">"`;"</span>)</span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Finished uploading `"</span>, table_name, <span class="st">"` with "</span>, row_count<span class="sc">$</span>n_rows, <span class="st">" rows."</span>)</span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">table_name =</span> table_name,</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">uploaded_rows =</span> row_count<span class="sc">$</span>n_rows</span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>A few choices here are worth calling out because they generalize to any upload pipeline, not just this one:</p>
+<p>The function <strong>drops and recreates the table</strong> before uploading, rather than appending to whatever might already be there. This makes the script <em>idempotent</em>: you can re-run it as many times as you want, and you’ll always end up with a clean, current copy of the data, rather than accumulating duplicate rows on every re-run.</p>
+<p>The <strong>row-count confirmation at the end</strong> closes the loop. This is important to verify that the row count of the uploaded tables aligns with what you already knew the CSV had from the earlier validation step.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>upload_results <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(csv_files, upload_csv_to_sql)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>upload_results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>At this point, every CSV is now a SQL table, with column types automatically inferred.</p>
+<hr>
+</section>
+</section>
+<section id="part-2-what-makes-a-relational-database-relational-keys" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-what-makes-a-relational-database-relational-keys">Part 2: What Makes a Relational Database “Relational” — Keys</h2>
+<p>Loading data into tables gets you tables in a SQL <em>server</em>, but not yet a SQL <em>database</em> in the meaningful sense. What turns a set of unrelated tables into an actual relational database is the presence of <strong>keys</strong>: the formal mechanism that encodes how tables relate to each other and what counts as a valid row.</p>
+<p>This is the part of the process most worth understanding deeply, because the concepts here — primary keys, foreign keys, referential integrity — apply identically whether you’re working with SNL sketches, clinical trial data, survey panels, or financial transactions.</p>
+<section id="two-types-of-keys-in-sql" class="level3">
+<h3 class="anchored" data-anchor-id="two-types-of-keys-in-sql">Two Types of Keys in SQL</h3>
+<p>A <strong>primary key</strong> is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed. When no single existing column satisfies these conditions, two common solutions are a composite key (combining multiple columns whose combination is unique, even if no individual column is) or a surrogate key (an artificial, often auto-incrementing column added purely to give each row a unique identifier).</p>
+<p>A <strong>foreign key</strong> is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental. The database itself guarantees the relationship is valid, rather than relying on the assumption that the matching columns happen to line up correctly.</p>
+</section>
+<section id="inspecting-the-database-before-changing-anything" class="level3">
+<h3 class="anchored" data-anchor-id="inspecting-the-database-before-changing-anything">Inspecting the Database Before Changing Anything</h3>
+<p>Before assigning any keys, the first move with any unfamiliar (or freshly uploaded) database is to look at what’s actually there.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbListTables</span>(con_snl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE actors;"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE appearances;"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE casts;"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE characters;"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE episodes;"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE hosts;"</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE impressions;"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE seasons;"</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE sketches;"</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE tenure;"</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"DESCRIBE titles;"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>DESCRIBE</code> shows you each table’s columns, their current data types, whether they accept missing values, and any keys already defined. This is the equivalent of running <code>str()</code> or <code>glimpse()</code> on a data frame in R. This is the first thing you should do before drawing any conclusions about the data’s structure.</p>
+</section>
+<section id="the-three-requirements-for-a-valid-primary-key" class="level3">
+<h3 class="anchored" data-anchor-id="the-three-requirements-for-a-valid-primary-key">The Three Requirements for a Valid Primary Key</h3>
+<p>For a column to serve as a primary key, it has to satisfy three conditions, and they don’t depend on what your data is about:</p>
+<ol type="1">
+<li><strong>No missing values.</strong> A key that’s sometimes absent can’t reliably identify every row.</li>
+<li><strong>Every value is unique.</strong> If a value repeats, it can’t distinguish between the rows that share it.</li>
+<li><strong>It represents a natural identifier for the entity.</strong> This one is more judgment-based. Choosing a column that <em>means</em> something as an identifier (an actor’s ID, a patient’s ID, a transaction’s ID) rather than an arbitrary column that happens to be unique by coincidence.</li>
+</ol>
+<p>For the SNL data, the natural candidates were the existing ID columns scraped along with the data: <code>actors.aid</code>, <code>characters.charid</code>, <code>episodes.epid</code>, <code>impressions.impid</code>, <code>seasons.sid</code>, <code>sketches.skid</code>, and <code>titles.tid</code>. This is a common situation where <em>the data often arrives with implicit identifiers already in place</em>.</p>
+</section>
+<section id="checking-candidates-before-committing" class="level3">
+<h3 class="anchored" data-anchor-id="checking-candidates-before-committing">Checking Candidates Before Committing</h3>
+<p>Rather than trust that an ID column satisfies the three conditions above, it’s worth checking directly. This test of comparing total rows, non-missing values, and distinct values is a general-purpose validity check you can reuse for any candidate key, in any dataset:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>check_key <span class="ot">&lt;-</span> <span class="cf">function</span>(table, col) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="fu">paste0</span>(<span class="st">"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT </span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">      '"</span>, table, <span class="st">"' AS table_name,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="st">      '"</span>, col, <span class="st">"' AS column_name,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="st">      COUNT(*) AS total_rows,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="st">      COUNT(`"</span>, col, <span class="st">"`) AS non_missing,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="st">      COUNT(DISTINCT `"</span>, col, <span class="st">"`) AS distinct_values,</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="st">      SUM(`"</span>, col, <span class="st">"` IS NULL) AS missing_values</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="st">    FROM `"</span>, table, <span class="st">"`;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="st">  "</span>))</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>primary_key_checks <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"actors"</span>, <span class="st">"aid"</span>),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"characters"</span>, <span class="st">"charid"</span>),</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"impressions"</span>, <span class="st">"impid"</span>),</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"seasons"</span>, <span class="st">"sid"</span>),</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"sketches"</span>, <span class="st">"skid"</span>),</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_key</span>(<span class="st">"titles"</span>, <span class="st">"tid"</span>)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>primary_key_checks</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>If <code>total_rows</code>, <code>non_missing</code>, and <code>distinct_values</code> are all equal, and <code>missing_values</code> is zero, the column passes the test. If any of those don’t line up, that’s valuable information <em>before</em> you commit to a key and this column likely should not become a primary key.</p>
+</section>
+<section id="identifying-foreign-key-relationships" class="level3">
+<h3 class="anchored" data-anchor-id="identifying-foreign-key-relationships">Identifying Foreign Key Relationships</h3>
+<p>Once primary keys are settled, the next question is: which columns in other tables refer back to those primary keys? This is fundamentally a modeling question about your data’s structure, and answering it well requires understanding what each table actually represents. Often times you can identify columns in tables that have the same name.</p>
+<p>For the SNL database, this looked like: <code>appearances</code> links to actors, titles, characters, impressions, episodes, and seasons (an appearance is the intersection of all of these: a specific actor performing in a specific sketch, in a specific episode); <code>casts</code> links actors to seasons; <code>episodes</code> belongs to a season; <code>hosts</code> links hosts to episodes; <code>titles</code> links to episodes, seasons, and sketches; and <code>tenure</code> links back to actors.</p>
+</section>
+<section id="checking-for-orphans-before-enforcing-anything" class="level3">
+<h3 class="anchored" data-anchor-id="checking-for-orphans-before-enforcing-anything">Checking for Orphans Before Enforcing Anything</h3>
+<p>A foreign key constraint, once created, <em>requires</em> that every value in the child column exists in the parent table. But real-world data is messy, and it’s common to have values that don’t satisfy this, called <strong>orphan values</strong>. SQL won’t let you create the constraint until they’re resolved, so it’s necessary to find them first before trying to make a foreign key that won’t be accepted.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT c.*</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM casts c</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="st">  LEFT JOIN episodes e</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="st">    ON c.first_epid = e.epid</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE c.first_epid IS NOT NULL</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="st">    AND e.epid IS NULL;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT h.*</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM hosts h</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="st">  LEFT JOIN actors a</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="st">    ON h.aid = a.aid</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE h.aid IS NOT NULL</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="st">    AND a.aid IS NULL;</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This <code>LEFT JOIN ... WHERE parent.key IS NULL</code> pattern directly answers “which rows in my child table don’t have a matching parent?” regardless of what the entities actually are.</p>
+<p>In the SNL data, this surfaced two genuine problems: some <code>casts.first_epid</code> values didn’t match any real episode, and one <code>hosts.aid</code> value didn’t match any real actor. Scraped and merged data routinely has small inconsistencies like this, and finding them is the entire point of this check.</p>
+</section>
+<section id="deciding-how-to-handle-orphans" class="level3">
+<h3 class="anchored" data-anchor-id="deciding-how-to-handle-orphans">Deciding How to Handle Orphans</h3>
+<p>Once you’ve found orphan values, you have to decide what to do about them. The options generally are: correct the value if you can determine what it <em>should</em> have been, delete the row if it’s clearly invalid, or set the offending value to <code>NULL</code> if you can’t confidently do either of the first two.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="st">  UPDATE casts c</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="st">  LEFT JOIN episodes e</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="st">    ON c.first_epid = e.epid</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">  SET c.first_epid = NULL</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE c.first_epid IS NOT NULL</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">    AND e.epid IS NULL;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="st">  UPDATE hosts h</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="st">  LEFT JOIN actors a</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="st">    ON h.aid = a.aid</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="st">  SET h.aid = NULL</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE h.aid IS NOT NULL</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="st">    AND a.aid IS NULL;</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Setting the value to <code>NULL</code> here is a deliberately conservative choice: rather than guessing at what the “correct” episode or actor should have been (and risking a false relationship that looks valid but isn’t), the missing-link information is preserved as openly missing.</p>
+</section>
+<section id="verifying-the-fix" class="level3">
+<h3 class="anchored" data-anchor-id="verifying-the-fix">Verifying the Fix</h3>
+<p>The same orphan-check pattern from before doubles as a verification step after the fix.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>check_fk <span class="ot">&lt;-</span> <span class="cf">function</span>(child_table, child_col, parent_table, parent_col) {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="fu">paste0</span>(<span class="st">"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT </span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="st">      '"</span>, child_table, <span class="st">"."</span>, child_col, <span class="st">" -&gt; "</span>, parent_table, <span class="st">"."</span>, parent_col, <span class="st">"' AS relationship,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="st">      COUNT(*) AS orphan_count</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="st">    FROM `"</span>, child_table, <span class="st">"` c</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="st">    LEFT JOIN `"</span>, parent_table, <span class="st">"` p</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="st">      ON c.`"</span>, child_col, <span class="st">"` = p.`"</span>, parent_col, <span class="st">"`</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="st">    WHERE c.`"</span>, child_col, <span class="st">"` IS NOT NULL</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="st">      AND p.`"</span>, parent_col, <span class="st">"` IS NULL;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="st">  "</span>))</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>fk_checks <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"aid"</span>, <span class="st">"actors"</span>, <span class="st">"aid"</span>),</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"tid"</span>, <span class="st">"titles"</span>, <span class="st">"tid"</span>),</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"charid"</span>, <span class="st">"characters"</span>, <span class="st">"charid"</span>),</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"impid"</span>, <span class="st">"impressions"</span>, <span class="st">"impid"</span>),</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"epid"</span>, <span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"appearances"</span>, <span class="st">"sid"</span>, <span class="st">"seasons"</span>, <span class="st">"sid"</span>),</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"casts"</span>, <span class="st">"aid"</span>, <span class="st">"actors"</span>, <span class="st">"aid"</span>),</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"casts"</span>, <span class="st">"sid"</span>, <span class="st">"seasons"</span>, <span class="st">"sid"</span>),</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"casts"</span>, <span class="st">"first_epid"</span>, <span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"casts"</span>, <span class="st">"last_epid"</span>, <span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"episodes"</span>, <span class="st">"sid"</span>, <span class="st">"seasons"</span>, <span class="st">"sid"</span>),</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"hosts"</span>, <span class="st">"epid"</span>, <span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"hosts"</span>, <span class="st">"aid"</span>, <span class="st">"actors"</span>, <span class="st">"aid"</span>),</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"titles"</span>, <span class="st">"epid"</span>, <span class="st">"episodes"</span>, <span class="st">"epid"</span>),</span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"titles"</span>, <span class="st">"skid"</span>, <span class="st">"sketches"</span>, <span class="st">"skid"</span>),</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"titles"</span>, <span class="st">"sid"</span>, <span class="st">"seasons"</span>, <span class="st">"sid"</span>),</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_fk</span>(<span class="st">"tenure"</span>, <span class="st">"aid"</span>, <span class="st">"actors"</span>, <span class="st">"aid"</span>)</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>fk_checks</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The test is applied across every candidate relationship, now we can see if each foreign key relationship is valid.</p>
+</section>
+<section id="a-required-technical-prerequisite-storage-engine-and-data-types" class="level3">
+<h3 class="anchored" data-anchor-id="a-required-technical-prerequisite-storage-engine-and-data-types">A Required Technical Prerequisite: Storage Engine and Data Types</h3>
+<p>Before constraints can actually be created, two technical prerequisites in MySQL/MariaDB specifically need attention.</p>
+<p><strong>Storage engine.</strong> Foreign keys require a storage engine that supports them: InnoDB, in MySQL/MariaDB’s case. Tables created through bulk CSV import sometimes default to a different engine, so this needs to be checked and corrected:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tables <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbListTables</span>(con_snl)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (table <span class="cf">in</span> tables) {</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="fu">paste0</span>(<span class="st">"ALTER TABLE `"</span>, table, <span class="st">"` ENGINE = InnoDB;"</span>))</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Matching data types.</strong> A foreign key constraint requires the child column and the parent column to have <em>compatible</em> types. Since automatic type inference during upload is often too loose these need to be tightened up first and have their variable type altered.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Primary key columns</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE actors MODIFY aid VARCHAR(255) NOT NULL;"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE characters MODIFY charid INT NOT NULL;"</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE episodes MODIFY epid INT NOT NULL;"</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE impressions MODIFY impid INT NOT NULL;"</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE seasons MODIFY sid INT NOT NULL;"</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE sketches MODIFY skid INT NOT NULL;"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE titles MODIFY tid INT NOT NULL;"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># appearances</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY aid VARCHAR(255);"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY tid INT;"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY charid INT;"</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY impid INT;"</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY epid INT;"</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE appearances MODIFY sid INT;"</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># casts</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE casts MODIFY aid VARCHAR(255);"</span>)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE casts MODIFY sid INT;"</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE casts MODIFY first_epid INT;"</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE casts MODIFY last_epid INT;"</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co"># episodes</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE episodes MODIFY sid INT;"</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co"># hosts</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE hosts MODIFY epid INT;"</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE hosts MODIFY aid VARCHAR(255);"</span>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co"># titles</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE titles MODIFY epid INT;"</span>)</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE titles MODIFY skid INT;"</span>)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE titles MODIFY sid INT;"</span>)</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="co"># tenure</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE tenure MODIFY aid VARCHAR(255);"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Notice that <code>actors.aid</code> is a <code>VARCHAR</code>, not an integer — in the original scraped data, actor IDs are text-based codes rather than plain numbers. Every column referencing it (<code>appearances.aid</code>, <code>casts.aid</code>, <code>hosts.aid</code>, <code>tenure.aid</code>) has to match that type exactly. This is a generalizable rule: <strong>a foreign key’s type is dictated by whatever the primary key it references actually is</strong>.</p>
+</section>
+<section id="creating-the-primary-keys" class="level3">
+<h3 class="anchored" data-anchor-id="creating-the-primary-keys">Creating the Primary Keys</h3>
+<p>With types corrected and orphans resolved, creating the primary keys themselves is mechanically simple:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE actors ADD PRIMARY KEY (aid);"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE characters ADD PRIMARY KEY (charid);"</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE episodes ADD PRIMARY KEY (epid);"</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE impressions ADD PRIMARY KEY (impid);"</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE seasons ADD PRIMARY KEY (sid);"</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE sketches ADD PRIMARY KEY (skid);"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE titles ADD PRIMARY KEY (tid);"</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE casts ADD PRIMARY KEY (aid, sid);"</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"ALTER TABLE tenure ADD PRIMARY KEY (aid);"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Two of these deserve a second look, because they illustrate situations that come up constantly in real data modeling.</p>
+<p><strong>Composite keys.</strong> <code>casts</code> uses <code>(aid, sid)</code> — actor ID <em>and</em> season ID together — as its primary key, rather than any single column. This makes sense once you think about what a row in <code>casts</code> represents: one actor’s membership in one season. Neither <code>aid</code> nor <code>sid</code> alone is unique (an actor appears across many seasons; a season has many actors), but the <em>combination</em> is.</p>
+<p><strong>No natural unique identifier at all.</strong> Some tables don’t have <em>any</em> column or combination of existing columns that’s guaranteed unique. <code>appearances</code>, in this case, since a single actor could in principle appear multiple times in the same sketch in the same episode, with no existing column distinguishing those occurrences. The solution is a <strong>surrogate key</strong>: a new column, with no real-world meaning, that exists purely to give every row a unique handle.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD COLUMN appearance_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>AUTO_INCREMENT</code> means the database assigns each new row the next sequential integer automatically. Surrogate keys like this are extremely common in practice; in fact, in many production database designs, <em>every</em> table gets an auto-incrementing surrogate key by default, specifically to sidestep this exact problem before it ever comes up.</p>
+</section>
+<section id="when-the-obvious-key-doesnt-quite-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-the-obvious-key-doesnt-quite-work">When the “Obvious” Key Doesn’t Quite Work</h3>
+<p>The original plan for <code>hosts</code> was a composite key of <code>(epid, aid)</code>: the same logic as <code>casts</code>. But a primary key, by definition, cannot contain missing values in <em>any</em> of its component columns. So before committing to that plan, it’s worth checking:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">    SUM(epid IS NULL) AS missing_epid,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">    SUM(aid IS NULL) AS missing_aid</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM hosts;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT *</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM hosts</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE aid IS NULL;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This check found exactly one row with a missing <code>aid</code>, likely a host who isn’t (or wasn’t, at the time of scraping) a cast member with an actor ID on file. Because of that single missing value, <code>(epid, aid)</code> is disqualified as a primary key outright; SQL would refuse to create it. The fix is the same surrogate-key pattern as before:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE hosts</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD COLUMN host_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>A key design that looks correct in theory can be invalidated by a single bad value in practice</strong>, and it’s much better to discover that during a deliberate check than to discover it as a cryptic constraint-creation error later. Always verify potential keys before you commit.</p>
+</section>
+<section id="creating-the-foreign-keys" class="level3">
+<h3 class="anchored" data-anchor-id="creating-the-foreign-keys">Creating the Foreign Keys</h3>
+<p>With primary keys, type compatibility, and orphan values all resolved, the foreign key constraints themselves can finally be added:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># appearances foreign keys</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_actor</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (aid) REFERENCES actors(aid);</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_title</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (tid) REFERENCES titles(tid);</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_character</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (charid) REFERENCES characters(charid);</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_impression</span></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (impid) REFERENCES impressions(impid);</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_episode</span></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (epid) REFERENCES episodes(epid);</span></span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE appearances</span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_appearances_season</span></span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (sid) REFERENCES seasons(sid);</span></span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a><span class="co"># casts foreign keys</span></span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE casts</span></span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_casts_actor</span></span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (aid) REFERENCES actors(aid);</span></span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE casts</span></span>
+<span id="cb24-47"><a href="#cb24-47" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_casts_season</span></span>
+<span id="cb24-48"><a href="#cb24-48" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (sid) REFERENCES seasons(sid);</span></span>
+<span id="cb24-49"><a href="#cb24-49" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-50"><a href="#cb24-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-51"><a href="#cb24-51" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-52"><a href="#cb24-52" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE casts</span></span>
+<span id="cb24-53"><a href="#cb24-53" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_casts_first_episode</span></span>
+<span id="cb24-54"><a href="#cb24-54" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (first_epid) REFERENCES episodes(epid);</span></span>
+<span id="cb24-55"><a href="#cb24-55" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-56"><a href="#cb24-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-57"><a href="#cb24-57" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-58"><a href="#cb24-58" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE casts</span></span>
+<span id="cb24-59"><a href="#cb24-59" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_casts_last_episode</span></span>
+<span id="cb24-60"><a href="#cb24-60" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (last_epid) REFERENCES episodes(epid);</span></span>
+<span id="cb24-61"><a href="#cb24-61" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-62"><a href="#cb24-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-63"><a href="#cb24-63" aria-hidden="true" tabindex="-1"></a><span class="co"># episodes foreign key</span></span>
+<span id="cb24-64"><a href="#cb24-64" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-65"><a href="#cb24-65" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE episodes</span></span>
+<span id="cb24-66"><a href="#cb24-66" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_episodes_season</span></span>
+<span id="cb24-67"><a href="#cb24-67" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (sid) REFERENCES seasons(sid);</span></span>
+<span id="cb24-68"><a href="#cb24-68" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-69"><a href="#cb24-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-70"><a href="#cb24-70" aria-hidden="true" tabindex="-1"></a><span class="co"># hosts foreign keys</span></span>
+<span id="cb24-71"><a href="#cb24-71" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-72"><a href="#cb24-72" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE hosts</span></span>
+<span id="cb24-73"><a href="#cb24-73" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_hosts_episode</span></span>
+<span id="cb24-74"><a href="#cb24-74" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (epid) REFERENCES episodes(epid);</span></span>
+<span id="cb24-75"><a href="#cb24-75" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-76"><a href="#cb24-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-77"><a href="#cb24-77" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-78"><a href="#cb24-78" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE hosts</span></span>
+<span id="cb24-79"><a href="#cb24-79" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_hosts_actor</span></span>
+<span id="cb24-80"><a href="#cb24-80" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (aid) REFERENCES actors(aid);</span></span>
+<span id="cb24-81"><a href="#cb24-81" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-82"><a href="#cb24-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-83"><a href="#cb24-83" aria-hidden="true" tabindex="-1"></a><span class="co"># titles foreign keys</span></span>
+<span id="cb24-84"><a href="#cb24-84" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-85"><a href="#cb24-85" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE titles</span></span>
+<span id="cb24-86"><a href="#cb24-86" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_titles_episode</span></span>
+<span id="cb24-87"><a href="#cb24-87" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (epid) REFERENCES episodes(epid);</span></span>
+<span id="cb24-88"><a href="#cb24-88" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-89"><a href="#cb24-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-90"><a href="#cb24-90" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-91"><a href="#cb24-91" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE titles</span></span>
+<span id="cb24-92"><a href="#cb24-92" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_titles_sketch</span></span>
+<span id="cb24-93"><a href="#cb24-93" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (skid) REFERENCES sketches(skid);</span></span>
+<span id="cb24-94"><a href="#cb24-94" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-95"><a href="#cb24-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-96"><a href="#cb24-96" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-97"><a href="#cb24-97" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE titles</span></span>
+<span id="cb24-98"><a href="#cb24-98" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_titles_season</span></span>
+<span id="cb24-99"><a href="#cb24-99" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (sid) REFERENCES seasons(sid);</span></span>
+<span id="cb24-100"><a href="#cb24-100" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-101"><a href="#cb24-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-102"><a href="#cb24-102" aria-hidden="true" tabindex="-1"></a><span class="co"># tenure foreign key</span></span>
+<span id="cb24-103"><a href="#cb24-103" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbExecute</span>(con_snl, <span class="st">"</span></span>
+<span id="cb24-104"><a href="#cb24-104" aria-hidden="true" tabindex="-1"></a><span class="st">  ALTER TABLE tenure</span></span>
+<span id="cb24-105"><a href="#cb24-105" aria-hidden="true" tabindex="-1"></a><span class="st">  ADD CONSTRAINT fk_tenure_actor</span></span>
+<span id="cb24-106"><a href="#cb24-106" aria-hidden="true" tabindex="-1"></a><span class="st">  FOREIGN KEY (aid) REFERENCES actors(aid);</span></span>
+<span id="cb24-107"><a href="#cb24-107" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This is the moment the database actually becomes “relational” in the formal sense. From this point forward, the database itself,enforces these relationships.</p>
+</section>
+<section id="confirming-the-final-structure" class="level3">
+<h3 class="anchored" data-anchor-id="confirming-the-final-structure">Confirming the Final Structure</h3>
+<p>Finally, it’s worth confirming what was actually built, both as a sanity check and as documentation you (or a collaborator) can return to later.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT </span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">    table_name,</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="st">    column_name,</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st">    constraint_name,</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="st">    referenced_table_name,</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="st">    referenced_column_name</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM information_schema.key_column_usage</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE table_schema = 'snl'</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY table_name, constraint_name, ordinal_position;</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(con_snl, <span class="st">"</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT </span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="st">    table_name,</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="st">    GROUP_CONCAT(column_name ORDER BY ordinal_position SEPARATOR ', ') AS primary_key</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM information_schema.key_column_usage</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE table_schema = 'snl'</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="st">    AND constraint_name = 'PRIMARY'</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY table_name</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY table_name;</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Querying <code>information_schema</code> on every standard SQL database shows its own structure through this same metadata schema, so this exact query pattern (perhaps with a different <code>table_schema</code> name) works for inspecting keys in any database you encounter, not just this one.</p>
+<hr>
+</section>
+</section>
+<section id="practical-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="practical-takeaways">Practical Takeaways</h2>
+<p>idk atm</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
