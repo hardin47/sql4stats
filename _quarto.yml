@@ -8,16 +8,20 @@ website:
       - href: index.qmd
         text: Home
       - about.qmd
-      - href: SQL_Scrolly.qmd
-        text: background
-      - href: joins.qmd
-        text: joins
-      - href: parquet.qmd
-        text: parquet files
-      - href: crosstab_pivot_comp.qmd
-        text: SQL Pivoting
-      - href: sql_upload_guide.qmd
-        text: SQL Upload Demo
+      - text: "Informational Resources"
+        menu:
+          - href: SQL_Scrolly.qmd
+            text: background
+          - href: joins.qmd
+            text: joins
+          - href: parquet.qmd
+            text: parquet files
+      - text: "Demos"
+        menu: 
+          - href: crosstab_pivot_comp.qmd
+            text: SQL Pivoting
+          - href: sql_upload_guide.qmd
+            text: SQL Upload Demo
 
 format:
   html:
