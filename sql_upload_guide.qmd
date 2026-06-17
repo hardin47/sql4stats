@@ -1,5 +1,5 @@
 ---
-title: "SQL Upload Guide: From CSVs to a Relational Database"
+title: "SQL Upload Guide"
 subtitle: "Building and Keying a SQL Database, Worked Through a SNL Dataset"
 format:
   html:
