@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>SQL Upload Guide – sql4stats</title>
+<title>SQL Upload Guide</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -61,114 +61,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-<script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
-  "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
-    "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
-  }
-}</script>
+<script src="sql_upload_guide_files/libs/clipboard/clipboard.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/popper.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="sql_upload_guide_files/libs/quarto-html/anchor.min.js"></script>
+<link href="sql_upload_guide_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="sql_upload_guide_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="sql_upload_guide_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="sql_upload_guide_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="sql_upload_guide_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
-<link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed quarto-light">
+<body class="quarto-light">
 
-<div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
-      <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">sql4stats</span>
-    </a>
-  </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-  <span class="navbar-toggler-icon"></span>
-</button>
-          <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="./index.html"> 
-<span class="menu-text">Home</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
-<span class="menu-text">About</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./SQL_Scrolly.html"> 
-<span class="menu-text">background</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./joins.html"> 
-<span class="menu-text">joins</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./parquet.html"> 
-<span class="menu-text">parquet files</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./crosstab_pivot_comp.html"> 
-<span class="menu-text">SQL Pivoting</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link active" href="./sql_upload_guide.html" aria-current="page"> 
-<span class="menu-text">SQL Upload Demo</span></a>
-  </li>  
-</ul>
-          </div> <!-- /navcollapse -->
-            <div class="quarto-navbar-tools">
-</div>
-      </div> <!-- /container-fluid -->
-    </nav>
-</header>
-<!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
-<!-- sidebar -->
-<!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
    
   <ul>
   <li><a href="#why-should-a-statistician-care-about-sql-databases" id="toc-why-should-a-statistician-care-about-sql-databases" class="nav-link active" data-scroll-target="#why-should-a-statistician-care-about-sql-databases">Why Should a Statistician Care About SQL Databases?</a></li>
@@ -199,8 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#practical-takeaways" id="toc-practical-takeaways" class="nav-link" data-scroll-target="#practical-takeaways">Practical Takeaways</a></li>
   </ul>
 </nav>
-    </div>
-<!-- main -->
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -431,8 +343,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This is the part of the process most worth understanding deeply, because the concepts here — primary keys, foreign keys, referential integrity — apply identically whether you’re working with SNL sketches, clinical trial data, survey panels, or financial transactions.</p>
 <section id="two-types-of-keys-in-sql" class="level3">
 <h3 class="anchored" data-anchor-id="two-types-of-keys-in-sql">Two Types of Keys in SQL</h3>
-<p>A <strong>primary key</strong> is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed. When no single existing column satisfies these conditions, two common solutions are a composite key (combining multiple columns whose combination is unique, even if no individual column is) or a surrogate key (an artificial, often auto-incrementing column added purely to give each row a unique identifier).</p>
-<p>A <strong>foreign key</strong> is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental. The database itself guarantees the relationship is valid, rather than relying on the assumption that the matching columns happen to line up correctly.</p>
+<p>A <strong>primary key</strong> is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed.</p>
+<p>A <strong>foreign key</strong> is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental.</p>
+<p>For more information of keys along with indexing in SQL <a href="SQL_Scrolly.qmd#relational-keys">click here</a>.</p>
 </section>
 <section id="inspecting-the-database-before-changing-anything" class="level3">
 <h3 class="anchored" data-anchor-id="inspecting-the-database-before-changing-anything">Inspecting the Database Before Changing Anything</h3>
@@ -902,11 +815,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="practical-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="practical-takeaways">Practical Takeaways</h2>
 <p>idk atm</p>
-
-
 </section>
 
-</main> <!-- /main -->
+</main>
+<!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

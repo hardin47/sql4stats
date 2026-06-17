@@ -643,7 +643,7 @@ main.content, #quarto-content, .page-columns,
       </div>
     </div>
 
-    <div class="step" data-panel="1-1">
+    <div class="step" data-panel="1-1" id="relational-keys">
       <div class="step-tag">1.2 · Tables &amp; Relationships</div>
       <h3>Relational aspect of SQL and Keys</h3>
       <p>A <strong style="8a00c2;">table</strong> represents an entity — students, courses, orders. Each row is one record; each column is one attribute. A <strong style="color:#8a00c2;">primary key</strong> uniquely identifies each row.</p>
@@ -889,7 +889,7 @@ main.content, #quarto-content, .page-columns,
         </div>
         <div style="background:#eef4ff;border:1px solid #bfdbfe;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(37,99,235,0.1);">
           <img
-            src="figs/figure-1-2.png"
+            src="figure-1-2.png"
             alt="B+ tree diagram showing root, branch, and leaf nodes"
             style="width:100%;height:auto;display:block;"
           />

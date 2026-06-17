@@ -232,9 +232,11 @@ This is the part of the process most worth understanding deeply, because the con
 
 ### Two Types of Keys in SQL
 
-A **primary key** is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed. When no single existing column satisfies these conditions, two common solutions are a composite key (combining multiple columns whose combination is unique, even if no individual column is) or a surrogate key (an artificial, often auto-incrementing column added purely to give each row a unique identifier).
+A **primary key** is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed.
 
-A **foreign key** is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental. The database itself guarantees the relationship is valid, rather than relying on the assumption that the matching columns happen to line up correctly.
+A **foreign key** is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental.
+
+For more information of keys along with indexing in SQL [click here](SQL_Scrolly.qmd#relational-keys).
 
 
 ### Inspecting the Database Before Changing Anything
