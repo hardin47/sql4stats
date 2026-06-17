@@ -11,17 +11,17 @@ website:
       - text: "Informational Resources"
         menu:
           - href: SQL_Scrolly.qmd
-            text: background
+            text: SQL:Indexing and B-Trees
           - href: joins.qmd
-            text: joins
+            text: Joins
           - href: parquet.qmd
-            text: parquet files
+            text: File Formats and DuckDB
       - text: "Demos"
         menu: 
           - href: crosstab_pivot_comp.qmd
-            text: SQL Pivoting
+            text: Pivoting + Crosstabs
           - href: sql_upload_guide.qmd
-            text: SQL Upload Demo
+            text: Data Upload Guide
 
 format:
   html:
