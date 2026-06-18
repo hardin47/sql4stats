@@ -1,0 +1,1302 @@
+---
+title: "SQL Joins"
+format:
+  html:
+    toc: false
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{=html}
+<style>
+/* ══════════════════════════════════════════════
+   LIGHT-BLUE THEME — soft blue canvas, white mono
+   tables w/ royal-blue headers, orange + green as
+   the only highlight accents (from the video)
+══════════════════════════════════════════════ */
+
+/* Palette tokens
+   --bg            #e9f1fd   page background (light blue)
+   --bg-2          #f3f8ff   raised panel / right column
+   --panel         #dde9fb   sticky-left visual stage
+   --surface       #ffffff   cards / tables (video)
+   --line          #c4d4ee   hairline borders
+   --ink           #16263f   primary text
+   --ink-dim       #5b6b86   secondary text
+   --blue          #3b62db   table header / accent (video)
+   --blue-soft     #4f72e0   lighter blue accent
+   --blue-ink      #2747b0   strong blue for text
+   --orange        #f2a159   highlight A (video)
+   --green         #4ab87d   highlight B (video)
+   --cell-ink      #16181d   table cell text (video) */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Fira Code', 'Cascadia Code', ui-monospace, 'SF Mono', Menlo, monospace;
+  background: #e9f1fd;
+  color: #16263f;
+  overflow-x: hidden;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Kill Quarto containers */
+main.content, #quarto-content, .page-columns,
+.page-columns .content, .content, #quarto-document-content,
+.quarto-title-block { max-width: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+.quarto-title-block { display: none; }
+
+/* ── PROGRESS BAR ── */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: #3b62db;
+  width: 0%; z-index: 9999;
+}
+
+/* ── SIDE NAV ── */
+#side-nav {
+  position: fixed; right: 1.4rem; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 0.55rem; z-index: 999;
+}
+.nav-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: transparent; border: 1.5px solid #9bb4e0;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.nav-dot:hover, .nav-dot.active { background: #3b62db; border-color: #3b62db; transform: scale(1.4); }
+.nav-tip {
+  position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
+  background: #16263f; color: #eaf1fc; border: 1px solid #2747b0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px; font-size: 0.7rem; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s;
+}
+.nav-dot:hover .nav-tip { opacity: 1; }
+
+/* ══════════════════════════════════════════════
+   HERO — light blue, mono type
+══════════════════════════════════════════════ */
+.hero {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 4rem 2rem; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
+  border-bottom: 1px solid #c4d4ee;
+}
+.hero-grid-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(59,98,219,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,98,219,0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.hero-glow { display: none; }
+.hero-inner { position: relative; z-index: 1; max-width: 820px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(59,98,219,0.08); border: 1px solid #b6c9ee;
+  color: #2747b0; padding: 0.35rem 1rem; border-radius: 999px;
+  font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+.hero h1 {
+  font-size: clamp(2.7rem, 6.5vw, 5.5rem); font-weight: 700; color: #16263f;
+  line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 1.8rem;
+}
+.hero h1 em { color: #3b62db; font-style: normal; }
+.hero-sub {
+  font-size: 1.0rem; color: #5b6b86; max-width: 600px; margin: 0 auto 3.5rem;
+  line-height: 1.75;
+}
+.hero-pills { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
+.hero-pill {
+  padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.78rem;
+  font-weight: 500; border: 1px solid #b6c9ee; background: rgba(255,255,255,0.5);
+}
+.hero-pill-1 { color: #2747b0; }
+.hero-pill-2 { color: #2747b0; }
+.hero-pill-3 { color: #5b6b86; }
+.hero-pill-4 { color: #5b6b86; }
+.hero-scroll-cue {
+  color: #7185a3; font-size: 0.74rem; letter-spacing: 0.12em;
+  text-transform: uppercase; animation: bob 2s ease-in-out infinite;
+}
+.hero-scroll-cue span { display: block; font-size: 1.6rem; color: #3b62db; margin-top: 0.3rem; }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+
+/* ══════════════════════════════════════════════
+   CHAPTER INTROS — light strips, blue rule
+══════════════════════════════════════════════ */
+.chapter-intro {
+  padding: 5rem 4rem 3rem;
+  border-top: 1px solid #3b62db;
+  display: flex; align-items: flex-end; gap: 3rem;
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
+}
+.chapter-intro .ch-num {
+  font-size: clamp(5rem,10vw,9rem); font-weight: 700; line-height: 1;
+  color: rgba(59,98,219,0.14); letter-spacing: -0.05em; flex-shrink: 0;
+}
+.chapter-intro .ch-text .ch-tag {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: #2747b0; font-weight: 600; margin-bottom: 0.5rem;
+}
+.chapter-intro .ch-text h2 {
+  font-size: clamp(1.8rem,3.6vw,2.9rem); font-weight: 600; color: #16263f;
+  letter-spacing: -0.02em; line-height: 1.15;
+}
+.chapter-intro .ch-text p {
+  color: #5b6b86; font-size: 0.98rem; line-height: 1.7; max-width: 60ch; margin-top: 0.8rem;
+}
+
+/* ══════════════════════════════════════════════
+   STICKY SCROLLY LAYOUT
+══════════════════════════════════════════════ */
+.sticky-scrolly {
+  display: flex;
+  background: #e9f1fd;
+}
+.sticky-left {
+  position: sticky; top: 0; height: 100vh;
+  width: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+  border-right: 1px solid #c4d4ee;
+  background: #dde9fb;
+  overflow: hidden;
+}
+.sticky-right {
+  flex: 1; padding: 0 3.5rem 20vh 3.5rem;
+  background: #f3f8ff;
+}
+
+/* Visual panels inside sticky-left.
+   Allow internal scroll so tall panels (e.g. CREATE TABLE + key cards)
+   are never clipped by the 100vh sticky stage. */
+.sticky-panel {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.75rem;
+  opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(14px);
+  pointer-events: none;
+  overflow-y: auto;
+}
+.sticky-panel.active {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+/* The inner wrapper of each panel: cap width, let height be natural */
+.sticky-panel > div { width: 100%; max-width: 460px; }
+
+/* Step blocks in sticky-right */
+.step {
+  min-height: 80vh; display: flex; flex-direction: column; justify-content: center;
+  padding: 5rem 0;
+  border-bottom: 1px solid #d3e0f4;
+  opacity: 0.32; transition: opacity 0.4s;
+}
+.step.is-active { opacity: 1; }
+.step:last-child { border-bottom: none; }
+.step-tag {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: #2747b0; font-weight: 600; margin-bottom: 0.8rem;
+}
+.step h3 {
+  font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight: 600; color: #16263f;
+  letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 1.1rem;
+}
+.step p { color: #33445f; font-size: 0.97rem; line-height: 1.8; margin-bottom: 0.9rem; }
+.step p:last-of-type { margin-bottom: 1.2rem; }
+.step code {
+  background: #dde9fb; border: 1px solid #b6c9ee;
+  color: #2747b0; padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.88em;
+}
+
+/* ══════════════════════════════════════════════
+   BADGES — outline chips, two accent colors
+══════════════════════════════════════════════ */
+.badge-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; }
+.badge {
+  padding: 0.28rem 0.75rem; border-radius: 999px; font-size: 0.72rem;
+  font-weight: 500; letter-spacing: 0.02em; border: 1px solid #b6c9ee;
+  background: #ffffff; color: #33445f;
+}
+.bi { color: #2747b0; border-color: #b6c9ee; background: #eef3fe; }
+.bs { color: #2747b0; border-color: #b6c9ee; background: #eef3fe; }
+.bg { color: #2c7a52; border-color: #abdcc3; background: #e9f8f0; }
+.ba { color: #b9692a; border-color: #f2cba3; background: #fdf0e3; }
+.br { color: #b9692a; border-color: #f2cba3; background: #fdf0e3; }
+.bp { color: #5b6b86; border-color: #c4d4ee; background: #ffffff; }
+
+/* ══════════════════════════════════════════════
+   SQL CODE BLOCKS — dark navy, the one dark element
+══════════════════════════════════════════════ */
+.sql-block {
+  background: #11244a; border: 1px solid #1d3a6e;
+  border-radius: 8px; padding: 0.95rem 1.2rem;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-size: 0.78rem; line-height: 1.6; color: #d8e3f7;
+  margin: 0.8rem 0; overflow-x: auto;
+}
+.sql-block .kw { color: #8fb0ff; font-weight: 600; }
+.sql-block .ty { color: #6ee7b7; }
+.sql-block .fn { color: #ffffff; }
+.sql-block .st { color: #f2a159; }
+.sql-block .cm { color: #7f93b8; font-style: italic; }
+
+/* ══════════════════════════════════════════════
+   VISUALS — TABLE  (mirrors the video tables)
+══════════════════════════════════════════════ */
+.vis-table {
+  width: 100%; border-collapse: collapse;
+  border: 1px solid #c4cbe0;
+  font-size: 0.85rem;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+  background: #ffffff;
+}
+.vis-table th {
+  background: #3b62db; color: #ffffff; padding: 0.6rem 1rem;
+  font-weight: 600; text-align: left; font-size: 0.8rem;
+  letter-spacing: 0.02em; border: 1px solid #3b62db;
+  text-transform: none;
+}
+.vis-table td {
+  padding: 0.55rem 1rem; border: 1px solid #d2d6e2;
+  color: #16181d; background: #ffffff; text-align: left;
+}
+.vis-table tr:nth-child(even) td { background: #ffffff; }
+.pk { color: #16181d; font-weight: 600; }
+.fk { color: #16181d; font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   VISUALS — RELATIONSHIP DIAGRAM
+══════════════════════════════════════════════ */
+.rel-wrap {
+  width: 100%; display: flex; flex-direction: column; gap: 1.2rem;
+}
+.rel-tables-row {
+  display: flex; gap: 1.5rem; align-items: flex-start;
+}
+.rel-box {
+  flex: 1; background: #ffffff; overflow: hidden;
+  border: 1px solid #c4cbe0;
+}
+.rel-head {
+  padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 600;
+  letter-spacing: 0.02em; text-transform: none;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+}
+.rel-head.ind { background: #3b62db; color: #fff; }
+.rel-head.pur { background: #3b62db; color: #fff; }
+.rel-field {
+  padding: 0.45rem 1rem; font-size: 0.8rem; color: #16181d;
+  border-bottom: 1px solid #e2e5ee;
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+}
+.rel-field:last-child { border-bottom: none; }
+.pk-badge {
+  font-size: 0.62rem; background: #f2a159;
+  color: #16181d; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700;
+}
+.fk-badge {
+  font-size: 0.62rem; background: #4ab87d;
+  color: #16181d; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700;
+}
+.rel-connector {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 0.2rem; padding: 0 0.3rem;
+  font-size: 0.65rem; color: #2747b0; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   VISUALS — INDEX COMPARISON
+══════════════════════════════════════════════ */
+.idx-compare {
+  width: 100%; display: flex; gap: 1rem; align-items: flex-start;
+}
+.idx-col { flex: 1; }
+.idx-col-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+  color: #5b6b86; font-weight: 600; margin-bottom: 0.5rem; text-align: center;
+}
+.idx-row {
+  background: #ffffff; border: 1px solid #d2d6e2;
+  padding: 0.5rem 0.8rem; margin-bottom: 0.3rem;
+  font-size: 0.8rem; color: #16181d; display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+}
+.idx-row .rn { color: #8595b0; font-size: 0.7rem; }
+.idx-row.sorted { background: #4ab87d; border-color: #3ba06c; color: #08120c; font-weight: 600; }
+.idx-arrow-mid {
+  display: flex; align-items: center; font-size: 1.5rem; color: #3b62db;
+  padding-top: 1.5rem;
+}
+
+/* ══════════════════════════════════════════════
+   VISUALS — B+ TREE SVG WRAPPER
+══════════════════════════════════════════════ */
+.btree-container {
+  width: 100%; padding: 1rem;
+  background: #ffffff; border: 1px solid #c4d4ee;
+  border-radius: 10px;
+}
+.btree-container svg { width: 100%; height: auto; overflow: visible; }
+
+/* Tree node fills */
+.tn-root rect   { fill: #3b62db; stroke: #2747b0; stroke-width: 2; }
+.tn-root text   { fill: #ffffff; font-weight: 700; font-size: 11px; }
+.tn-branch rect { fill: #eef3fe; stroke: #3b62db; stroke-width: 1.5; }
+.tn-branch text { fill: #2747b0; font-weight: 600; font-size: 10px; }
+.tn-leaf rect   { fill: #e9f8f0; stroke: #4ab87d; stroke-width: 1.5; }
+.tn-leaf text   { fill: #1f6443; font-weight: 600; font-size: 10px; }
+.tn-active rect { fill: #f2a159; stroke: #d97e2e; stroke-width: 2.5; }
+.tn-active text { fill: #16181d; }
+.t-edge { stroke: #3b62db; stroke-width: 1.5; fill: none; }
+.t-link { stroke: #4ab87d; stroke-width: 1.5; stroke-dasharray: 4 3; fill: none; }
+.t-path { stroke: #f2a159; stroke-width: 3; fill: none; }
+
+/* ══════════════════════════════════════════════
+   SCAN VISUAL
+══════════════════════════════════════════════ */
+.scan-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem;
+}
+.scan-cell {
+  aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center;
+  justify-content: center; font-size: 0.65rem; font-weight: 600;
+  border: 1px solid #d2d6e2; color: #8595b0;
+  background: #ffffff; transition: all 0.3s;
+}
+.scan-cell.checked { background: #fdf0e3; border-color: #f2cba3; color: #b9692a; }
+.scan-cell.found   { background: #e9f8f0; border-color: #abdcc3; color: #2c7a52; font-size: 0.8rem; }
+
+/* ══════════════════════════════════════════════
+   TRAVERSAL STEPS
+══════════════════════════════════════════════ */
+.trav-steps { display: flex; flex-direction: column; gap: 0.55rem; width: 100%; }
+.trav-step {
+  display: flex; gap: 0.9rem; align-items: flex-start;
+  background: #ffffff; border: 1px solid #c4d4ee;
+  border-radius: 8px; padding: 0.65rem 0.9rem;
+  transition: all 0.3s;
+}
+.trav-step.active-step {
+  background: #fdf0e3; border-color: #f2cba3;
+}
+.trav-num {
+  width: 26px; height: 26px; border-radius: 50%; background: #3b62db;
+  color: #fff; font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.trav-text { font-size: 0.83rem; color: #33445f; line-height: 1.5; }
+.trav-text strong { color: #2747b0; }
+
+/* ══════════════════════════════════════════════
+   TRADEOFF + CHECKLIST VISUALS
+══════════════════════════════════════════════ */
+.trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; width: 100%; }
+.trade-card { border-radius: 8px; padding: 0.9rem 1rem; border: 1px solid; background: #ffffff; }
+.trade-card.pro { border-color: #abdcc3; background: #e9f8f0; }
+.trade-card.con { border-color: #f2cba3; background: #fdf0e3; }
+.trade-card h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+.trade-card.pro h4 { color: #2c7a52; }
+.trade-card.con h4 { color: #b9692a; }
+.trade-card ul { padding-left: 1.1rem; font-size: 0.8rem; color: #33445f; }
+.trade-card li { margin-bottom: 0.25rem; }
+
+.checklist { display: flex; flex-direction: column; gap: 0.45rem; width: 100%; }
+.check-item {
+  display: flex; gap: 0.7rem; align-items: flex-start;
+  background: #ffffff; border: 1px solid #c4d4ee;
+  border-radius: 8px; padding: 0.65rem 0.9rem; font-size: 0.82rem; color: #33445f;
+}
+.check-icon { flex-shrink: 0; margin-top: 0.05rem; }
+
+/* ══════════════════════════════════════════════
+   COMPOSITE INDEX VISUAL
+══════════════════════════════════════════════ */
+.comp-list { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; }
+.comp-row {
+  display: flex; border-radius: 5px; overflow: hidden;
+  border: 1px solid #d2d6e2; font-size: 0.78rem;
+  font-family: 'Fira Code','Cascadia Code',monospace;
+}
+.comp-a { background: #3b62db; color: #ffffff; padding: 0.4rem 0.75rem; font-weight: 600; }
+.comp-b { background: #ffffff; color: #16181d; padding: 0.4rem 0.75rem; flex: 1; }
+
+/* ══════════════════════════════════════════════
+   FULL-WIDTH INTERLUDE — solid blue band
+══════════════════════════════════════════════ */
+.interlude {
+  padding: 6rem 4rem; display: flex; align-items: center; justify-content: center;
+  background: #3b62db;
+}
+.interlude-inner { max-width: 700px; text-align: center; }
+.interlude-inner .int-label {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: #cdd8ff; font-weight: 600; margin-bottom: 1rem;
+}
+.interlude-inner .int-quote {
+  font-size: clamp(1.2rem,2.4vw,1.85rem); font-weight: 600; color: #ffffff;
+  line-height: 1.45; margin-bottom: 1rem;
+}
+.interlude-inner .int-sub { font-size: 0.92rem; color: rgba(255,255,255,0.85); line-height: 1.7; }
+
+/* ══════════════════════════════════════════════
+   SUMMARY / FINAL
+══════════════════════════════════════════════ */
+.final-section {
+  padding: 8rem 4rem;
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
+  border-top: 1px solid #3b62db;
+}
+.final-section h2 {
+  font-size: clamp(1.9rem,3.6vw,3rem); font-weight: 700; color: #16263f;
+  letter-spacing: -0.02em; margin-bottom: 3rem; text-align: center;
+}
+.final-section h2 span { color: #3b62db; }
+.takeaway-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+  gap: 1rem; max-width: 1200px; margin: 0 auto;
+}
+.tk-card {
+  background: #ffffff; border: 1px solid #c4d4ee;
+  border-radius: 10px; padding: 1.5rem 1.6rem;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.tk-card:hover { border-color: #3b62db; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(59,98,219,0.12); }
+.tk-num { font-size: 2.1rem; font-weight: 700; color: #c4d4ee; line-height:1; margin-bottom:0.7rem; }
+.tk-card p { color: #33445f; font-size: 0.9rem; line-height: 1.7; }
+.tk-card p strong { color: #2747b0; }
+
+/* ══════════════════════════════════════════════
+   SELECTIVITY VISUAL
+══════════════════════════════════════════════ */
+.sel-bars { width: 100%; display: flex; flex-direction: column; gap: 0.7rem; }
+.sel-row { display: flex; flex-direction: column; gap: 0.3rem; }
+.sel-label { font-size: 0.75rem; color: #5b6b86; display: flex; justify-content: space-between; }
+.sel-track { height: 10px; background: #d3e0f4; border: 1px solid #c4d4ee; border-radius: 999px; overflow: hidden; }
+.sel-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+.sel-fill.hi { background: #4ab87d; }
+.sel-fill.lo { background: #f2a159; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media(max-width:900px){
+  .sticky-scrolly { flex-direction: column; }
+  .sticky-left { position: relative; height: auto; min-height: 50vh; width: 100%; border-right: none; border-bottom: 1px solid #c4d4ee; }
+  .sticky-panel { position: relative; opacity: 1; transform: none; overflow-y: visible; }
+  .sticky-panel:not(.active){ display: none; }
+  .sticky-panel > div { max-width: none; }
+  .sticky-right { padding: 2rem 1.5rem; }
+  .chapter-intro { padding: 3rem 1.5rem 2rem; flex-direction: column; gap: 1rem; }
+  .chapter-intro .ch-num { font-size: 4rem; }
+  .rel-tables-row { flex-direction: column; }
+  .idx-compare { flex-direction: column; }
+  .trade-grid { grid-template-columns: 1fr; }
+  #side-nav { display: none; }
+  .interlude { padding: 3rem 1.5rem; }
+  .final-section { padding: 4rem 1.5rem; }
+}
+
+/* ══════════════════════════════════════════════
+   JOINS ADDITIONS — teal accent + video panels
+══════════════════════════════════════════════ */
+/* teal = sort-merge pointer / match accent (from video) */
+.bt { color: #2b7e8c; border-color: #a8d4db; background: #e6f4f6; }
+
+/* Video animation frame inside sticky-left panels.
+   The animations are transparent webms, so they sit directly on the
+   light-blue page with no surrounding chrome. */
+.anim-frame {
+  width: 100%;
+  background: transparent;
+}
+.anim-frame video { width: 100%; height: auto; display: block; background: transparent; }
+.anim-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em;
+  color: #2747b0; font-weight: 700; margin-bottom: 0.7rem;
+}
+.anim-cap {
+  font-size: 0.74rem; color: #5b6b86; line-height: 1.5;
+  background: #eef3fe; border: 1px solid #b6c9ee; border-radius: 8px;
+  padding: 0.55rem 0.75rem; margin-top: 0.7rem;
+}
+
+/* Logical-join set diagrams (Venn-style chips) */
+.join-grid { width: 100%; display: flex; flex-direction: column; gap: 0.7rem; }
+.join-card {
+  background: #ffffff; border: 1px solid #c4d4ee; border-radius: 10px;
+  padding: 0.85rem 1rem; display: flex; gap: 0.9rem; align-items: center;
+}
+.join-card .venn { flex-shrink: 0; }
+.join-card .jc-text { font-size: 0.82rem; color: #33445f; line-height: 1.5; }
+.join-card .jc-text strong { color: #2747b0; display:block; font-size:0.86rem; margin-bottom:0.15rem; }
+.join-card .jc-text .formula { color: #2b7e8c; font-weight: 600; }
+
+/* Complexity comparison bars */
+.cx-row { display:flex; flex-direction:column; gap:0.3rem; margin-bottom:0.7rem; }
+.cx-head { display:flex; justify-content:space-between; font-size:0.78rem; color:#33445f; }
+.cx-head strong { color:#16263f; }
+.cx-track { height:10px; background:#d3e0f4; border:1px solid #c4d4ee; border-radius:999px; overflow:hidden; }
+.cx-fill { height:100%; border-radius:999px; }
+.cx-fill.bad { background:#f2a159; }
+.cx-fill.mid { background:#2b7e8c; }
+.cx-fill.good{ background:#4ab87d; }
+
+</style><!-- ═══════════ CHROME ═══════════ -->
+<div id="progress-bar"></div>
+<div id="side-nav"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════ -->
+<section class="hero" id="sec-hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">● Relational Query Operations</div>
+    <h1>SQL<br><em>Joins</em></h1>
+    <p class="hero-sub">What is a join? How do logical join types differ from the physical strategies the optimizer actually runs — nested loops, sort-merge, and hash?</p>
+    <div class="hero-pills">
+      <span class="hero-pill hero-pill-1">Join Keys</span>
+      <span class="hero-pill hero-pill-2">Logical Joins</span>
+      <span class="hero-pill hero-pill-3">Physical Strategies</span>
+      <span class="hero-pill hero-pill-4">Optimizer Choices</span>
+    </div>
+    <div class="hero-scroll-cue">Scroll to explore<span>↓</span></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     CHAPTER 1 INTRO
+════════════════════════════════════════════════════ -->
+<div class="chapter-intro" id="sec-ch1">
+  <div class="ch-num">01</div>
+  <div class="ch-text">
+    <div class="ch-tag">Foundations</div>
+    <h2>What are joins &amp; join keys?</h2>
+    <p>Joins are key operations in relational database querying that let practitioners extract information from multiple tables simultaneously. Most joins are executed using a key shared by both tables — keys whose construction matches so they can correctly identify matches between tables.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 1 — Join basics, keys, logical join types
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-1" data-chapter="1">
+
+  <!-- STICKY LEFT -->
+  <div class="sticky-left" id="left-1">
+
+    <!-- Panel A: two tables sharing a key -->
+    <div class="sticky-panel active" id="panel-1-0">
+      <div>
+        <div class="anim-label">Two tables joined on a shared key</div>
+        <div class="rel-wrap">
+          <div class="rel-tables-row">
+            <div class="rel-box">
+              <div class="rel-head ind">departments</div>
+              <div class="rel-field"><span class="pk-badge">KEY</span><span class="pk">dept</span></div>
+              <div class="rel-field">dname</div>
+            </div>
+            <div class="rel-connector">
+              <span>dept</span>
+              <span style="font-size:1.4rem;">↔</span>
+              <span>links</span>
+            </div>
+            <div class="rel-box">
+              <div class="rel-head ind">buildings</div>
+              <div class="rel-field"><span class="pk-badge">KEY</span><span class="pk">dept</span></div>
+              <div class="rel-field">building</div>
+            </div>
+          </div>
+          <table class="vis-table" style="font-size:0.8rem;">
+            <thead><tr><th>dept</th><th>dname</th><th>building</th></tr></thead>
+            <tbody>
+              <tr><td class="pk">2</td><td>Art</td><td>STAR</td></tr>
+              <tr><td class="pk">5</td><td>Math</td><td>Estella</td></tr>
+            </tbody>
+          </table>
+          <div class="anim-cap">The <strong>dept</strong> column exists in both tables. A join matches rows where the two keys are equal, combining their columns into one result.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel B: logical join types set diagrams -->
+    <div class="sticky-panel" id="panel-1-1">
+      <div>
+        <div class="anim-label">Logical join types · A (m rows), B (n rows)</div>
+        <div class="join-grid">
+          <div class="join-card">
+            <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="20" r="16" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
+              <circle cx="36" cy="20" r="16" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
+              <path d="M29 7 A16 16 0 0 1 29 33 A16 16 0 0 1 29 7" fill="#4ab87d"/>
+            </svg>
+            <div class="jc-text"><strong>Inner Join</strong>Only rows where A's key matches B's. <span class="formula">A ∩ B</span></div>
+          </div>
+          <div class="join-card">
+            <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="20" r="16" fill="#4ab87d" stroke="#3b62db" stroke-width="1.5"/>
+              <circle cx="36" cy="20" r="16" fill="#4ab87d" stroke="#3b62db" stroke-width="1.5"/>
+            </svg>
+            <div class="jc-text"><strong>Full Outer Join</strong>Matched and unmatched rows from both, nulls for misses. <span class="formula">A ∪ B · returns m + n</span></div>
+          </div>
+          <div class="join-card">
+            <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="20" r="16" fill="#4ab87d" stroke="#3b62db" stroke-width="1.5"/>
+              <circle cx="36" cy="20" r="16" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
+              <path d="M29 7 A16 16 0 0 1 29 33 A16 16 0 0 1 29 7" fill="#4ab87d"/>
+            </svg>
+            <div class="jc-text"><strong>Left / Right Outer Join</strong>All rows from one side, matches from the other. <span class="formula">A ∪ (A ∩ B) · at most m + n</span></div>
+          </div>
+          <div class="join-card">
+            <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="6" width="20" height="28" rx="3" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
+              <text x="16" y="24" text-anchor="middle" font-size="11" fill="#2747b0" font-weight="700">×</text>
+              <rect x="32" y="6" width="20" height="28" rx="3" fill="#fdf0e3" stroke="#f2a159" stroke-width="1.5"/>
+            </svg>
+            <div class="jc-text"><strong>Cross Join</strong>Every combination — the Cartesian product. <span class="formula">A × B · returns m × n</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <!-- SCROLL STEPS RIGHT -->
+  <div class="sticky-right">
+
+    <div class="step" data-panel="1-0">
+      <div class="step-tag">1.1 · Join Basics</div>
+      <h3>Joins combine rows across tables</h3>
+      <p>A <strong style="color:#2747b0;">join</strong> lets you query multiple tables at once, pulling related information into a single result set. Rather than duplicating data, relational databases keep it spread across tables and stitch it together at query time.</p>
+      <p>Joins are most commonly executed using a <strong style="color:#2747b0;">key</strong> from both involved tables. These keys are often identical in their construction so that they can correctly identify matches between tables.</p>
+      <p>To learn more about keys and their structure — primary keys, foreign keys, and the indexes that make them fast — see the indexes and B-trees page.</p>
+      <div class="badge-row">
+        <span class="badge bi">Multiple tables</span>
+        <span class="badge bs">Shared key</span>
+        <span class="badge bg">No duplication</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="1-1">
+      <div class="step-tag">1.2 · Logical Join Types</div>
+      <h3>The four logical joins you can write</h3>
+      <p>Given two tables, <strong style="color:#2747b0;">A</strong> (m rows) and <strong style="color:#2747b0;">B</strong> (n rows), the logical join type defines <em style="color:#2747b0;">what</em> the result should contain:</p>
+      <p>An <strong style="color:#2747b0;">inner join</strong> returns only rows where A's join key matches B's — analogous to A ∩ B. A <strong style="color:#2747b0;">full outer join</strong> returns matching and unmatched rows from both tables, denoting missing matches as nulls — analogous to A ∪ B, returning exactly m + n rows.</p>
+      <p>A <strong style="color:#2747b0;">left or right outer join</strong> is like a full outer join but keeps unmatched rows from only one side — analogous to A ∪ (A ∩ B), returning at most m + n rows. A <strong style="color:#2747b0;">cross join</strong> takes the full Cartesian product, every possible combination of rows — analogous to A × B, returning m × n rows.</p>
+      <div class="badge-row">
+        <span class="badge bg">Inner · A ∩ B</span>
+        <span class="badge bs">Full outer · A ∪ B</span>
+        <span class="badge bi">Left / Right</span>
+        <span class="badge ba">Cross · A × B</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-1 -->
+
+<!-- ═══════════ INTERLUDE 1 ═══════════ -->
+<div class="interlude">
+  <div class="interlude-inner">
+    <div class="int-label">Two layers, one query</div>
+    <div class="int-quote">The logical join says what you want. The physical join decides how the engine gets it.</div>
+    <div class="int-sub">Understanding both layers helps you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks. The same logical join can run with radically different speed depending on the physical strategy the optimizer picks.</div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════
+     CHAPTER 2 INTRO — Logical vs Physical
+════════════════════════════════════════════════════ -->
+<div class="chapter-intro" id="sec-ch2">
+  <div class="ch-num">02</div>
+  <div class="ch-text">
+    <div class="ch-tag">Under the Hood</div>
+    <h2>Logical vs. physical joins</h2>
+    <p>Independently of which logical join you write, the query optimizer decides how to execute it. Queries pass through logical query plans that must be physically implemented, and several physical join types may be selected depending on your engine. The three main strategies are nested loops, sort-merge, and hash.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 2 — Logical→Physical plan + strategy overview
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-2" data-chapter="2">
+
+  <div class="sticky-left" id="left-2">
+
+    <!-- Panel: plan pipeline -->
+    <div class="sticky-panel active" id="panel-2-0">
+      <div>
+        <div class="anim-label">From SQL text to executed join</div>
+        <div style="display:flex;flex-direction:column;align-items:stretch;gap:0.5rem;">
+          <div style="background:#11244a;border:1px solid #1d3a6e;border-radius:8px;padding:0.7rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#d8e3f7;">
+            <span style="color:#8fb0ff;font-weight:600;">SELECT</span> * <span style="color:#8fb0ff;font-weight:600;">FROM</span> <span style="color:#fff;">A</span> <span style="color:#8fb0ff;font-weight:600;">JOIN</span> <span style="color:#fff;">B</span><br>&nbsp;&nbsp;<span style="color:#8fb0ff;font-weight:600;">ON</span> A.dept = B.dept;
+          </div>
+          <div style="text-align:center;color:#2747b0;font-size:0.85rem;">↓ logical join (what)</div>
+          <div style="background:#eef3fe;border:1px solid #b6c9ee;border-radius:8px;padding:0.6rem 0.8rem;font-size:0.78rem;color:#33445f;text-align:center;">Optimizer builds &amp; compares query plans</div>
+          <div style="text-align:center;color:#2747b0;font-size:0.85rem;">↓ physical join (how)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.45rem;">
+            <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:8px;padding:0.55rem;text-align:center;font-size:0.72rem;color:#b9692a;font-weight:700;">Nested<br>Loop</div>
+            <div style="background:#e6f4f6;border:1px solid #a8d4db;border-radius:8px;padding:0.55rem;text-align:center;font-size:0.72rem;color:#2b7e8c;font-weight:700;">Sort-<br>Merge</div>
+            <div style="background:#e9f8f0;border:1px solid #abdcc3;border-radius:8px;padding:0.55rem;text-align:center;font-size:0.72rem;color:#2c7a52;font-weight:700;">Hash</div>
+          </div>
+          <div class="anim-cap">PostgreSQL allows the most granular control over physical join execution settings. Knowing which join the optimizer uses is essential to improving a query's efficiency.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <div class="sticky-right">
+
+    <div class="step" data-panel="2-0">
+      <div class="step-tag">2.1 · Two Levels of a Join</div>
+      <h3>What you write vs. how it runs</h3>
+      <p>When executing a SQL query, joins operate on two distinct levels: the <strong style="color:#2747b0;">logical join</strong> (what you define in SQL syntax) and the <strong style="color:#2747b0;">physical join</strong> (how the query optimizer actually executes it behind the scenes).</p>
+      <p>When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented. Several physical join types may be selected during this implementation depending on your query engine.</p>
+      <p><strong style="color:#2747b0;">PostgreSQL</strong> allows for the most granular control over physical join execution settings. The three main physical join strategies are <strong style="color:#2747b0;">nested loops</strong>, <strong style="color:#2747b0;">merge</strong>, and <strong style="color:#2747b0;">hash</strong> — and understanding which one the optimizer uses is essential to improving the query's efficiency.</p>
+      <div class="badge-row">
+        <span class="badge bi">Logical = what</span>
+        <span class="badge bs">Physical = how</span>
+        <span class="badge bp">Query plans</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-2 -->
+
+<!-- ═══════════════════════════════════════════════════
+     CHAPTER 3 INTRO — Physical Joins
+════════════════════════════════════════════════════ -->
+<div class="chapter-intro" id="sec-ch3">
+  <div class="ch-num">03</div>
+  <div class="ch-text">
+    <div class="ch-tag">Physical Strategies</div>
+    <h2>The three physical joins</h2>
+    <p>Nested loops, sort-merge, and hash. Each has a distinct algorithm, cost profile, and sweet spot. The animations below walk through exactly how each one matches rows and assembles the result.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 3 — NESTED LOOP JOIN (+ unique-key variant)
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-3" data-chapter="3">
+
+  <div class="sticky-left" id="left-3">
+
+    <!-- Panel: nested loop animation -->
+    <div class="sticky-panel active" id="panel-3-0">
+      <div>
+        <div class="anim-label">Nested loop · scan inner for each outer row</div>
+        <div class="anim-frame">
+          <video src="NestedLoopJoin.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="anim-cap">The outer row (green) stays fixed while the engine scans the entire inner table for matching keys, appending each match to the result.</div>
+      </div>
+    </div>
+
+    <!-- Panel: unique-key nested loop animation -->
+    <div class="sticky-panel" id="panel-3-1">
+      <div>
+        <div class="anim-label">Nested loop on a unique key · search stops early</div>
+        <div class="anim-frame">
+          <video src="UniqueKeyJoin.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="anim-cap">When the inner key is unique (a primary key), the scan ends as soon as the single match is found — no need to scan the rest of the inner table.</div>
+      </div>
+    </div>
+
+    <!-- Panel: complexity callout -->
+    <div class="sticky-panel" id="panel-3-2">
+      <div>
+        <div class="anim-label">Why nested loops can be slow</div>
+        <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
+          <div style="font-size:0.72rem;color:#b9692a;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Worst case · unsorted inputs</div>
+          <div style="font-size:2.4rem;font-weight:900;color:#b9692a;line-height:1.1;">O(m × n)</div>
+          <div style="font-size:0.8rem;color:#5b6b86;">every outer row scans the whole inner table</div>
+        </div>
+        <div class="checklist">
+          <div class="check-item"><span class="check-icon" style="color:#2c7a52;">✓</span><div><strong style="color:#2747b0;">Index or sort the inner table</strong> so the scan ends early once all matching keys are found.</div></div>
+          <div class="check-item"><span class="check-icon" style="color:#2c7a52;">✓</span><div><strong style="color:#2747b0;">Join on a primary key</strong> and the search ends after one match, since primary keys are unique by definition.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <div class="sticky-right">
+
+    <div class="step" data-panel="3-0">
+      <div class="step-tag">3.1 · Nested Loop Join</div>
+      <h3>The simplest strategy: scan for every row</h3>
+      <p>The <strong style="color:#2747b0;">nested loop join</strong> is the simplest physical strategy to understand. For simplicity we focus on two-table inner joins, and assume neither table is sorted.</p>
+      <p>The smaller table is designated the <strong style="color:#2747b0;">outer</strong> table, the larger the <strong style="color:#2747b0;">inner</strong>. Staying at a fixed row in the outer table, the engine performs a sequential scan on the inner table until it finds a match, records that match, moves to the next outer row, scans the entire inner table again, and so on.</p>
+      <div class="badge-row">
+        <span class="badge bi">Outer × inner</span>
+        <span class="badge bs">Sequential scan</span>
+        <span class="badge bp">Simplest to grasp</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="3-1">
+      <div class="step-tag">3.2 · Unique-Key Shortcut</div>
+      <h3>A unique inner key ends the search early</h3>
+      <p>You can improve performance dramatically by <strong style="color:#2747b0;">indexing or sorting the inner table</strong>, so the engine no longer has to scan the entire inner table on each pass — the search can end early once all instances of the join key are found.</p>
+      <p>Additionally, if you're <strong style="color:#2747b0;">joining on primary keys</strong>, the search ends once a single matching instance is found, since primary keys must be unique by definition. The animation shows the scan halting at the first (and only) match.</p>
+      <div class="badge-row">
+        <span class="badge bg">Early stop</span>
+        <span class="badge bi">Unique key</span>
+        <span class="badge bs">Indexed inner</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="3-2">
+      <div class="step-tag">3.3 · Cost Profile</div>
+      <h3>Catastrophic on large unsorted inputs</h3>
+      <p>This is why nested loop joins can cause <strong style="color:#b9692a;">catastrophically long runtimes</strong> with unsorted input tables. If table A has m rows and table B has n rows, the worst-case time complexity is <strong style="color:#2747b0;">O(m × n)</strong>.</p>
+      <p>That said, nested loops require the least overhead, so they may <em style="color:#2747b0;">outperform</em> the other strategies on small datasets or when a good index exists on the inner table — exactly the cases shown in the two animations above.</p>
+      <div class="badge-row">
+        <span class="badge br">O(m × n) worst case</span>
+        <span class="badge bg">Great when small</span>
+        <span class="badge bs">Low overhead</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-3 -->
+<!-- ═══════════ INTERLUDE 2 ═══════════ -->
+<div class="interlude">
+  <div class="interlude-inner">
+    <div class="int-label">From quadratic to linear</div>
+    <div class="int-quote">Nested loops can cost m × n. Sort-merge and hash read each table about once — cost proportional to m + n.</div>
+    <div class="int-sub">The next two strategies trade a little setup work — sorting, or building a hash table — for a dramatically better cost profile on large inputs.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 4 — SORT-MERGE JOIN
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-4" data-chapter="3">
+
+  <div class="sticky-left" id="left-4">
+
+    <!-- Panel: sort phase -->
+    <div class="sticky-panel active" id="panel-4-0">
+      <div>
+        <div class="anim-label">Sort-merge · phase 1: sort each input</div>
+        <div style="display:flex;gap:0.8rem;">
+          <table class="vis-table" style="font-size:0.78rem;flex:1;">
+            <thead><tr><th>dept</th><th>dname</th></tr></thead>
+            <tbody>
+              <tr><td class="pk">2</td><td>Art</td></tr>
+              <tr><td class="pk">5</td><td>Math</td></tr>
+              <tr><td class="pk">7</td><td>Music</td></tr>
+            </tbody>
+          </table>
+          <table class="vis-table" style="font-size:0.78rem;flex:1;">
+            <thead><tr><th>dept</th><th>building</th></tr></thead>
+            <tbody>
+              <tr><td class="pk">2</td><td>STAR</td></tr>
+              <tr><td class="pk">5</td><td>Estella</td></tr>
+              <tr><td class="pk">7</td><td>Thatcher</td></tr>
+              <tr><td class="pk">9</td><td>Seaver</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="anim-cap">Each input is split into memory-sized runs, each run sorted individually (by index or sort algorithm), then written back — both inputs sorted on the join key.</div>
+      </div>
+    </div>
+
+    <!-- Panel: merge phase animation -->
+    <div class="sticky-panel" id="panel-4-1">
+      <div>
+        <div class="anim-label">Sort-merge · phase 2: merge with two pointers</div>
+        <div class="anim-frame">
+          <video src="SortMergeJoin.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="anim-cap">A pointer walks each sorted table in the same direction. On a match (teal) the row joins the result; otherwise the pointer at the smaller value advances.</div>
+      </div>
+    </div>
+
+    <!-- Panel: cost profile -->
+    <div class="sticky-panel" id="panel-4-2">
+      <div>
+        <div class="anim-label">Cost: each table read at most once</div>
+        <div style="background:#e6f4f6;border:1px solid #a8d4db;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
+          <div style="font-size:0.72rem;color:#2b7e8c;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Merge cost (already sorted)</div>
+          <div style="font-size:2.4rem;font-weight:900;color:#2b7e8c;line-height:1.1;">O(m + n)</div>
+          <div style="font-size:0.8rem;color:#5b6b86;">proportional to the sum, not the product</div>
+        </div>
+        <div class="checklist">
+          <div class="check-item"><span class="check-icon" style="color:#2b7e8c;">⚑</span><div>Requires at least one <strong style="color:#2747b0;">equijoin predicate</strong> — equality on the key must be a join condition.</div></div>
+          <div class="check-item"><span class="check-icon" style="color:#b9692a;">⚠</span><div>The <strong style="color:#b9692a;">sort requirement</strong> can dominate cost if the data isn't already sorted.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <div class="sticky-right">
+
+    <div class="step" data-panel="4-0">
+      <div class="step-tag">3.4 · Merge (Sort-Merge) Join</div>
+      <h3>Most efficient — if the data is pre-sorted</h3>
+      <p>A <strong style="color:#2747b0;">merge join</strong> is one of the most efficient joins, assuming the two datasets are pre-sorted. That requirement is also its catch: sorting first can drastically impact overall computation.</p>
+      <p>Merge joins require at least one <strong style="color:#2747b0;">equijoin predicate</strong> — equality between key values must be at least one condition of the join. In the <strong style="color:#2747b0;">sort phase</strong>, the dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms — indexes are often faster.</p>
+      <div class="badge-row">
+        <span class="badge bt">Equijoin required</span>
+        <span class="badge bi">Sort phase</span>
+        <span class="badge bp">Memory-sized runs</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="4-1">
+      <div class="step-tag">3.5 · The Merge Phase</div>
+      <h3>Two pointers sweep the sorted runs</h3>
+      <p>The sorted runs are combined into a final result. The engine maintains a <strong style="color:#2747b0;">pointer on each sorted dataset</strong> and traverses both in the same direction simultaneously.</p>
+      <p>As matches are found, they are stored. Once there isn't a match, the pointer at the <strong style="color:#2747b0;">smallest value advances</strong>. This continues until all rows have been processed — exactly the sweep shown in the animation.</p>
+      <div class="badge-row">
+        <span class="badge bt">Twin pointers</span>
+        <span class="badge bg">Advance smaller side</span>
+        <span class="badge bs">Single pass</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="4-2">
+      <div class="step-tag">3.6 · Cost Profile</div>
+      <h3>Cost scales with the sum, not the product</h3>
+      <p>A key advantage over nested loops is the cost profile: unlike the nested loop join, where total cost may be proportional to the <em>product</em> of the row counts, with a merge join each table is read <strong style="color:#2747b0;">at most once</strong> and total cost is proportional to the <strong style="color:#2747b0;">sum</strong> of the input row counts.</p>
+      <p>It's worth noting that performance may vary with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations.</p>
+      <div class="badge-row">
+        <span class="badge bg">O(m + n)</span>
+        <span class="badge bt">Read once each</span>
+        <span class="badge bp">Many-to-many nuance</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-4 -->
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 5 — HASH JOIN
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-5" data-chapter="3">
+
+  <div class="sticky-left" id="left-5">
+
+    <!-- Panel: what is a hash table -->
+    <div class="sticky-panel active" id="panel-5-0">
+      <div>
+        <div class="anim-label">A hash table: keys → buckets</div>
+        <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.8rem;">
+          <div style="background:#3b62db;color:#fff;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">key</div>
+          <span style="color:#2747b0;font-size:1.2rem;">→ hash() →</span>
+          <div style="background:#fdf0e3;border:1px solid #f2cba3;color:#b9692a;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">bucket #</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">5&nbsp;&nbsp;Math</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">7&nbsp;&nbsp;Music</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">2&nbsp;&nbsp;Art</span></div>
+        </div>
+        <div class="anim-cap">A hash table stores key-value pairs in a fixed-size array. A key "hashes" to a specific bucket, so lookups need only hash the key — no scanning.</div>
+      </div>
+    </div>
+
+    <!-- Panel: hash join animation (build + probe) -->
+    <div class="sticky-panel" id="panel-5-1">
+      <div>
+        <div class="anim-label">Hash join · build, then probe</div>
+        <div class="anim-frame">
+          <video src="HashJoin.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="anim-cap">Build (orange): hash each row of the smaller table into a bucket. Probe (teal): hash each row of the larger table and check its bucket for a match.</div>
+      </div>
+    </div>
+
+    <!-- Panel: collisions + cost -->
+    <div class="sticky-panel" id="panel-5-2">
+      <div>
+        <div class="anim-label">Collisions &amp; cost</div>
+        <div style="background:#e9f8f0;border:1px solid #abdcc3;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
+          <div style="font-size:0.72rem;color:#2c7a52;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Linear in the inputs</div>
+          <div style="font-size:2.4rem;font-weight:900;color:#2c7a52;line-height:1.1;">O(N + M)</div>
+          <div style="font-size:0.8rem;color:#5b6b86;">no pre-sorting required</div>
+        </div>
+        <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:10px;padding:0.75rem 0.9rem;">
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#b9692a;margin-bottom:0.3rem;">Hash collision</div>
+          <div style="font-size:0.78rem;color:#33445f;line-height:1.5;">Two distinct keys land in the same bucket. The system checks each value in the bucket for a true match. A well-distributed hash function keeps collisions minimal.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <div class="sticky-right">
+
+    <div class="step" data-panel="5-0">
+      <div class="step-tag">3.7 · Hash Join</div>
+      <h3>First, what is a hash table?</h3>
+      <p>To understand the hash join, it helps to know what a <strong style="color:#2747b0;">hash table</strong> is: a data structure that stores information in key-value pairs for efficient lookups. It's an array of predetermined size, where a small representative piece of information — the <strong style="color:#2747b0;">key</strong> — hashes (corresponds) to a specific index in the array.</p>
+      <p>To find a value, you only need to hash the key to extract the relevant information. A hash join relies on this and operates in two distinct phases: the <strong style="color:#2747b0;">build</strong> phase and the <strong style="color:#2747b0;">probe</strong> phase.</p>
+      <div class="badge-row">
+        <span class="badge bi">Key-value pairs</span>
+        <span class="badge bg">Buckets</span>
+        <span class="badge bs">Fast lookup</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="5-1">
+      <div class="step-tag">3.8 · Build &amp; Probe</div>
+      <h3>Build a table, then probe it</h3>
+      <p>In the <strong style="color:#2747b0;">build phase</strong>, the typically smaller table (the build input) is scanned and a hash table is constructed using the join-key values. Each entry stores a tuple along with its hash value, distributing data evenly across buckets.</p>
+      <p>In the <strong style="color:#2747b0;">probe phase</strong>, the larger table (the probe input) is scanned. Each tuple's join key is hashed with the same function, and that hash points to the bucket to check for matches. If a match is found, tuples from both inputs are combined — as the animation shows.</p>
+      <div class="badge-row">
+        <span class="badge ba">Build · smaller table</span>
+        <span class="badge bt">Probe · larger table</span>
+        <span class="badge bg">Same hash function</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="5-2">
+      <div class="step-tag">3.9 · Collisions &amp; Cost</div>
+      <h3>Linear cost, watch for collisions</h3>
+      <p>A <strong style="color:#2747b0;">hash collision</strong> occurs when two or more distinct join-key values hash to the same bucket. The system must then check each value in the bucket to determine a true match. Depending on collision count and bucket size, this can slow the join — but a well-distributed hash function keeps collisions minimal.</p>
+      <p>Hash joins are commonly used for <strong style="color:#2747b0;">larger joins on unsorted data</strong>, as the algorithm's time complexity is linear at O(N + M) and it does not require pre-sorted data the way a merge join does.</p>
+      <div class="badge-row">
+        <span class="badge bg">O(N + M)</span>
+        <span class="badge ba">Collisions</span>
+        <span class="badge bs">No sorting needed</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-5 -->
+<!-- ═══════════════════════════════════════════════════
+     CHAPTER 4 INTRO — Optimizer choice
+════════════════════════════════════════════════════ -->
+<div class="chapter-intro" id="sec-ch4">
+  <div class="ch-num">04</div>
+  <div class="ch-text">
+    <div class="ch-tag">Decisions</div>
+    <h2>When does the optimizer choose each?</h2>
+    <p>Knowing the three strategies is only useful if you know when each one wins. The optimizer weighs data size, sortedness, the join predicate, and available indexes to pick the cheapest plan.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY SECTION 6 — Optimizer decision
+════════════════════════════════════════════════════ -->
+<div class="sticky-scrolly" id="scrolly-6" data-chapter="4">
+
+  <div class="sticky-left" id="left-6">
+
+    <!-- Panel: three-way comparison -->
+    <div class="sticky-panel active" id="panel-6-0">
+      <div>
+        <div class="anim-label">Choosing a physical join</div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:10px;padding:0.75rem 0.9rem;">
+            <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#b9692a;margin-bottom:0.35rem;">Nested Loop</div>
+            <div style="font-size:0.76rem;color:#33445f;line-height:1.5;">Small datasets, or a good index on the inner table. Least overhead.</div>
+          </div>
+          <div style="background:#e6f4f6;border:1px solid #a8d4db;border-radius:10px;padding:0.75rem 0.9rem;">
+            <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#2b7e8c;margin-bottom:0.35rem;">Sort-Merge</div>
+            <div style="font-size:0.76rem;color:#33445f;line-height:1.5;">Both inputs already sorted on the key, or range-based joins. Minimal memory.</div>
+          </div>
+          <div style="background:#e9f8f0;border:1px solid #abdcc3;border-radius:10px;padding:0.75rem 0.9rem;">
+            <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#2c7a52;margin-bottom:0.35rem;">Hash</div>
+            <div style="font-size:0.76rem;color:#33445f;line-height:1.5;">Large, unsorted data with equality joins, especially if one table fits in memory.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: complexity comparison bars -->
+    <div class="sticky-panel" id="panel-6-1">
+      <div>
+        <div class="anim-label">Cost at a glance</div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Nested loop (unsorted)</span><strong>O(m × n)</strong></div>
+          <div class="cx-track"><div class="cx-fill bad" style="width:100%"></div></div>
+        </div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Sort-merge (pre-sorted)</span><strong>O(m + n)</strong></div>
+          <div class="cx-track"><div class="cx-fill mid" style="width:34%"></div></div>
+        </div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Hash (unsorted, equality)</span><strong>O(N + M)</strong></div>
+          <div class="cx-track"><div class="cx-fill good" style="width:30%"></div></div>
+        </div>
+        <div class="anim-cap">In theory both hash and merge perform well on large tables. The deciding factors are sortedness, the join predicate, memory, and whether a useful index exists.</div>
+      </div>
+    </div>
+
+  </div><!-- /sticky-left -->
+
+  <div class="sticky-right">
+
+    <div class="step" data-panel="6-0">
+      <div class="step-tag">4.1 · Picking a Strategy</div>
+      <h3>Each strategy has a sweet spot</h3>
+      <p>In theory, both hash and merge joins perform well with large tables. A query engine typically uses a <strong style="color:#2747b0;">hash join</strong> for large, unsorted datasets and equality joins — especially if one table fits in memory.</p>
+      <p>A <strong style="color:#2747b0;">merge join</strong> is often used when both tables are pre-sorted on the join key, or for range-based joins, since it minimizes memory usage and avoids the extra I/O of building a hash table.</p>
+      <p><strong style="color:#2747b0;">Nested loops</strong>, while the least scalable, may outperform both on small datasets or when a good index is available on the inner table, since they require the least overhead.</p>
+      <div class="badge-row">
+        <span class="badge bg">Hash · big &amp; unsorted</span>
+        <span class="badge bt">Merge · pre-sorted / range</span>
+        <span class="badge ba">Nested · small / indexed</span>
+      </div>
+    </div>
+
+    <div class="step" data-panel="6-1">
+      <div class="step-tag">4.2 · Cost Comparison</div>
+      <h3>Sum beats product — when you can get it</h3>
+      <p>The headline difference is complexity. Nested loops can degrade to <strong style="color:#b9692a;">O(m × n)</strong> on unsorted inputs, while sort-merge and hash both scale with the <strong style="color:#2747b0;">sum</strong> of the inputs once their setup is paid for.</p>
+      <p>But complexity isn't the whole story: merge pays a sort cost, hash pays to build a table and risks collisions, and nested loops carry almost no overhead. The optimizer weighs all of this against your actual data and indexes to choose the cheapest plan.</p>
+      <div class="badge-row">
+        <span class="badge br">Nested O(m × n)</span>
+        <span class="badge bt">Merge O(m + n)</span>
+        <span class="badge bg">Hash O(N + M)</span>
+      </div>
+    </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-6 -->
+
+<!-- ═══════════════════════════════════════════════════
+     FINAL SUMMARY
+════════════════════════════════════════════════════ -->
+<section class="final-section" id="sec-summary">
+  <h2>Key <span>Takeaways</span></h2>
+  <div class="takeaway-grid">
+    <div class="tk-card">
+      <div class="tk-num">01</div>
+      <p><strong>Joins</strong> combine rows from multiple tables, most often by matching a <strong>key</strong> shared by both. Matching keys are usually identical in construction so they can correctly identify matches.</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">02</div>
+      <p><strong>Logical join types</strong> define what the result holds: inner (A ∩ B), full outer (A ∪ B, m + n rows), left/right outer (at most m + n), and cross (A × B, m × n rows).</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">03</div>
+      <p><strong>Logical vs. physical</strong>: whatever logical join you write, the optimizer chooses how to run it — nested loop, sort-merge, or hash — by building and comparing query plans.</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">04</div>
+      <p><strong>Nested loop join</strong> scans the inner table for every outer row — O(m × n) on unsorted data. Indexing or sorting the inner table, or joining on a unique primary key, lets the search stop early.</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">05</div>
+      <p><strong>Sort-merge join</strong> sorts both inputs, then sweeps them with twin pointers, advancing the smaller side. Each table is read at most once, so cost is proportional to m + n. Needs an equijoin predicate.</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">06</div>
+      <p><strong>Hash join</strong> builds a hash table from the smaller input, then probes it with the larger one. Linear O(N + M), no sorting needed; watch for collisions, minimized by a good hash function.</p>
+    </div>
+    <div class="tk-card">
+      <div class="tk-num">07</div>
+      <p><strong>Optimizer choice</strong>: hash for large unsorted equality joins, merge for pre-sorted or range joins, nested loops for small datasets or a well-indexed inner table.</p>
+    </div>
+  </div>
+</section>
+
+<script src="https://unpkg.com/scrollama@3.2.0/build/scrollama.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ── PROGRESS BAR ── */
+const bar = document.getElementById('progress-bar');
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, t = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (t > 0 ? s/t*100 : 0) + '%';
+}, {passive:true});
+
+/* ── SIDE NAV ── */
+const navSections = [
+  {id:'sec-hero',  label:'Hero'},
+  {id:'sec-ch1',   label:'Ch 1: Joins & Keys'},
+  {id:'scrolly-1', label:'Basics · Logical Types'},
+  {id:'sec-ch2',   label:'Ch 2: Logical vs Physical'},
+  {id:'scrolly-2', label:'Query Plans'},
+  {id:'sec-ch3',   label:'Ch 3: Physical Joins'},
+  {id:'scrolly-3', label:'Nested Loop'},
+  {id:'scrolly-4', label:'Sort-Merge'},
+  {id:'scrolly-5', label:'Hash'},
+  {id:'sec-ch4',   label:'Ch 4: Optimizer'},
+  {id:'scrolly-6', label:'Choosing a Strategy'},
+  {id:'sec-summary', label:'Summary'},
+];
+const nav = document.getElementById('side-nav');
+navSections.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'nav-dot'; d.dataset.id = s.id;
+  d.innerHTML = `<span class="nav-tip">${s.label}</span>`;
+  d.addEventListener('click', () => {
+    const el = document.getElementById(s.id);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  nav.appendChild(d);
+});
+function updateNav(){
+  navSections.forEach(s => {
+    const el = document.getElementById(s.id), d = nav.querySelector(`[data-id="${s.id}"]`);
+    if(!el||!d) return;
+    const r = el.getBoundingClientRect();
+    d.classList.toggle('active', r.top < window.innerHeight*0.55 && r.bottom > 0);
+  });
+}
+window.addEventListener('scroll', updateNav, {passive:true});
+
+/* ── PANEL SWITCHER ── */
+function showPanel(panelId){
+  const panel = document.getElementById('panel-' + panelId);
+  if(!panel) return;
+  const container = panel.closest('.sticky-left');
+  if(!container) return;
+  container.querySelectorAll('.sticky-panel').forEach(p => p.classList.remove('active'));
+  panel.classList.add('active');
+}
+
+/* ── SCROLLAMA SETUP ── */
+if(typeof scrollama !== 'undefined'){
+  ['1','2','3','4','5','6'].forEach(ch => {
+    const scrolly = document.getElementById('scrolly-' + ch);
+    if(!scrolly) return;
+    const steps = scrolly.querySelectorAll('.step');
+    if(!steps.length) return;
+
+    steps[0].classList.add('is-active');
+    const firstPanel = steps[0].dataset.panel;
+    if(firstPanel) showPanel(firstPanel);
+
+    const scroller = scrollama();
+    scroller.setup({
+      step: '#scrolly-' + ch + ' .step',
+      offset: 0.5,
+    })
+    .onStepEnter(({element}) => {
+      steps.forEach(s => s.classList.remove('is-active'));
+      element.classList.add('is-active');
+      const panelId = element.dataset.panel;
+      if(panelId) showPanel(panelId);
+    });
+    window.addEventListener('resize', scroller.resize);
+  });
+} else {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('is-active'));
+  document.querySelectorAll('.sticky-panel').forEach(p => p.classList.add('active'));
+}
+
+updateNav();
+
+})();
+</script>
+```

@@ -12,7 +12,7 @@ website:
         menu:
           - href: SQL_Scrolly.qmd
             text: SQL:Indexing and B-Trees
-          - href: joins.qmd
+          - href: SQL_Joins_Scrolly.qmd
             text: Joins
           - href: parquet.qmd
             text: File Formats and DuckDB
