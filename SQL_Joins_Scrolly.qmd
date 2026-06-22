@@ -1054,7 +1054,7 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="5-1">
       <div class="step-tag">3.8 · Build &amp; Probe</div>
       <h3>Build a table, then probe it</h3>
-      <p>In the <strong style="color:#2747b0;">build phase</strong>, the typically smaller table (the build input) is scanned and a hash table is constructed using the join-key values. Each entry stores a tuple along with its hash value, distributing data evenly across buckets.</p>
+      <p>In the <strong style="color:#2747b0;">build phase</strong>, the typically smaller table (the build input) is scanned and a hash table is constructed using the join-key values. Each entry stores a small portion of data called a tuple along with its hash value, distributing data evenly across buckets.</p>
       <p>In the <strong style="color:#2747b0;">probe phase</strong>, the larger table (the probe input) is scanned. Each tuple's join key is hashed with the same function, and that hash points to the bucket to check for matches. If a match is found, tuples from both inputs are combined — as the animation shows.</p>
       <div class="badge-row">
         <span class="badge ba">Build · smaller table</span>
