@@ -1,0 +1,458 @@
+---
+title: "Parquet Querying Time Exploration"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    toc-title: "Contents"
+    code-fold: true
+    code-summary: "Show code"
+    self-contained: true
+execute:
+  warning: false
+  message: false
+---
+
+## Introduction
+
+This page reports the results of two controlled benchmarking experiments examining how DuckDB query performance changes as a function of (1) the number of Parquet files queried and (2) the total number of rows in those files. Both experiments use DuckDB's `read_parquet()` function to query files directly from disk without loading them into a native DuckDB database first. For background on Parquet's internal structure and how DuckDB reads Parquet files, see the [Parquet & DuckDB reference page](parquet.qmd).
+
+Two query types are benchmarked throughout:
+
+- **`COUNT(*)`** — counts every row; requires minimal data I/O but must open and process every file and row within each file.
+- **`SELECT c5`** — reads a single column across all rows; I/O-intensive but benefits from columnar storage.
+
+Each timing result is the mean of 100 timed runs (Test 1) or 25 timed runs (Test 2), preceded by 5 warmup runs and one additional cache-primer run that is discarded, to ensure stable measurements.
+
+---
+
+## Test 1: Fixed Row Count, Varying File Count
+
+### Research Question
+
+When the total number of rows is held constant, does splitting that data across more Parquet files increase query time?
+
+### Setup
+
+```{r}
+#| label: setup
+
+library(duckdb)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(glue)
+```
+
+```{r}
+#| label: config
+
+TOTAL_ROWS   <- 1000000
+SPLITS       <- c(1, 4, 10, 20, 50, 75, 100, 200)
+WARMUP_RUNS  <- 5
+TIMED_RUNS   <- 100
+PARQUET_DIR  <- file.path(tempdir(), "parquet_splits")
+```
+
+One million rows are written to disk, split evenly across varying numbers of Parquet files (1 through 200). Every configuration contains exactly the same data(incrementing integers); only the number of files differs. Each file contains ten integer columns (`c1` through `c10`).
+
+```{r}
+#| label: generate-table
+
+con <- dbConnect(duckdb())
+
+dbExecute(con, glue::glue("
+  CREATE TABLE base AS
+  SELECT
+    row_number() OVER () AS c1,
+    row_number() OVER () AS c2,
+    row_number() OVER () AS c3,
+    row_number() OVER () AS c4,
+    row_number() OVER () AS c5,
+    row_number() OVER () AS c6,
+    row_number() OVER () AS c7,
+    row_number() OVER () AS c8,
+    row_number() OVER () AS c9,
+    row_number() OVER () AS c10
+  FROM range({as.integer(TOTAL_ROWS)})
+"))
+```
+
+```{r}
+#| label: write-parquet
+
+dir.create(PARQUET_DIR, showWarnings = FALSE, recursive = TRUE)
+
+for (n_files in SPLITS) {
+  folder <- file.path(PARQUET_DIR, sprintf("split_%03d", n_files))
+  dir.create(folder, showWarnings = FALSE)
+  rows_per_file <- TOTAL_ROWS %/% n_files
+
+  for (i in seq_len(n_files)) {
+    offset <- (i - 1) * rows_per_file
+    limit  <- if (i < n_files) rows_per_file else TOTAL_ROWS - offset
+    path   <- file.path(folder, sprintf("part_%04d.parquet", i))
+    dbExecute(con, sprintf(
+      "COPY (SELECT * FROM base LIMIT %d OFFSET %d) TO '%s' (FORMAT PARQUET)",
+      limit, offset, path
+    ))
+  }
+}
+```
+
+### Benchmark
+
+```{r}
+#| label: benchmark
+
+bench_query <- function(con, sql, warmup = WARMUP_RUNS, timed = TIMED_RUNS) {
+  for (i in seq_len(warmup)) dbGetQuery(con, sql)
+  dbGetQuery(con, sql)
+  times_ms <- numeric(timed)
+  for (i in seq_len(timed)) {
+    t0 <- proc.time()[["elapsed"]]
+    dbGetQuery(con, sql)
+    times_ms[i] <- (proc.time()[["elapsed"]] - t0) * 1000
+  }
+  mean(times_ms)
+}
+
+results <- lapply(SPLITS, function(n_files) {
+  glob <- file.path(PARQUET_DIR, sprintf("split_%03d", n_files), "*.parquet")
+  data.frame(
+    n_files   = n_files,
+    count_ms  = bench_query(con, sprintf("SELECT count(*) FROM read_parquet('%s')", glob)),
+    select_ms = bench_query(con, sprintf("SELECT c5 FROM read_parquet('%s')", glob))
+  )
+})
+
+results_df <- bind_rows(results)
+```
+
+### Results
+
+```{r}
+#| label: summary-table-1
+
+results_df |>
+  mutate(
+    `Files`          = n_files,
+    `COUNT(*) (ms)`  = round(count_ms, 2),
+    `SELECT c5 (ms)` = round(select_ms, 2)
+  ) |>
+  select(`Files`, `COUNT(*) (ms)`, `SELECT c5 (ms)`) |>
+  knitr::kable(align = "r", caption = "Mean query time by file count (1,000,000 rows fixed)")
+```
+
+```{r}
+#| label: plot-count-1
+#| fig-cap: "Mean COUNT(*) time as file count increases. Total rows held constant at 1,000,000."
+#| fig-width: 8
+#| fig-height: 4
+
+ggplot(results_df, aes(x = factor(n_files), y = count_ms)) +
+  geom_col(fill = "#185FA5", width = 0.6) +
+  geom_text(aes(label = sprintf("%.1f ms", count_ms)),
+            vjust = -0.4, size = 3.2, colour = "#185FA5") +
+  scale_y_continuous(
+    labels = function(x) paste0(x, " ms"),
+    expand = expansion(mult = c(0, 0.18))
+  ) +
+  labs(
+    x = "Number of Parquet files",
+    y = "Mean time (ms)",
+    title = "COUNT(*) query time by file count",
+    subtitle = "1,000,000 total rows held constant"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(panel.grid.major.x = element_blank())
+```
+
+```{r}
+#| label: plot-select-1
+#| fig-cap: "Mean SELECT c5 time as file count increases. Total rows held constant at 1,000,000."
+#| fig-width: 8
+#| fig-height: 4
+
+ggplot(results_df, aes(x = factor(n_files), y = select_ms)) +
+  geom_col(fill = "#0F6E56", width = 0.6) +
+  geom_text(aes(label = sprintf("%.1f ms", select_ms)),
+            vjust = -0.4, size = 3.2, colour = "#0F6E56") +
+  scale_y_continuous(
+    labels = function(x) paste0(x, " ms"),
+    expand = expansion(mult = c(0, 0.18)),
+    limits = c(0, max(results_df$select_ms) * 1.2)
+  ) +
+  labs(
+    x = "Number of Parquet files",
+    y = "Mean time (ms)",
+    title = "SELECT c5 query time by file count",
+    subtitle = "1,000,000 total rows held constant"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(panel.grid.major.x = element_blank())
+```
+
+```{r}
+#| label: plot-dual-1
+#| fig-cap: "Both query types plotted together. Dual y-axes account for the difference in absolute times between COUNT(*) and SELECT c5."
+#| fig-width: 8
+#| fig-height: 4
+
+scale_factor <- max(results_df$select_ms) / max(results_df$count_ms)
+
+results_long <- results_df |>
+  mutate(select_ms_scaled = select_ms / scale_factor) |>
+  pivot_longer(c(count_ms, select_ms_scaled),
+               names_to = "query", values_to = "ms") |>
+  mutate(query = recode(query,
+    count_ms         = "COUNT(*)",
+    select_ms_scaled = "SELECT c5"
+  ))
+
+ggplot(results_long, aes(x = factor(n_files), y = ms,
+                          colour = query, group = query)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("COUNT(*)" = "#185FA5", "SELECT c5" = "#0F6E56")) +
+  scale_y_continuous(
+    name     = "COUNT(*) mean time (ms)",
+    labels   = function(x) paste0(round(x, 1), " ms"),
+    sec.axis = sec_axis(
+      transform = ~ . * scale_factor,
+      name      = "SELECT c5 mean time (ms)",
+      labels    = function(x) paste0(round(x), " ms")
+    )
+  ) +
+  labs(
+    x      = "Number of Parquet files",
+    colour = NULL,
+    title  = "COUNT(*) vs SELECT c5 — file count overhead",
+    subtitle = "1,000,000 rows held constant across all splits"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top",
+        panel.grid.major.x = element_blank())
+```
+
+### Interpretation
+
+**`COUNT(*)`** shows a clear and consistent increase with file count even though the total number of rows never changes. This is attributable to per-file overhead: DuckDB must open, parse the footer of, and coordinate each Parquet file individually before aggregating the result. When the data is stored in a single file this overhead is incurred once; at 200 files it is incurred 200 times. Since `COUNT(*)` requires minimal data I/O — DuckDB can satisfy it from footer statistics alone — this per-file cost is the dominant factor and the relationship is approximately linear.
+
+**`SELECT c5`** is less sensitive to file count at low file numbers, because the cost of physically reading and decompressing a full column of data is substantially higher than file-opening overhead. At higher file counts (50+), the coordination overhead becomes more visible and the two trends converge. The key distinction is that for I/O-bound queries, data volume matters more than file count; for metadata-bound queries like `COUNT(*)`, file count matters more than data volume.
+
+```{r}
+#| label: cleanup-1
+#| include: false
+
+dbDisconnect(con)
+unlink(PARQUET_DIR, recursive = TRUE)
+```
+
+---
+
+## Test 2: Fixed File Count, Varying Row Count
+
+### Research Question
+
+When the number of Parquet files is held constant at 50, how does query time scale with total row count? Does splitting data across multiple files provide any advantage over a single file as row counts grow?
+
+### Setup
+
+```{r}
+#| label: config2
+
+ROW_COUNTS  <- c(100, 10000, 100000, 500000, 1000000, 2000000)
+N_FILES     <- 50
+WARMUP_RUNS <- 5
+TIMED_RUNS  <- 25
+PARQUET_DIR <- file.path(tempdir(), "parquet_rowtest")
+```
+
+For each row count, the same data is written in two configurations: a single Parquet file containing all rows, and 50 files each containing an equal share of rows. Both configurations hold identical data; only the number of files differs.
+
+```{r}
+#| label: generate-and-write-2
+
+dir.create(PARQUET_DIR, showWarnings = FALSE, recursive = TRUE)
+con <- dbConnect(duckdb())
+
+for (total_rows in ROW_COUNTS) {
+  dbExecute(con, "DROP TABLE IF EXISTS base")
+  dbExecute(con, glue("
+    CREATE TABLE base AS
+    SELECT
+      row_number() OVER () AS c1,
+      row_number() OVER () AS c2,
+      row_number() OVER () AS c3,
+      row_number() OVER () AS c4,
+      row_number() OVER () AS c5,
+      row_number() OVER () AS c6,
+      row_number() OVER () AS c7,
+      row_number() OVER () AS c8,
+      row_number() OVER () AS c9,
+      row_number() OVER () AS c10
+    FROM range({as.integer(total_rows)})
+  "))
+
+  single_dir <- file.path(PARQUET_DIR, paste0("single_", total_rows))
+  dir.create(single_dir, showWarnings = FALSE)
+  dbExecute(con, glue(
+    "COPY base TO '{file.path(single_dir, 'data.parquet')}' (FORMAT PARQUET)"
+  ))
+
+  multi_dir <- file.path(PARQUET_DIR, paste0("multi_", total_rows))
+  dir.create(multi_dir, showWarnings = FALSE)
+  rows_per_file <- max(1L, as.integer(total_rows) %/% N_FILES)
+
+  for (i in seq_len(N_FILES)) {
+    offset <- (i - 1L) * rows_per_file
+    limit  <- if (i < N_FILES) rows_per_file else total_rows - offset
+    if (limit <= 0) break
+    path <- file.path(multi_dir, sprintf("part_%04d.parquet", i))
+    dbExecute(con, glue(
+      "COPY (SELECT * FROM base LIMIT {limit} OFFSET {offset}) TO '{path}' (FORMAT PARQUET)"
+    ))
+  }
+}
+```
+
+### Benchmark
+
+```{r}
+#| label: benchmark-2
+
+bench_query2 <- function(con, sql, warmup = WARMUP_RUNS, timed = TIMED_RUNS) {
+  for (i in seq_len(warmup)) dbGetQuery(con, sql)
+  dbGetQuery(con, sql)
+  times_ms <- numeric(timed)
+  for (i in seq_len(timed)) {
+    t0 <- proc.time()[["elapsed"]]
+    dbGetQuery(con, sql)
+    times_ms[i] <- (proc.time()[["elapsed"]] - t0) * 1000
+  }
+  mean(times_ms)
+}
+
+results2 <- lapply(ROW_COUNTS, function(total_rows) {
+  single_path <- file.path(PARQUET_DIR, paste0("single_", total_rows), "data.parquet")
+  multi_glob  <- file.path(PARQUET_DIR, paste0("multi_",  total_rows), "*.parquet")
+  data.frame(
+    total_rows       = total_rows,
+    single_count_ms  = bench_query2(con, glue("SELECT count(*) FROM read_parquet('{single_path}')")),
+    multi_count_ms   = bench_query2(con, glue("SELECT count(*) FROM read_parquet('{multi_glob}')")),
+    single_select_ms = bench_query2(con, glue("SELECT c5 FROM read_parquet('{single_path}')")),
+    multi_select_ms  = bench_query2(con, glue("SELECT c5 FROM read_parquet('{multi_glob}')"))
+  )
+})
+
+results_df2 <- bind_rows(results2)
+```
+
+### Results
+
+```{r}
+#| label: summary-table-2
+
+results_df2 |>
+  mutate(
+    `Total rows`            = format(total_rows, big.mark = ","),
+    `COUNT — 1 file (ms)`   = round(single_count_ms,  2),
+    `COUNT — 50 files (ms)` = round(multi_count_ms,   2),
+    `SELECT — 1 file (ms)`  = round(single_select_ms, 2),
+    `SELECT — 50 files (ms)`= round(multi_select_ms,  2)
+  ) |>
+  select(6:10) |>
+  knitr::kable(align = "r", caption = "Mean query time by row count (file count fixed at 1 vs 50)")
+```
+
+```{r}
+#| label: plot-count-2
+#| fig-cap: "COUNT(*) mean time by total row count. The 50-file series consistently exceeds the single-file series due to fixed per-file overhead."
+#| fig-width: 8
+#| fig-height: 4
+
+count_long2 <- results_df2 |>
+  select(total_rows, single_count_ms, multi_count_ms) |>
+  pivot_longer(-total_rows, names_to = "condition", values_to = "mean_ms") |>
+  mutate(condition = recode(condition,
+    single_count_ms = "1 file",
+    multi_count_ms  = "50 files"
+  ))
+
+ggplot(count_long2, aes(x = total_rows, y = mean_ms,
+                         colour = condition, group = condition)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_x_log10(labels = label_comma(), breaks = ROW_COUNTS) +
+  scale_y_continuous(labels = function(x) paste0(round(x, 2), " ms")) +
+  scale_colour_manual(values = c("1 file" = "#185FA5", "50 files" = "#A32D2D")) +
+  labs(
+    x      = "Total rows (log scale)",
+    y      = "Mean time (ms)",
+    colour = NULL,
+    title  = "COUNT(*) — 1 file vs 50 files",
+    subtitle = "File count fixed; row count varies"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: plot-select-2
+#| fig-cap: "SELECT c5 mean time by total row count. Both series grow together as data volume increases; the gap between them narrows relative to total query time."
+#| fig-width: 8
+#| fig-height: 4
+
+select_long2 <- results_df2 |>
+  select(total_rows, single_select_ms, multi_select_ms) |>
+  pivot_longer(-total_rows, names_to = "condition", values_to = "mean_ms") |>
+  mutate(condition = recode(condition,
+    single_select_ms = "1 file",
+    multi_select_ms  = "50 files"
+  ))
+
+ggplot(select_long2, aes(x = total_rows, y = mean_ms,
+                          colour = condition, group = condition)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_x_log10(labels = label_comma(), breaks = ROW_COUNTS) +
+  scale_y_continuous(labels = function(x) paste0(round(x, 2), " ms")) +
+  scale_colour_manual(values = c("1 file" = "#185FA5", "50 files" = "#0F6E56")) +
+  labs(
+    x      = "Total rows (log scale)",
+    y      = "Mean time (ms)",
+    colour = NULL,
+    title  = "SELECT c5 — 1 file vs 50 files",
+    subtitle = "File count fixed; row count varies"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.minor = element_blank())
+```
+
+### Interpretation
+
+**`COUNT(*)`** exhibits a stable gap between the single-file and 50-file configurations across all row counts. The absolute difference between the two series changes little as rows increase, confirming that the overhead is driven by file count rather than data volume. At low row counts this overhead represents a large proportion of total query time; at high row counts it becomes relatively smaller but remains present and consistent.
+
+**`SELECT c5`** both series grow together as row count increases because the cost is dominated by reading and decompressing column data, a cost that scales with the number of rows, not the number of files. At larger row counts, the relative gap between the single-file and 50-file configurations shrinks as a proportion of total query time, because the cost of reading and decompressing large volumes of column data becomes the dominant factor and diminishes the relative contribution of per-file overhead.
+
+```{r}
+#| label: cleanup-2
+#| include: false
+
+dbDisconnect(con)
+unlink(PARQUET_DIR, recursive = TRUE)
+```
+
+---
+
+## Conclusion
+
+Taken together, the two experiments reveal a consistent pattern in how DuckDB handles Parquet files directly from disk. File count and row count impose costs through different mechanisms and affect query types differently.
+
+For **`COUNT(*)`**, which is the most basic form of a row-based query, file count is the primary cost driver. Because DuckDB satisfies this query from Parquet footer metadata rather than reading row data, the per-file overhead of opening and parsing each file is the bottleneck. Adding more files increases query time consistently regardless of how many rows those files contain.
+
+For **`SELECT c5`**, which is a basic form of column-based querying, row count and data volume have a greater impact on query efficiency compared to transactional row-based query's. The cost of reading and decompressing a column grows with the number of rows, and per-file overhead is comparatively smaller.
+
+The practical implication is that the optimal Parquet file organization depends on the query pattern. Workloads dominated by lightweight aggregations and metadata queries benefit from fewer, larger files. Workloads involving large column scans across many rows are less sensitive to file count and may benefit from parallelism across multiple files. Neither extreme, one massive file or thousands of tiny files, is universally optimal.
