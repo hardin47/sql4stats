@@ -4831,7 +4831,7 @@ width: 40px; flex-shrink: 0; padding-top: 0.1rem;
   <div class="interlude-inner">
     <div class="int-label">Fun historical insight</div>
     <div class="int-quote">Parquet was actually made by Twitter, and Google aided in its creation.</div>
-    <div class="int-sub">Parquet&#39;s origin story actually traces back to a 2010 Google research paper called <a href="https://parquet.apache.org/docs/file-format/data-pages/compression/" target="_blank" style="color:#ffffff;text-decoration:underline;">&quot;Dremel: Interactive Analysis of Web-Scale Datasets&quot;</a>, which introduced the idea of representing nested data in a columnar format. This trick let Google query massive datasets interactively instead of waiting on slow batch jobs.Three years later, in 2013, two unlikely co-conspirators Twitter and Cloudera joined forces and built Parquet together and donated it to the Apache Software Foundation, making it free and open for anyone to use. Twitter needed to crunch enormous volumes of data fast, and Cloudera was deep in the business of helping companies do exactly that at scale. Today Parquet is widely known as a open source file storage format purpose-built for analytical OLAP-style workloads, heavy on reads and aggregations, over huge piles of data, and it&#39;s remarkably space-efficient.</div>
+    <div class="int-sub">Parquet&#39;s origin story actually traces back to a 2010 Google research paper called <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf" target="_blank" style="color:#ffffff;text-decoration:underline;">&quot;Dremel: Interactive Analysis of Web-Scale Datasets&quot;</a>, which introduced the idea of representing nested data in a columnar format. This trick let Google query massive datasets interactively instead of waiting on slow batch jobs.Three years later, in 2013, two unlikely co-conspirators Twitter and Cloudera joined forces and built Parquet together and donated it to the Apache Software Foundation, making it free and open for anyone to use. Twitter needed to crunch enormous volumes of data fast, and Cloudera was deep in the business of helping companies do exactly that at scale. Today Parquet is widely known as a open source file storage format purpose-built for analytical OLAP-style workloads, heavy on reads and aggregations, over huge piles of data, and it&#39;s remarkably space-efficient.</div>
   </div>
 </div>
 
@@ -5309,7 +5309,7 @@ width: 40px; flex-shrink: 0; padding-top: 0.1rem;
     </div>
     <div class="tk-card">
       <div class="tk-num">06</div>
-      <p><strong>Native DuckDB vs. direct Parquet is a genuine trade-off.</strong> Native DuckDB is faster for coordination-heavy queries across many files (up to 3.8× on COUNT). Direct Parquet can win on narrow column scans due to its smaller footprint. Native DuckDB takes 3× more storage. Choose based on query frequency and storage constraints.</p>
+      <p><strong>Native DuckDB and direct Parquet are both columnar but not the same.</strong> Parquet is a file format read on demand from disk. DuckDB ingests data into its own internal columnar storage. Once inside, the source format no longer matters. The trade-off is storage (DuckDB takes ~3× more space) versus speed (DuckDB is faster for repeated queries). Choose direct Parquet for one-off queries; choose native DuckDB when querying the same data frequently.</p>
     </div>
   </div>
 </section>
