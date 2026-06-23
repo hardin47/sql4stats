@@ -3,7 +3,6 @@ project:
 
 website:
   title: "sql4stats"
-  href: index.qmd
   navbar:
     left:
       - text: "Informational Resources"
