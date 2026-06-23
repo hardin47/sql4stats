@@ -1,11 +1,11 @@
 ---
-title: "Join Strategies and Join Order in PostgreSQL"
+title: "Join Algorithms and Join Order in PostgreSQL"
 format:
   html:
     toc: true
     toc-location: left
     code-fold: true
-    code-summary: "Show the code"
+    code-summary: "Show code"
     code-tools: true
     df-print: paged
 execute:
@@ -15,14 +15,15 @@ execute:
 
 ## Introduction
 
-When you write a multi-table `JOIN`, you specify *which* tables connect and *on what columns* — but you do **not** specify *how* the database should physically combine them, nor *in what order*. Those two decisions belong to the query planner, and they are the single largest lever on how fast a join runs.
+When you write a multi-table `JOIN`, you specify *which* tables connect and *on what columns* — but you do **not** specify *how* the database should physically combine them, nor *in what order*. Those two decisions belong to the query optimizer, and they are the most important influences  on how fast a join runs.
 
-This demo isolates and measures two planner decisions:
+This simulation isolates and measures two optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
+For more information on these strategies, see the <a href="_site/SQL_Joins_Scrolly.qmd">Joins page</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
-Normally the planner picks both automatically using table statistics and cost estimates. To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is purely a teaching device — in production you almost always let the planner decide.
+Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is purely a teaching device — in production you almost always let the planner decide.
 
 We use the Stack Exchange `stats` dataset (the Cross Validated dump), which has four tables we can chain together: `votes`, `posts`, `users`, and `badges`.
 
