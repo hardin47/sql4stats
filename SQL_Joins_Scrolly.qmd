@@ -13,6 +13,7 @@ execute:
 
 ```{=html}
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&display=swap');
 /* ══════════════════════════════════════════════
    LIGHT-BLUE THEME — soft blue canvas, white mono
    tables w/ royal-blue headers, orange + green as
@@ -37,7 +38,7 @@ execute:
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Fira Code', 'Cascadia Code', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Source Code Pro', ui-monospace, 'SF Mono', Menlo, monospace;
   background: #e9f1fd;
   color: #16263f;
   overflow-x: hidden;
@@ -238,7 +239,7 @@ main.content, #quarto-content, .page-columns,
 .sql-block {
   background: #11244a; border: 1px solid #1d3a6e;
   border-radius: 8px; padding: 0.95rem 1.2rem;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
   font-size: 0.78rem; line-height: 1.6; color: #d8e3f7;
   margin: 0.8rem 0; overflow-x: auto;
 }
@@ -255,7 +256,7 @@ main.content, #quarto-content, .page-columns,
   width: 100%; border-collapse: collapse;
   border: 1px solid #c4cbe0;
   font-size: 0.85rem;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
   background: #ffffff;
 }
 .vis-table th {
@@ -288,7 +289,7 @@ main.content, #quarto-content, .page-columns,
 .rel-head {
   padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 600;
   letter-spacing: 0.02em; text-transform: none;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 .rel-head.ind { background: #3b62db; color: #fff; }
 .rel-head.pur { background: #3b62db; color: #fff; }
@@ -296,7 +297,7 @@ main.content, #quarto-content, .page-columns,
   padding: 0.45rem 1rem; font-size: 0.8rem; color: #16181d;
   border-bottom: 1px solid #e2e5ee;
   display: flex; align-items: center; gap: 0.5rem;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 .rel-field:last-child { border-bottom: none; }
 .pk-badge {
@@ -329,7 +330,7 @@ main.content, #quarto-content, .page-columns,
   background: #ffffff; border: 1px solid #d2d6e2;
   padding: 0.5rem 0.8rem; margin-bottom: 0.3rem;
   font-size: 0.8rem; color: #16181d; display: flex; align-items: center; gap: 0.5rem;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 .idx-row .rn { color: #8595b0; font-size: 0.7rem; }
 .idx-row.sorted { background: #4ab87d; border-color: #3ba06c; color: #08120c; font-weight: 600; }
@@ -425,7 +426,7 @@ main.content, #quarto-content, .page-columns,
 .comp-row {
   display: flex; border-radius: 5px; overflow: hidden;
   border: 1px solid #d2d6e2; font-size: 0.78rem;
-  font-family: 'Fira Code','Cascadia Code',monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 .comp-a { background: #3b62db; color: #ffffff; padding: 0.4rem 0.75rem; font-weight: 600; }
 .comp-b { background: #ffffff; color: #16181d; padding: 0.4rem 0.75rem; flex: 1; }
@@ -513,13 +514,19 @@ main.content, #quarto-content, .page-columns,
 .bt { color: #2b7e8c; border-color: #a8d4db; background: #e6f4f6; }
 
 /* Video animation frame inside sticky-left panels.
-   The animations are transparent webms, so they sit directly on the
-   light-blue page with no surrounding chrome. */
+   The source animations have a black backdrop, so the frame is a dark
+   navy "player" (matching the SQL code blocks) — the black video blends
+   into intentional dark chrome instead of floating on the light page. */
 .anim-frame {
   width: 100%;
-  background: transparent;
+  background: #000000;
+  border: 1px solid #1d3a6e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 22px rgba(17,36,74,0.22);
+  padding: 0.5rem;
 }
-.anim-frame video { width: 100%; height: auto; display: block; background: transparent; }
+.anim-frame video { width: 100%; height: auto; display: block; background: #000000; border-radius: 6px; }
 .anim-label {
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em;
   color: #2747b0; font-weight: 700; margin-bottom: 0.7rem;
@@ -583,7 +590,7 @@ main.content, #quarto-content, .page-columns,
   <div class="ch-text">
     <div class="ch-tag">Foundations</div>
     <h2>What are joins &amp; join keys?</h2>
-    <p>Joins are key operations in relational database querying that let practitioners extract information from multiple tables simultaneously. Most joins are executed using a key shared by both tables — keys that are constructed in such a way that they can correctly identify matches between tables.</p>
+    <p>Joins are key operations in relational database querying that let practitioners extract information from multiple tables simultaneously. Most joins are executed using a key shared by both tables — keys whose construction matches so they can correctly identify matches between tables.</p>
   </div>
 </div>
 
@@ -640,14 +647,14 @@ main.content, #quarto-content, .page-columns,
               <circle cx="36" cy="20" r="16" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
               <path d="M29 7 A16 16 0 0 1 29 33 A16 16 0 0 1 29 7" fill="#4ab87d"/>
             </svg>
-            <div class="jc-text"><strong>Inner Join</strong>Only rows where A's key matches B's. Can be thought of as <span class="formula">A ∩ B</span></div>
+            <div class="jc-text"><strong>Inner Join</strong>Only rows where A's key matches B's. <span class="formula">A ∩ B</span></div>
           </div>
           <div class="join-card">
             <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
               <circle cx="22" cy="20" r="16" fill="#4ab87d" stroke="#3b62db" stroke-width="1.5"/>
               <circle cx="36" cy="20" r="16" fill="#4ab87d" stroke="#3b62db" stroke-width="1.5"/>
             </svg>
-            <div class="jc-text"><strong>Full Outer Join</strong>Matched and unmatched rows from both, nulls for misses. Can be thought of as <span class="formula">A ∪ B (returns m + n rows)</span></div>
+            <div class="jc-text"><strong>Full Outer Join</strong>Matched and unmatched rows from both, nulls for misses. <span class="formula">A ∪ B · returns m + n</span></div>
           </div>
           <div class="join-card">
             <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
@@ -655,7 +662,7 @@ main.content, #quarto-content, .page-columns,
               <circle cx="36" cy="20" r="16" fill="#dbe6fb" stroke="#3b62db" stroke-width="1.5"/>
               <path d="M29 7 A16 16 0 0 1 29 33 A16 16 0 0 1 29 7" fill="#4ab87d"/>
             </svg>
-            <div class="jc-text"><strong>Left / Right Outer Join</strong>All rows from one side, matches from the other. Can be thought of as <span class="formula">A ∪ (A ∩ B) (returns at most m + n rows)</span></div>
+            <div class="jc-text"><strong>Left / Right Outer Join</strong>All rows from one side, matches from the other. <span class="formula">A ∪ (A ∩ B) · at most m + n</span></div>
           </div>
           <div class="join-card">
             <svg class="venn" width="58" height="40" viewBox="0 0 58 40" xmlns="http://www.w3.org/2000/svg">
@@ -663,7 +670,7 @@ main.content, #quarto-content, .page-columns,
               <text x="16" y="24" text-anchor="middle" font-size="11" fill="#2747b0" font-weight="700">×</text>
               <rect x="32" y="6" width="20" height="28" rx="3" fill="#fdf0e3" stroke="#f2a159" stroke-width="1.5"/>
             </svg>
-            <div class="jc-text"><strong>Cross Join</strong>Every combination — the Cartesian product. Can be thought of as<span class="formula">A × B  (returns m × n rows) </span></div>
+            <div class="jc-text"><strong>Cross Join</strong>Every combination — the Cartesian product. <span class="formula">A × B · returns m × n</span></div>
           </div>
         </div>
       </div>
@@ -677,8 +684,8 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="1-0">
       <div class="step-tag">1.1 · Join Basics</div>
       <h3>Joins combine rows across tables</h3>
-      <p>A <strong style="color:#2747b0;">join</strong> lets you query multiple tables at once, pulling related information into a single result set. Rather than duplicating data, relational databases keep information spread across tables and stitch it together at query time.</p>
-      <p>Joins are most commonly executed using a <strong style="color:#2747b0;">key</strong> from both involved tables. Across tables, keys are often identical in their construction so that they can correctly identify matches between tables.</p>
+      <p>A <strong style="color:#2747b0;">join</strong> lets you query multiple tables at once, pulling related information into a single result set. Rather than duplicating data, relational databases keep it spread across tables and stitch it together at query time.</p>
+      <p>Joins are most commonly executed using a <strong style="color:#2747b0;">key</strong> from both involved tables. These keys are often identical in their construction so that they can correctly identify matches between tables.</p>
       <p>To learn more about keys and their structure — primary keys, foreign keys, and the indexes that make them fast — see the indexes and B-trees page.</p>
       <div class="badge-row">
         <span class="badge bi">Multiple tables</span>
@@ -689,10 +696,10 @@ main.content, #quarto-content, .page-columns,
 
     <div class="step" data-panel="1-1">
       <div class="step-tag">1.2 · Logical Join Types</div>
-      <h3>The four standard logical joins you can write</h3>
+      <h3>The four logical joins you can write</h3>
       <p>Given two tables, <strong style="color:#2747b0;">A</strong> (m rows) and <strong style="color:#2747b0;">B</strong> (n rows), the logical join type defines <em style="color:#2747b0;">what</em> the result should contain:</p>
-      <p>An <strong style="color:#2747b0;">inner join</strong> returns only rows where A's join key matches B's. Can be thought of as A ∩ B. A <strong style="color:#2747b0;">full outer join</strong> returns matching and unmatched rows from both tables. Can be thought of as A ∪ B, returning at most m + n rows. Any row which is not matched in a full outer join will have missing data – denoted as NULL – for some variables. </p> 
-      <p>A <strong style="color:#2747b0;">left or right outer join</strong> is like a full outer join but keeps unmatched rows from only one table. Can be thought of as A ∪ (A ∩ B), returning at most m + n rows. A <strong style="color:#2747b0;">cross join</strong> takes the full Cartesian product, every possible combination of rows. Can be thought of as A × B, returning m × n rows.</p>
+      <p>An <strong style="color:#2747b0;">inner join</strong> returns only rows where A's join key matches B's — analogous to A ∩ B. A <strong style="color:#2747b0;">full outer join</strong> returns matching and unmatched rows from both tables, denoting missing matches as nulls — analogous to A ∪ B, returning exactly m + n rows.</p>
+      <p>A <strong style="color:#2747b0;">left or right outer join</strong> is like a full outer join but keeps unmatched rows from only one side — analogous to A ∪ (A ∩ B), returning at most m + n rows. A <strong style="color:#2747b0;">cross join</strong> takes the full Cartesian product, every possible combination of rows — analogous to A × B, returning m × n rows.</p>
       <div class="badge-row">
         <span class="badge bg">Inner · A ∩ B</span>
         <span class="badge bs">Full outer · A ∪ B</span>
@@ -708,7 +715,7 @@ main.content, #quarto-content, .page-columns,
 <div class="interlude">
   <div class="interlude-inner">
     <div class="int-label">Two layers, one query</div>
-    <div class="int-quote">The logical join describes the query. The physical join decides the algorithm used by the engine.</div>
+    <div class="int-quote">The logical join says what you want. The physical join decides how the engine gets it.</div>
     <div class="int-sub">Understanding both layers helps you write more efficient queries, reduce computation costs, and diagnose performance bottlenecks. The same logical join can run with radically different speed depending on the physical strategy the optimizer picks.</div>
   </div>
 </div>
@@ -720,7 +727,7 @@ main.content, #quarto-content, .page-columns,
   <div class="ch-text">
     <div class="ch-tag">Under the Hood</div>
     <h2>Logical vs. physical joins</h2>
-    <p>Independent of which logical join is written, the query optimizer decides how to execute it. Queries pass through logical query plans that must be physically implemented, and several physical join types may be selected depending on intermediate result sizes. The three main physical join strategies are nested loops, sort-merge, and hash.</p>
+    <p>Independently of which logical join you write, the query optimizer decides how to execute it. Queries pass through logical query plans that must be physically implemented, and several physical join types may be selected depending on your engine. The three main strategies are nested loops, sort-merge, and hash.</p>
   </div>
 </div>
 
@@ -736,7 +743,7 @@ main.content, #quarto-content, .page-columns,
       <div>
         <div class="anim-label">From SQL text to executed join</div>
         <div style="display:flex;flex-direction:column;align-items:stretch;gap:0.5rem;">
-          <div style="background:#11244a;border:1px solid #1d3a6e;border-radius:8px;padding:0.7rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#d8e3f7;">
+          <div style="background:#11244a;border:1px solid #1d3a6e;border-radius:8px;padding:0.7rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#d8e3f7;">
             <span style="color:#8fb0ff;font-weight:600;">SELECT</span> * <span style="color:#8fb0ff;font-weight:600;">FROM</span> <span style="color:#fff;">A</span> <span style="color:#8fb0ff;font-weight:600;">JOIN</span> <span style="color:#fff;">B</span><br>&nbsp;&nbsp;<span style="color:#8fb0ff;font-weight:600;">ON</span> A.dept = B.dept;
           </div>
           <div style="text-align:center;color:#2747b0;font-size:0.85rem;">↓ logical join (what)</div>
@@ -747,7 +754,7 @@ main.content, #quarto-content, .page-columns,
             <div style="background:#e6f4f6;border:1px solid #a8d4db;border-radius:8px;padding:0.55rem;text-align:center;font-size:0.72rem;color:#2b7e8c;font-weight:700;">Sort-<br>Merge</div>
             <div style="background:#e9f8f0;border:1px solid #abdcc3;border-radius:8px;padding:0.55rem;text-align:center;font-size:0.72rem;color:#2c7a52;font-weight:700;">Hash</div>
           </div>
-          <div class="anim-cap"> side note: PostgreSQL allows the most granular control over physical join execution settings. Knowing which join the optimizer uses is essential to improving a query's efficiency.</div>
+          <div class="anim-cap">PostgreSQL allows the most granular control over physical join execution settings. Knowing which join the optimizer uses is essential to improving a query's efficiency.</div>
         </div>
       </div>
     </div>
@@ -759,9 +766,9 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="2-0">
       <div class="step-tag">2.1 · Two Levels of a Join</div>
       <h3>What you write vs. how it runs</h3>
-      <p>When executing a SQL query, joins operate on two distinct levels: the <strong style="color:#2747b0;">logical join</strong> (SQL syntax) and the <strong style="color:#2747b0;">physical join</strong> (the query optimizer's execution of the SQL code).</p>
+      <p>When executing a SQL query, joins operate on two distinct levels: the <strong style="color:#2747b0;">logical join</strong> (what you define in SQL syntax) and the <strong style="color:#2747b0;">physical join</strong> (how the query optimizer actually executes it behind the scenes).</p>
       <p>When queries run, they go through a process of creating logical query plans that eventually need to be physically implemented. Several physical join types may be selected during this implementation depending on your query engine.</p>
-      <p><strong style="color:#2747b0;"> PostgreSQL</strong> allows for granular control over physical join execution settings. The three main physical join strategies are <strong style="color:#2747b0;">nested loops</strong>, <strong style="color:#2747b0;">merge</strong>, and <strong style="color:#2747b0;">hash</strong> — and understanding which one the optimizer uses is essential to improving the query's efficiency.</p>
+      <p><strong style="color:#2747b0;">PostgreSQL</strong> allows for the most granular control over physical join execution settings. The three main physical join strategies are <strong style="color:#2747b0;">nested loops</strong>, <strong style="color:#2747b0;">merge</strong>, and <strong style="color:#2747b0;">hash</strong> — and understanding which one the optimizer uses is essential to improving the query's efficiency.</p>
       <div class="badge-row">
         <span class="badge bi">Logical = what</span>
         <span class="badge bs">Physical = how</span>
@@ -780,7 +787,7 @@ main.content, #quarto-content, .page-columns,
   <div class="ch-text">
     <div class="ch-tag">Physical Strategies</div>
     <h2>The three physical joins</h2>
-    <p>Nested loops, sort-merge, and hash. Each has a distinct algorithm, cost profile, and sweet spot. The animations below walk through exactly how each one matches rows across tables and then assembles the result.</p>
+    <p>Nested loops, sort-merge, and hash. Each has a distinct algorithm, cost profile, and sweet spot. The animations below walk through exactly how each one matches rows and assembles the result.</p>
   </div>
 </div>
 
@@ -798,7 +805,7 @@ main.content, #quarto-content, .page-columns,
         <div class="anim-frame">
           <video src="NestedLoopJoin.webm" autoplay loop muted playsinline></video>
         </div>
-        <div class="anim-cap">For each row in the outer table, the outer row stays fixed while the engine scans the entire inner table for matching keys, appending each match to the result.</div>
+        <div class="anim-cap">The outer row (green) stays fixed while the engine scans the entire inner table for matching keys, appending each match to the result.</div>
       </div>
     </div>
 
@@ -820,7 +827,7 @@ main.content, #quarto-content, .page-columns,
         <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
           <div style="font-size:0.72rem;color:#b9692a;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Worst case · unsorted inputs</div>
           <div style="font-size:2.4rem;font-weight:900;color:#b9692a;line-height:1.1;">O(m × n)</div>
-          <div style="font-size:0.8rem;color:#5b6b86;">every outer row scans the entire inner table</div>
+          <div style="font-size:0.8rem;color:#5b6b86;">every outer row scans the whole inner table</div>
         </div>
         <div class="checklist">
           <div class="check-item"><span class="check-icon" style="color:#2c7a52;">✓</span><div><strong style="color:#2747b0;">Index or sort the inner table</strong> so the scan ends early once all matching keys are found.</div></div>
@@ -835,12 +842,13 @@ main.content, #quarto-content, .page-columns,
 
     <div class="step" data-panel="3-0">
       <div class="step-tag">3.1 · Nested Loop Join</div>
-      <h3>The simplest strategy: scan every row</h3>
-      <p>The <strong style="color:#2747b0;">nested loop join</strong> is the simplest physical strategy to understand. We focus on two-table inner joins, and assume neither table is sorted.</p>
-      <p>The smaller table is designated the <strong style="color:#2747b0;">outer</strong> table, the larger the <strong style="color:#2747b0;">inner</strong>. Staying at a fixed row in the outer table, the engine performs a sequential scan on the inner table until it finds a match, and records that match. Then, the algorithm moves to the next outer row, scans the entire inner table again, and so on.</p>
+      <h3>The simplest strategy: scan for every row</h3>
+      <p>The <strong style="color:#2747b0;">nested loop join</strong> is the simplest physical strategy to understand. For simplicity we focus on two-table inner joins, and assume neither table is sorted.</p>
+      <p>The smaller table is designated the <strong style="color:#2747b0;">outer</strong> table, the larger the <strong style="color:#2747b0;">inner</strong>. Staying at a fixed row in the outer table, the engine performs a sequential scan on the inner table until it finds a match, records that match, moves to the next outer row, scans the entire inner table again, and so on.</p>
       <div class="badge-row">
         <span class="badge bi">Outer × inner</span>
         <span class="badge bs">Sequential scan</span>
+        <span class="badge bp">Simplest to grasp</span>
       </div>
     </div>
 
@@ -859,8 +867,8 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="3-2">
       <div class="step-tag">3.3 · Cost Profile</div>
       <h3>Catastrophic on large unsorted inputs</h3>
-      <p>Nested loop joins can cause <strong style="color:#b9692a;">catastrophically long runtimes</strong> with unsorted input tables. If table A has m rows and table B has n rows, the worst-case time complexity is <strong style="color:#2747b0;">O(m × n)</strong>.</p>
-      <p>That said, nested loops require the least overhead (no additional data structures stored in memory), so they may <em style="color:#2747b0;">outperform</em> the other strategies on small datasets or when a good index exists on the inner table — exactly the cases shown in the two animations above.</p>
+      <p>This is why nested loop joins can cause <strong style="color:#b9692a;">catastrophically long runtimes</strong> with unsorted input tables. If table A has m rows and table B has n rows, the worst-case time complexity is <strong style="color:#2747b0;">O(m × n)</strong>.</p>
+      <p>That said, nested loops require the least overhead, so they may <em style="color:#2747b0;">outperform</em> the other strategies on small datasets or when a good index exists on the inner table — exactly the cases shown in the two animations above.</p>
       <div class="badge-row">
         <span class="badge br">O(m × n) worst case</span>
         <span class="badge bg">Great when small</span>
@@ -875,7 +883,7 @@ main.content, #quarto-content, .page-columns,
   <div class="interlude-inner">
     <div class="int-label">From quadratic to linear</div>
     <div class="int-quote">Nested loops can cost m × n. Sort-merge and hash read each table about once — cost proportional to m + n.</div>
-    <div class="int-sub">The next two strategies trade some setup work — sorting or building a hash table — for a dramatically better cost profile on large inputs.</div>
+    <div class="int-sub">The next two strategies trade a little setup work — sorting, or building a hash table — for a dramatically better cost profile on large inputs.</div>
   </div>
 </div>
 
@@ -909,7 +917,7 @@ main.content, #quarto-content, .page-columns,
             </tbody>
           </table>
         </div>
-        <div class="anim-cap">Each input is split into memory-sized runs, each run sorted individually (by index or sorting algorithm), then written back — both input tables are sorted on the join key.</div>
+        <div class="anim-cap">Each input is split into memory-sized runs, each run sorted individually (by index or sort algorithm), then written back — both inputs sorted on the join key.</div>
       </div>
     </div>
 
@@ -920,7 +928,7 @@ main.content, #quarto-content, .page-columns,
         <div class="anim-frame">
           <video src="SortMergeJoin.webm" autoplay loop muted playsinline></video>
         </div>
-        <div class="anim-cap">A pointer walks each sorted table in the same direction. On a match the row joins the result; otherwise the pointer at the smaller value advances.</div>
+        <div class="anim-cap">A pointer walks each sorted table in the same direction. On a match (teal) the row joins the result; otherwise the pointer at the smaller value advances.</div>
       </div>
     </div>
 
@@ -931,11 +939,11 @@ main.content, #quarto-content, .page-columns,
         <div style="background:#e6f4f6;border:1px solid #a8d4db;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
           <div style="font-size:0.72rem;color:#2b7e8c;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Merge cost (already sorted)</div>
           <div style="font-size:2.4rem;font-weight:900;color:#2b7e8c;line-height:1.1;">O(m + n)</div>
-          <div style="font-size:0.8rem;color:#5b6b86;">proportional to the sum of the number of rows, not their product</div>
+          <div style="font-size:0.8rem;color:#5b6b86;">proportional to the sum, not the product</div>
         </div>
         <div class="checklist">
-          <div class="check-item"><span class="check-icon" style="color:#2b7e8c;">⚑</span><div>Requires at least one <strong style="color:#2747b0;">equijoin predicate</strong> — equality on the key is a join condition.</div></div>
-          <div class="check-item"><span class="check-icon" style="color:#b9692a;">⚠</span><div>The <strong style="color:#b9692a;">sort requirement</strong> can dominate computation time if the data is large and not already sorted.</div></div>
+          <div class="check-item"><span class="check-icon" style="color:#2b7e8c;">⚑</span><div>Requires at least one <strong style="color:#2747b0;">equijoin predicate</strong> — equality on the key must be a join condition.</div></div>
+          <div class="check-item"><span class="check-icon" style="color:#b9692a;">⚠</span><div>The <strong style="color:#b9692a;">sort requirement</strong> can dominate cost if the data isn't already sorted.</div></div>
         </div>
       </div>
     </div>
@@ -947,7 +955,7 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="4-0">
       <div class="step-tag">3.4 · Merge (Sort-Merge) Join</div>
       <h3>Most efficient — if the data is pre-sorted</h3>
-      <p>A <strong style="color:#2747b0;">merge join</strong> is one of the most efficient joins, assuming the two datasets are pre-sorted based on the join key. The sorting requirement is also its catch: sorting first can drastically impact overall computation.</p>
+      <p>A <strong style="color:#2747b0;">merge join</strong> is one of the most efficient joins, assuming the two datasets are pre-sorted. That requirement is also its catch: sorting first can drastically impact overall computation.</p>
       <p>Merge joins require at least one <strong style="color:#2747b0;">equijoin predicate</strong> — equality between key values must be at least one condition of the join. In the <strong style="color:#2747b0;">sort phase</strong>, the dataset is split into runs that fit in memory, each run is sorted individually, and the sorted blocks are written back to disk. Runs can be sorted by indexes or explicit sorting algorithms — indexes are often faster.</p>
       <div class="badge-row">
         <span class="badge bt">Equijoin required</span>
@@ -959,8 +967,8 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="4-1">
       <div class="step-tag">3.5 · The Merge Phase</div>
       <h3>Two pointers sweep the sorted runs</h3>
-      <p>The sorted runs are combined into a final result. The algorithm maintains a <strong style="color:#2747b0;">pointer on each sorted dataset</strong> and traverses both in the same direction simultaneously.</p>
-      <p>As matches are found, they are stored. Once there isn't a match, the pointer at the <strong style="color:#2747b0;">smallest value advances</strong>. The operation continues until all rows have been processed, as shown in the animation.</p>
+      <p>The sorted runs are combined into a final result. The engine maintains a <strong style="color:#2747b0;">pointer on each sorted dataset</strong> and traverses both in the same direction simultaneously.</p>
+      <p>As matches are found, they are stored. Once there isn't a match, the pointer at the <strong style="color:#2747b0;">smallest value advances</strong>. This continues until all rows have been processed — exactly the sweep shown in the animation.</p>
       <div class="badge-row">
         <span class="badge bt">Twin pointers</span>
         <span class="badge bg">Advance smaller side</span>
@@ -971,8 +979,8 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="4-2">
       <div class="step-tag">3.6 · Cost Profile</div>
       <h3>Cost scales with the sum, not the product</h3>
-      <p>A key advantage of merge join over nested loops is the cost profile: unlike the nested loop join, where total cost may be proportional to the <em>product</em> of the row counts, with a merge join each table is read <strong style="color:#2747b0;">at most once</strong> and total cost is proportional to the <strong style="color:#2747b0;">sum</strong> of the input row counts.</p>
-      <p>It's worth noting that performance may vary with one-to-many or many-to-many relationships, and there is additional nuance in the approach for joining many-to-many variables.</p>
+      <p>A key advantage over nested loops is the cost profile: unlike the nested loop join, where total cost may be proportional to the <em>product</em> of the row counts, with a merge join each table is read <strong style="color:#2747b0;">at most once</strong> and total cost is proportional to the <strong style="color:#2747b0;">sum</strong> of the input row counts.</p>
+      <p>It's worth noting that performance may vary with one-to-many or many-to-many relationships, and there is additional nuance in the approach for many-to-many situations.</p>
       <div class="badge-row">
         <span class="badge bg">O(m + n)</span>
         <span class="badge bt">Read once each</span>
@@ -995,14 +1003,14 @@ main.content, #quarto-content, .page-columns,
       <div>
         <div class="anim-label">A hash table: keys → buckets</div>
         <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.8rem;">
-          <div style="background:#3b62db;color:#fff;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">key</div>
+          <div style="background:#3b62db;color:#fff;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.8rem;font-weight:600;">key</div>
           <span style="color:#2747b0;font-size:1.2rem;">→ hash() →</span>
-          <div style="background:#fdf0e3;border:1px solid #f2cba3;color:#b9692a;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">bucket #</div>
+          <div style="background:#fdf0e3;border:1px solid #f2cba3;color:#b9692a;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.8rem;font-weight:600;">bucket #</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.35rem;">
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">5&nbsp;&nbsp;Math</span></div>
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">7&nbsp;&nbsp;Music</span></div>
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">2&nbsp;&nbsp;Art</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">5&nbsp;&nbsp;Math</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">7&nbsp;&nbsp;Music</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">2&nbsp;&nbsp;Art</span></div>
         </div>
         <div class="anim-cap">A hash table stores key-value pairs in a fixed-size array. A key "hashes" to a specific bucket, so lookups need only hash the key — no scanning.</div>
       </div>
@@ -1015,7 +1023,7 @@ main.content, #quarto-content, .page-columns,
         <div class="anim-frame">
           <video src="HashJoin.webm" autoplay loop muted playsinline></video>
         </div>
-        <div class="anim-cap">Build (orange): hash each row of the smaller table into a bucket. Probe (teal): hash each row of the larger table and check its bucket for a match (green).</div>
+        <div class="anim-cap">Build (orange): hash each row of the smaller table into a bucket. Probe (teal): hash each row of the larger table and check its bucket for a match.</div>
       </div>
     </div>
 
@@ -1025,7 +1033,7 @@ main.content, #quarto-content, .page-columns,
         <div class="anim-label">Collisions &amp; cost</div>
         <div style="background:#e9f8f0;border:1px solid #abdcc3;border-radius:12px;padding:1rem;margin-bottom:0.9rem;text-align:center;">
           <div style="font-size:0.72rem;color:#2c7a52;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Linear in the inputs</div>
-          <div style="font-size:2.4rem;font-weight:900;color:#2c7a52;line-height:1.1;">O(n + m)</div>
+          <div style="font-size:2.4rem;font-weight:900;color:#2c7a52;line-height:1.1;">O(N + M)</div>
           <div style="font-size:0.8rem;color:#5b6b86;">no pre-sorting required</div>
         </div>
         <div style="background:#fdf0e3;border:1px solid #f2cba3;border-radius:10px;padding:0.75rem 0.9rem;">
@@ -1043,7 +1051,7 @@ main.content, #quarto-content, .page-columns,
       <div class="step-tag">3.7 · Hash Join</div>
       <h3>First, what is a hash table?</h3>
       <p>To understand the hash join, it helps to know what a <strong style="color:#2747b0;">hash table</strong> is: a data structure that stores information in key-value pairs for efficient lookups. It's an array of predetermined size, where a small representative piece of information — the <strong style="color:#2747b0;">key</strong> — hashes (corresponds) to a specific index in the array.</p>
-      <p>To find a value, you only need to hash the key to extract the relevant information. A hash join operates in two distinct phases: the <strong style="color:#2747b0;">build</strong> phase and the <strong style="color:#2747b0;">probe</strong> phase.</p>
+      <p>To find a value, you only need to hash the key to extract the relevant information. A hash join relies on this and operates in two distinct phases: the <strong style="color:#2747b0;">build</strong> phase and the <strong style="color:#2747b0;">probe</strong> phase.</p>
       <div class="badge-row">
         <span class="badge bi">Key-value pairs</span>
         <span class="badge bg">Buckets</span>
@@ -1054,7 +1062,7 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="5-1">
       <div class="step-tag">3.8 · Build &amp; Probe</div>
       <h3>Build a table, then probe it</h3>
-      <p>In the <strong style="color:#2747b0;">build phase</strong>, the typically smaller table (the build input) is scanned and a hash table is constructed using the join-key values. Each entry stores a small portion of data called a tuple along with its hash value, distributing data evenly across buckets.</p>
+      <p>In the <strong style="color:#2747b0;">build phase</strong>, the typically smaller table (the build input) is scanned and a hash table is constructed using the join-key values. Each entry stores a tuple along with its hash value, distributing data evenly across buckets.</p>
       <p>In the <strong style="color:#2747b0;">probe phase</strong>, the larger table (the probe input) is scanned. Each tuple's join key is hashed with the same function, and that hash points to the bucket to check for matches. If a match is found, tuples from both inputs are combined — as the animation shows.</p>
       <div class="badge-row">
         <span class="badge ba">Build · smaller table</span>
@@ -1067,9 +1075,9 @@ main.content, #quarto-content, .page-columns,
       <div class="step-tag">3.9 · Collisions &amp; Cost</div>
       <h3>Linear cost, watch for collisions</h3>
       <p>A <strong style="color:#2747b0;">hash collision</strong> occurs when two or more distinct join-key values hash to the same bucket. The system must then check each value in the bucket to determine a true match. Depending on collision count and bucket size, this can slow the join — but a well-distributed hash function keeps collisions minimal.</p>
-      <p>Hash joins are commonly used for <strong style="color:#2747b0;">larger joins on unsorted data</strong>, as the algorithm's time complexity is linear at O(n + m) and it does not require pre-sorted data the way a merge join does.</p>
+      <p>Hash joins are commonly used for <strong style="color:#2747b0;">larger joins on unsorted data</strong>, as the algorithm's time complexity is linear at O(N + M) and it does not require pre-sorted data the way a merge join does.</p>
       <div class="badge-row">
-        <span class="badge bg">O(n + m)</span>
+        <span class="badge bg">O(N + M)</span>
         <span class="badge ba">Collisions</span>
         <span class="badge bs">No sorting needed</span>
       </div>
@@ -1130,7 +1138,7 @@ main.content, #quarto-content, .page-columns,
           <div class="cx-track"><div class="cx-fill mid" style="width:34%"></div></div>
         </div>
         <div class="cx-row">
-          <div class="cx-head"><span>Hash (unsorted, equality)</span><strong>O(n + m)</strong></div>
+          <div class="cx-head"><span>Hash (unsorted, equality)</span><strong>O(N + M)</strong></div>
           <div class="cx-track"><div class="cx-fill good" style="width:30%"></div></div>
         </div>
         <div class="anim-cap">In theory both hash and merge perform well on large tables. The deciding factors are sortedness, the join predicate, memory, and whether a useful index exists.</div>
@@ -1162,7 +1170,7 @@ main.content, #quarto-content, .page-columns,
       <div class="badge-row">
         <span class="badge br">Nested O(m × n)</span>
         <span class="badge bt">Merge O(m + n)</span>
-        <span class="badge bg">Hash O(n + m)</span>
+        <span class="badge bg">Hash O(N + M)</span>
       </div>
     </div>
 
@@ -1197,7 +1205,7 @@ main.content, #quarto-content, .page-columns,
     </div>
     <div class="tk-card">
       <div class="tk-num">06</div>
-      <p><strong>Hash join</strong> builds a hash table from the smaller input, then probes it with the larger one. Linear O(n + m), no sorting needed; watch for collisions, minimized by a good hash function.</p>
+      <p><strong>Hash join</strong> builds a hash table from the smaller input, then probes it with the larger one. Linear O(N + M), no sorting needed; watch for collisions, minimized by a good hash function.</p>
     </div>
     <div class="tk-card">
       <div class="tk-num">07</div>
