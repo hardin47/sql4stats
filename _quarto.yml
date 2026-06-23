@@ -4,6 +4,7 @@ project:
 website:
   title: "sql4stats"
   navbar:
+    href: index.qmd
     left:
       - text: "Informational Resources"
         menu:
