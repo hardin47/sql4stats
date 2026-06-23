@@ -6,8 +6,7 @@ format:
     toc-location: left
     code-fold: true
     code-summary: "Show code"
-    code-tools: true
-    df-print: paged
+   
 execute:
   warning: false
   message: false
@@ -20,7 +19,7 @@ When you write a multi-table `JOIN`, you specify *which* tables connect and *on 
 This simulation isolates and measures two optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
-For more information on these strategies, see the <a href="_site/SQL_Joins_Scrolly.qmd">Joins page</a>.
+For more information on these strategies, see the <a href="_site/joins.html">Joins page</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
 Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is purely a teaching device — in production you almost always let the planner decide.
@@ -33,6 +32,7 @@ We connect to the database, build indexes on the join columns, and confirm the c
 
 ```{r}
 #| label: setup
+#| eval: false
 library(DBI)
 library(RPostgres)
 library(purrr)
@@ -45,6 +45,8 @@ con <- dbConnect(
   port   = 5432,
   user   = Sys.info()[["user"]]
 )
+```
+```{r}
 
 # Index the columns that appear in our JOIN ... ON clauses
 dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)")
