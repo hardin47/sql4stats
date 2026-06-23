@@ -30,6 +30,8 @@ website:
             text: Data Upload Guide
       - text: "About"
         href: about.qmd
+      - text: "References"
+        href: references.qmd
 format:
   html:
     theme: 
