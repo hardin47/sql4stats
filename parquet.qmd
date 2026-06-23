@@ -9,6 +9,9 @@ execute:
   echo: false
   warning: false
   message: false
+
+bibliography: references.bib
+suppress-bibliography: true
 ---
 
 ```{=html}
@@ -792,7 +795,7 @@ main.content, #quarto-content, .page-columns,
   <div class="interlude-inner">
     <div class="int-label">Fun historical insight</div>
     <div class="int-quote">Parquet was actually made by Twitter, and Google aided in its creation.</div>
-    <div class="int-sub">Parquet's origin story actually traces back to a 2010 Google research paper called <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf" target="_blank" style="color:#ffffff;text-decoration:underline;">"Dremel: Interactive Analysis of Web-Scale Datasets"</a>, which introduced the idea of representing nested data in a columnar format. This trick let Google query massive datasets interactively instead of waiting on slow batch jobs.Three years later, in 2013, two unlikely co-conspirators Twitter and Cloudera joined forces and built Parquet together and donated it to the Apache Software Foundation, making it free and open for anyone to use. Twitter needed to crunch enormous volumes of data fast, and Cloudera was deep in the business of helping companies do exactly that at scale. Today Parquet is widely known as a open source file storage format purpose-built for analytical OLAP-style workloads, heavy on reads and aggregations, over huge piles of data, and it's remarkably space-efficient.</div>
+    <div class="int-sub">Parquet's origin story actually traces back to a 2010 Google research paper called <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf" target="_blank" style="color:#ffffff;text-decoration:underline;">"Dremel: Interactive Analysis of Web-Scale Datasets"</a>, [@dremel] which introduced the idea of representing nested data in a columnar format. This trick let Google query massive datasets interactively instead of waiting on slow batch jobs.Three years later, in 2013, two unlikely co-conspirators Twitter and Cloudera joined forces and built Parquet together and donated it to the Apache Software Foundation, making it free and open for anyone to use. Twitter needed to crunch enormous volumes of data fast, and Cloudera was deep in the business of helping companies do exactly that at scale. Today Parquet is widely known as a open source file storage format purpose-built for analytical OLAP-style workloads, heavy on reads and aggregations, over huge piles of data, and it's remarkably space-efficient.</div>
   </div>
 </div>
 
