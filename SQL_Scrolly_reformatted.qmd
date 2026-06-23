@@ -37,7 +37,7 @@ execute:
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Fira Code', 'Cascadia Code', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Source Code Pro', ui-monospace, 'SF Mono', Menlo, monospace;
   background: #e9f1fd;
   color: #16263f;
   overflow-x: hidden;

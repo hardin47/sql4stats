@@ -13,17 +13,36 @@ execute:
 
 ```{=html}
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&display=swap');
 /* ══════════════════════════════════════════════
-   RESET & BASE
+   LIGHT-BLUE THEME — soft blue canvas, Source Code Pro
+   tables w/ royal-blue headers, orange + green as
+   the only highlight accents
 ══════════════════════════════════════════════ */
+
+/* Palette tokens
+   --bg            #e9f1fd   page background (light blue)
+   --bg-2          #f3f8ff   raised panel / right column
+   --panel         #dde9fb   sticky-left visual stage
+   --surface       #ffffff   cards / tables
+   --line          #c4d4ee   hairline borders
+   --ink           #16263f   primary text
+   --ink-dim       #5b6b86   secondary text
+   --blue          #3b62db   table header / accent
+   --blue-ink      #2747b0   strong blue for text
+   --orange        #f2a159   highlight A
+   --green         #4ab87d   highlight B
+   --cell-ink      #16181d   table cell text */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #f0f5ff;
-  color: #1e293b;
+  font-family: 'Source Code Pro', ui-monospace, 'SF Mono', Menlo, monospace;
+  background: #e9f1fd;
+  color: #16263f;
   overflow-x: hidden;
-  line-height: 1.6;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Kill Quarto containers */
@@ -34,8 +53,8 @@ main.content, #quarto-content, .page-columns,
 
 /* ── PROGRESS BAR ── */
 #progress-bar {
-  position: fixed; top: 0; left: 0; height: 3px;
-  background: linear-gradient(90deg, #2563eb, #38bdf8, #6366f1);
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: #3b62db;
   width: 0%; z-index: 9999;
 }
 
@@ -45,95 +64,93 @@ main.content, #quarto-content, .page-columns,
   display: flex; flex-direction: column; gap: 0.55rem; z-index: 999;
 }
 .nav-dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: #bfdbfe; border: 1.5px solid #93c5fd;
-  cursor: pointer; transition: all 0.25s; position: relative;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: transparent; border: 1.5px solid #9bb4e0;
+  cursor: pointer; transition: all 0.2s; position: relative;
 }
-.nav-dot:hover, .nav-dot.active { background: #2563eb; transform: scale(1.5); border-color: #2563eb; }
+.nav-dot:hover, .nav-dot.active { background: #3b62db; border-color: #3b62db; transform: scale(1.4); }
 .nav-tip {
   position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
-  background: #1e3a5f; color: #e0f2fe; padding: 0.2rem 0.55rem;
-  border-radius: 5px; font-size: 0.7rem; white-space: nowrap;
+  background: #16263f; color: #eaf1fc; border: 1px solid #2747b0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px; font-size: 0.7rem; white-space: nowrap;
   opacity: 0; pointer-events: none; transition: opacity 0.18s;
 }
 .nav-dot:hover .nav-tip { opacity: 1; }
 
 /* ══════════════════════════════════════════════
-   HERO
+   HERO — light blue, mono type
 ══════════════════════════════════════════════ */
 .hero {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 4rem 2rem; position: relative; overflow: hidden;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #1e40af 100%);
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
+  border-bottom: 1px solid #c4d4ee;
 }
 .hero-grid-bg {
   position: absolute; inset: 0; z-index: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+    linear-gradient(rgba(59,98,219,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,98,219,0.06) 1px, transparent 1px);
   background-size: 48px 48px;
 }
-.hero-glow {
-  position: absolute; width: 600px; height: 600px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
-  top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 0;
-}
+.hero-glow { display: none; }
 .hero-inner { position: relative; z-index: 1; max-width: 820px; }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
-  color: #dbeafe; padding: 0.35rem 1rem; border-radius: 999px;
-  font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase;
+  background: rgba(59,98,219,0.08); border: 1px solid #b6c9ee;
+  color: #2747b0; padding: 0.35rem 1rem; border-radius: 999px;
+  font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
   margin-bottom: 2rem;
 }
 .hero h1 {
-  font-size: clamp(3rem, 7vw, 6rem); font-weight: 900; color: #ffffff;
-  line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 1.8rem;
+  font-size: clamp(2.7rem, 6.5vw, 5.5rem); font-weight: 700; color: #16263f;
+  line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 1.8rem;
 }
-.hero h1 em { color: #bfdbfe; font-style: normal; }
+.hero h1 em { color: #3b62db; font-style: normal; }
 .hero-sub {
-  font-size: 1.1rem; color: rgba(255,255,255,0.75); max-width: 600px; margin: 0 auto 3.5rem;
+  font-size: 1.0rem; color: #5b6b86; max-width: 600px; margin: 0 auto 3.5rem;
   line-height: 1.75;
 }
 .hero-pills { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
 .hero-pill {
-  padding: 0.45rem 1.1rem; border-radius: 999px; font-size: 0.8rem;
-  font-weight: 600; border: 1px solid;
+  padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.78rem;
+  font-weight: 500; border: 1px solid #b6c9ee; background: rgba(255,255,255,0.5);
 }
-.hero-pill-1 { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.35); color: #dbeafe; }
-.hero-pill-2 { background: rgba(56,189,248,0.2);  border-color: rgba(56,189,248,0.5);  color: #e0f7ff; }
-.hero-pill-3 { background: rgba(167,139,250,0.2); border-color: rgba(167,139,250,0.4); color: #ede9fe; }
-.hero-pill-4 { background: rgba(52,211,153,0.18); border-color: rgba(52,211,153,0.4);  color: #d1fae5; }
+.hero-pill-1 { color: #2747b0; }
+.hero-pill-2 { color: #2747b0; }
+.hero-pill-3 { color: #5b6b86; }
+.hero-pill-4 { color: #5b6b86; }
 .hero-scroll-cue {
-  color: rgba(255,255,255,0.55); font-size: 0.75rem; letter-spacing: 0.12em;
+  color: #7185a3; font-size: 0.74rem; letter-spacing: 0.12em;
   text-transform: uppercase; animation: bob 2s ease-in-out infinite;
 }
-.hero-scroll-cue span { display: block; font-size: 1.6rem; color: #bfdbfe; margin-top: 0.3rem; }
+.hero-scroll-cue span { display: block; font-size: 1.6rem; color: #3b62db; margin-top: 0.3rem; }
 @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
 
 /* ══════════════════════════════════════════════
-   CHAPTER INTROS
+   CHAPTER INTROS — light strips, blue rule
 ══════════════════════════════════════════════ */
 .chapter-intro {
   padding: 5rem 4rem 3rem;
-  border-top: 3px solid #2563eb;
+  border-top: 1px solid #3b62db;
   display: flex; align-items: flex-end; gap: 3rem;
-  background: linear-gradient(180deg, #dbeafe 0%, #f0f5ff 100%);
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
 }
 .chapter-intro .ch-num {
-  font-size: clamp(5rem,10vw,9rem); font-weight: 900; line-height: 1;
-  color: rgba(37,99,235,0.13); letter-spacing: -0.06em; flex-shrink: 0;
+  font-size: clamp(5rem,10vw,9rem); font-weight: 700; line-height: 1;
+  color: rgba(59,98,219,0.14); letter-spacing: -0.05em; flex-shrink: 0;
 }
 .chapter-intro .ch-text .ch-tag {
-  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.16em;
-  color: #2563eb; font-weight: 700; margin-bottom: 0.5rem;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: #2747b0; font-weight: 600; margin-bottom: 0.5rem;
 }
 .chapter-intro .ch-text h2 {
-  font-size: clamp(2rem,4vw,3.2rem); font-weight: 800; color: #1e3a8a;
-  letter-spacing: -0.03em; line-height: 1.1;
+  font-size: clamp(1.8rem,3.6vw,2.9rem); font-weight: 600; color: #16263f;
+  letter-spacing: -0.02em; line-height: 1.15;
 }
 .chapter-intro .ch-text p {
-  color: #475569; font-size: 1rem; line-height: 1.7; max-width: 60ch; margin-top: 0.8rem;
+  color: #5b6b86; font-size: 0.98rem; line-height: 1.7; max-width: 60ch; margin-top: 0.8rem;
 }
 
 /* ══════════════════════════════════════════════
@@ -141,113 +158,117 @@ main.content, #quarto-content, .page-columns,
 ══════════════════════════════════════════════ */
 .sticky-scrolly {
   display: flex;
-  background: #f0f5ff;
+  background: #e9f1fd;
 }
 .sticky-left {
   position: sticky; top: 0; height: 100vh;
   width: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  padding: 2.5rem;
-  border-right: 1px solid #bfdbfe;
-  background: #e8f0fe;
+  padding: 2rem;
+  border-right: 1px solid #c4d4ee;
+  background: #dde9fb;
   overflow: hidden;
 }
 .sticky-right {
   flex: 1; padding: 0 3.5rem 20vh 3.5rem;
-  background: #f8faff;
+  background: #f3f8ff;
 }
 
 /* Visual panels inside sticky-left */
 .sticky-panel {
   position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center; padding: 2.5rem;
-  opacity: 0; transition: opacity 0.45s ease, transform 0.45s ease;
-  transform: translateY(16px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.75rem;
+  opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(14px);
   pointer-events: none;
+  overflow-y: auto;
 }
 .sticky-panel.active {
   opacity: 1; transform: translateY(0); pointer-events: auto;
 }
+.sticky-panel > div { width: 100%; max-width: 460px; }
 
 /* Step blocks in sticky-right */
 .step {
   min-height: 80vh; display: flex; flex-direction: column; justify-content: center;
   padding: 5rem 0;
-  border-bottom: 1px solid #e2e8f0;
-  opacity: 0.3; transition: opacity 0.4s;
+  border-bottom: 1px solid #d3e0f4;
+  opacity: 0.32; transition: opacity 0.4s;
 }
 .step.is-active { opacity: 1; }
 .step:last-child { border-bottom: none; }
 .step-tag {
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em;
-  color: #2563eb; font-weight: 700; margin-bottom: 0.8rem;
+  color: #2747b0; font-weight: 600; margin-bottom: 0.8rem;
 }
 .step h3 {
-  font-size: clamp(1.5rem, 2.5vw, 2.1rem); font-weight: 800; color: #0f172a;
-  letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.1rem;
+  font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight: 600; color: #16263f;
+  letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 1.1rem;
 }
-.step p { color: #334155; font-size: 1rem; line-height: 1.8; margin-bottom: 0.9rem; }
+.step p { color: #33445f; font-size: 0.97rem; line-height: 1.8; margin-bottom: 0.9rem; }
 .step p:last-of-type { margin-bottom: 1.2rem; }
 .step code {
-  background: #dbeafe; border: 1px solid #93c5fd;
-  color: #1d4ed8; padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.88em;
+  background: #dde9fb; border: 1px solid #b6c9ee;
+  color: #2747b0; padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.88em;
 }
 
 /* ══════════════════════════════════════════════
-   BADGES
+   BADGES — outline chips, two accent colors
 ══════════════════════════════════════════════ */
 .badge-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; }
 .badge {
-  padding: 0.28rem 0.75rem; border-radius: 999px; font-size: 0.73rem;
-  font-weight: 600; letter-spacing: 0.03em; border: 1px solid;
+  padding: 0.28rem 0.75rem; border-radius: 999px; font-size: 0.72rem;
+  font-weight: 500; letter-spacing: 0.02em; border: 1px solid #b6c9ee;
+  background: #ffffff; color: #33445f;
 }
-.bi { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
-.bs { background: #e0f7ff; color: #0369a1; border-color: #7dd3fc; }
-.bg { background: #dcfce7; color: #15803d; border-color: #86efac; }
-.ba { background: #fef9c3; color: #a16207; border-color: #fde047; }
-.br { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-.bp { background: #ede9fe; color: #6d28d9; border-color: #c4b5fd; }
+.bi { color: #2747b0; border-color: #b6c9ee; background: #eef3fe; }
+.bs { color: #2747b0; border-color: #b6c9ee; background: #eef3fe; }
+.bg { color: #2c7a52; border-color: #abdcc3; background: #e9f8f0; }
+.ba { color: #b9692a; border-color: #f2cba3; background: #fdf0e3; }
+.br { color: #b9692a; border-color: #f2cba3; background: #fdf0e3; }
+.bp { color: #5b6b86; border-color: #c4d4ee; background: #ffffff; }
 
 /* ══════════════════════════════════════════════
-   SQL / CODE BLOCKS
+   SQL / CODE BLOCKS — dark navy, the one dark element
 ══════════════════════════════════════════════ */
 .sql-block {
-  background: #0f1e3d; border: 1px solid #2d4a7a;
-  border-radius: 12px; padding: 1.2rem 1.5rem;
-  font-family: 'Fira Code','Cascadia Code','Courier New',monospace;
-  font-size: 0.82rem; line-height: 1.75; color: #e2e8f0;
-  margin: 1rem 0; overflow-x: auto;
-  box-shadow: 0 4px 20px rgba(15,30,61,0.2);
+  background: #11244a; border: 1px solid #1d3a6e;
+  border-radius: 8px; padding: 0.95rem 1.2rem;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.78rem; line-height: 1.6; color: #d8e3f7;
+  margin: 0.8rem 0; overflow-x: auto;
 }
-.sql-block .kw { color: #93c5fd; font-weight: 600; }
-.sql-block .fn { color: #6ee7b7; }
-.sql-block .st { color: #fbbf24; }
-.sql-block .cm { color: #64748b; font-style: italic; }
-.sql-block .ty { color: #67e8f9; }
+.sql-block .kw { color: #8fb0ff; font-weight: 600; }
+.sql-block .ty { color: #6ee7b7; }
+.sql-block .fn { color: #ffffff; }
+.sql-block .st { color: #f2a159; }
+.sql-block .cm { color: #7f93b8; font-style: italic; }
 
 /* ══════════════════════════════════════════════
    FILE FORMAT COMPARISON TABLE
 ══════════════════════════════════════════════ */
 .vis-table {
   width: 100%; border-collapse: collapse;
-  border-radius: 12px; overflow: hidden;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.12);
-  font-size: 0.83rem;
+  border: 1px solid #c4cbe0;
+  font-size: 0.85rem;
+  font-family: 'Source Code Pro', monospace;
+  background: #ffffff;
 }
 .vis-table th {
-  background: #2563eb; color: #fff; padding: 0.65rem 1rem;
-  font-weight: 700; text-align: left; font-size: 0.74rem;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  background: #3b62db; color: #ffffff; padding: 0.6rem 1rem;
+  font-weight: 600; text-align: left; font-size: 0.8rem;
+  letter-spacing: 0.02em; border: 1px solid #3b62db;
+  text-transform: none;
 }
 .vis-table td {
-  padding: 0.6rem 1rem; border-bottom: 1px solid #e2e8f0;
-  color: #334155; background: #ffffff; word-break: break-word;
+  padding: 0.55rem 1rem; border: 1px solid #d2d6e2;
+  color: #16181d; background: #ffffff; text-align: left; word-break: break-word;
 }
-.vis-table tr:last-child td { border-bottom: none; }
-.vis-table tr:nth-child(even) td { background: #f0f5ff; }
-.cell-good { color: #15803d; font-weight: 600; }
-.cell-bad  { color: #b91c1c; font-weight: 600; }
-.cell-mid  { color: #a16207; font-weight: 600; }
+.vis-table tr:nth-child(even) td { background: #ffffff; }
+.cell-good { color: #2c7a52; font-weight: 600; }
+.cell-bad  { color: #b9692a; font-weight: 600; }
+.cell-mid  { color: #b9692a; font-weight: 600; }
 
 /* ══════════════════════════════════════════════
    ROW vs COLUMN vs HYBRID VISUAL
@@ -255,14 +276,14 @@ main.content, #quarto-content, .page-columns,
 .layout-compare {
   display: flex; flex-direction: column; gap: 1rem; width: 100%;
 }
-.layout-block { border-radius: 12px; overflow: hidden; border: 1px solid; }
+.layout-block { border-radius: 8px; overflow: hidden; border: 1px solid #c4cbe0; }
 .layout-head {
-  padding: 0.5rem 1rem; font-size: 0.72rem; font-weight: 800;
+  padding: 0.5rem 1rem; font-size: 0.72rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.1em;
 }
-.layout-head.row-h   { background: #fee2e2; color: #b91c1c; border-bottom: 1px solid #fca5a5; }
-.layout-head.col-h   { background: #dcfce7; color: #15803d; border-bottom: 1px solid #86efac; }
-.layout-head.hyb-h   { background: #dbeafe; color: #1d4ed8; border-bottom: 1px solid #93c5fd; }
+.layout-head.row-h   { background: #fdf0e3; color: #b9692a; border-bottom: 1px solid #f2cba3; }
+.layout-head.col-h   { background: #e9f8f0; color: #2c7a52; border-bottom: 1px solid #abdcc3; }
+.layout-head.hyb-h   { background: #eef3fe; color: #2747b0; border-bottom: 1px solid #b6c9ee; }
 .layout-grid {
   display: grid; padding: 0.5rem;
   gap: 3px;
@@ -274,13 +295,13 @@ main.content, #quarto-content, .page-columns,
   border-radius: 4px; padding: 0.28rem 0.1rem;
   font-size: 0.62rem; text-align: center; font-weight: 600;
 }
-.c-a { background: #bfdbfe; color: #1e40af; }
-.c-b { background: #bbf7d0; color: #14532d; }
-.c-c { background: #fde68a; color: #78350f; }
-.c-d { background: #e9d5ff; color: #4c1d95; }
-.c-g { background: #e2e8f0; color: #475569; font-style: italic; }
+.c-a { background: #d6e2fb; color: #2747b0; }
+.c-b { background: #cdeedd; color: #1f6443; }
+.c-c { background: #fbe3cd; color: #8a4a1c; }
+.c-d { background: #dfe7f8; color: #3a4d80; }
+.c-g { background: #e7edf7; color: #5b6b86; font-style: italic; }
 .rg-sep {
-  grid-column: 1 / -1; height: 1px; background: #e2e8f0; margin: 2px 0;
+  grid-column: 1 / -1; height: 1px; background: #d3e0f4; margin: 2px 0;
 }
 
 /* ══════════════════════════════════════════════
@@ -288,20 +309,20 @@ main.content, #quarto-content, .page-columns,
 ══════════════════════════════════════════════ */
 .parquet-struct {
   width: 100%; display: flex; flex-direction: column; gap: 0;
-  border-radius: 12px; overflow: hidden; border: 1px solid #2d4a7a;
-  font-size: 0.78rem; box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+  border-radius: 8px; overflow: hidden; border: 1px solid #1d3a6e;
+  font-size: 0.78rem;
 }
 .pq-magic {
-  background: #1e3a8a; color: #bfdbfe; padding: 0.4rem 1rem;
-  font-family: 'Fira Code', monospace; font-weight: 700; text-align: center;
+  background: #11244a; color: #8fb0ff; padding: 0.4rem 1rem;
+  font-family: 'Source Code Pro', monospace; font-weight: 700; text-align: center;
   font-size: 0.75rem; letter-spacing: 0.2em;
 }
 .pq-rg {
-  background: #f0f5ff; border-top: 1px solid #bfdbfe;
-  border-bottom: 1px solid #bfdbfe;
+  background: #f3f8ff; border-top: 1px solid #c4d4ee;
+  border-bottom: 1px solid #c4d4ee;
 }
 .pq-rg-label {
-  background: #2563eb; color: #fff; padding: 0.3rem 1rem;
+  background: #3b62db; color: #fff; padding: 0.3rem 1rem;
   font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
 }
 .pq-cols {
@@ -309,25 +330,25 @@ main.content, #quarto-content, .page-columns,
   gap: 0.4rem; padding: 0.5rem;
 }
 .pq-col {
-  border-radius: 8px; overflow: hidden; border: 1px solid;
+  border-radius: 6px; overflow: hidden; border: 1px solid;
 }
 .pq-col-head {
   padding: 0.3rem 0.5rem; font-size: 0.65rem; font-weight: 800;
   text-align: center; text-transform: uppercase; letter-spacing: 0.08em;
 }
-.pq-col-a .pq-col-head { background: #bfdbfe; color: #1e3a8a; border-bottom: 1px solid #93c5fd; }
-.pq-col-b .pq-col-head { background: #bbf7d0; color: #14532d; border-bottom: 1px solid #86efac; }
-.pq-col-c .pq-col-head { background: #fde68a; color: #78350f; border-bottom: 1px solid #fcd34d; }
-.pq-col-a { border-color: #93c5fd; background: #eff6ff; }
-.pq-col-b { border-color: #86efac; background: #f0fdf4; }
-.pq-col-c { border-color: #fcd34d; background: #fffbeb; }
+.pq-col-a .pq-col-head { background: #d6e2fb; color: #2747b0; border-bottom: 1px solid #b6c9ee; }
+.pq-col-b .pq-col-head { background: #cdeedd; color: #1f6443; border-bottom: 1px solid #abdcc3; }
+.pq-col-c .pq-col-head { background: #fbe3cd; color: #8a4a1c; border-bottom: 1px solid #f2cba3; }
+.pq-col-a { border-color: #b6c9ee; background: #eef3fe; }
+.pq-col-b { border-color: #abdcc3; background: #e9f8f0; }
+.pq-col-c { border-color: #f2cba3; background: #fdf0e3; }
 .pq-page {
-  padding: 0.22rem 0.5rem; font-size: 0.6rem; color: #475569;
+  padding: 0.22rem 0.5rem; font-size: 0.6rem; color: #5b6b86;
   border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center;
 }
 .pq-page:last-child { border-bottom: none; }
 .pq-footer {
-  background: #1e3a8a; color: #93c5fd; padding: 0.5rem 1rem;
+  background: #11244a; color: #8fb0ff; padding: 0.5rem 1rem;
   font-size: 0.68rem; text-align: center; line-height: 1.4;
 }
 
@@ -341,19 +362,19 @@ main.content, #quarto-content, .page-columns,
   display: flex; align-items: center; gap: 0.7rem;
 }
 .enc-label {
-  width: 110px; font-size: 0.72rem; color: #64748b; flex-shrink: 0; font-weight: 600;
+  width: 110px; font-size: 0.72rem; color: #5b6b86; flex-shrink: 0; font-weight: 600;
 }
 .enc-bar-track {
-  flex: 1; height: 26px; background: #e2e8f0; border-radius: 8px; overflow: visible;
+  flex: 1; height: 26px; background: #d3e0f4; border: 1px solid #c4d4ee; border-radius: 8px; overflow: visible;
 }
 .enc-bar {
   height: 100%; border-radius: 8px; display: flex; align-items: center;
   padding: 0 0.6rem; font-size: 0.65rem; font-weight: 700;
   transition: width 1s ease; white-space: nowrap; overflow: hidden;
 }
-.enc-csv  { background: linear-gradient(90deg, #f87171, #ef4444); color: #fff; }
-.enc-json { background: linear-gradient(90deg, #fb923c, #f97316); color: #fff; }
-.enc-pq   { background: linear-gradient(90deg, #34d399, #10b981); color: #fff; }
+.enc-csv  { background: #f2a159; color: #16181d; }
+.enc-json { background: #f2b87a; color: #16181d; }
+.enc-pq   { background: #4ab87d; color: #08120c; }
 
 /* ══════════════════════════════════════════════
    DUCKDB ARCHITECTURE VISUAL
@@ -362,39 +383,39 @@ main.content, #quarto-content, .page-columns,
   width: 100%; display: flex; flex-direction: column; gap: 0.5rem;
 }
 .arch-layer {
-  border-radius: 10px; padding: 0.7rem 1rem;
+  border-radius: 8px; padding: 0.7rem 1rem;
   display: flex; align-items: center; gap: 0.8rem;
   border: 1px solid;
 }
 .arch-icon { font-size: 1.4rem; flex-shrink: 0; }
 .arch-text {}
 .arch-text .arch-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 0.1rem; }
-.arch-text .arch-desc { font-size: 0.7rem; color: #64748b; }
-.arch-l1 { background: #dbeafe; border-color: #93c5fd; }
-.arch-l1 .arch-name { color: #1d4ed8; }
-.arch-l2 { background: #ede9fe; border-color: #c4b5fd; }
-.arch-l2 .arch-name { color: #6d28d9; }
-.arch-l3 { background: #dcfce7; border-color: #86efac; }
-.arch-l3 .arch-name { color: #15803d; }
-.arch-l4 { background: #fef9c3; border-color: #fde047; }
-.arch-l4 .arch-name { color: #a16207; }
-.arch-l5 { background: #fee2e2; border-color: #fca5a5; }
-.arch-l5 .arch-name { color: #b91c1c; }
-.arch-arrow { text-align: center; color: #94a3b8; font-size: 0.9rem; }
+.arch-text .arch-desc { font-size: 0.7rem; color: #5b6b86; }
+.arch-l1 { background: #eef3fe; border-color: #b6c9ee; }
+.arch-l1 .arch-name { color: #2747b0; }
+.arch-l2 { background: #eef3fe; border-color: #b6c9ee; }
+.arch-l2 .arch-name { color: #2747b0; }
+.arch-l3 { background: #e9f8f0; border-color: #abdcc3; }
+.arch-l3 .arch-name { color: #2c7a52; }
+.arch-l4 { background: #fdf0e3; border-color: #f2cba3; }
+.arch-l4 .arch-name { color: #b9692a; }
+.arch-l5 { background: #fdf0e3; border-color: #f2cba3; }
+.arch-l5 .arch-name { color: #b9692a; }
+.arch-arrow { text-align: center; color: #8595b0; font-size: 0.9rem; }
 
 /* ══════════════════════════════════════════════
    OLTP vs OLAP SPLIT VISUAL
 ══════════════════════════════════════════════ */
 .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; width: 100%; }
-.trade-card { border-radius: 12px; padding: 1rem 1.1rem; border: 1px solid; }
-.trade-card.pro { background: #f0fdf4; border-color: #86efac; }
-.trade-card.con { background: #fff7ed; border-color: #fed7aa; }
-.trade-card.neu { background: #f0f5ff; border-color: #bfdbfe; }
-.trade-card h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
-.trade-card.pro h4 { color: #15803d; }
-.trade-card.con h4 { color: #c2410c; }
-.trade-card.neu h4 { color: #1d4ed8; }
-.trade-card ul { padding-left: 1.1rem; font-size: 0.8rem; color: #475569; }
+.trade-card { border-radius: 8px; padding: 1rem 1.1rem; border: 1px solid; background: #ffffff; }
+.trade-card.pro { background: #e9f8f0; border-color: #abdcc3; }
+.trade-card.con { background: #fdf0e3; border-color: #f2cba3; }
+.trade-card.neu { background: #eef3fe; border-color: #b6c9ee; }
+.trade-card h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+.trade-card.pro h4 { color: #2c7a52; }
+.trade-card.con h4 { color: #b9692a; }
+.trade-card.neu h4 { color: #2747b0; }
+.trade-card ul { padding-left: 1.1rem; font-size: 0.8rem; color: #33445f; }
 .trade-card li { margin-bottom: 0.28rem; }
 
 /* ══════════════════════════════════════════════
@@ -404,71 +425,70 @@ main.content, #quarto-content, .page-columns,
 .exp-row {
   display: flex; align-items: center; gap: 0.6rem;
 }
-.exp-name { width: 160px; font-size: 0.72rem; color: #334155; font-weight: 600; flex-shrink: 0; }
+.exp-name { width: 160px; font-size: 0.72rem; color: #33445f; font-weight: 600; flex-shrink: 0; }
 .exp-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
 .exp-bar-wrap { display: flex; align-items: center; gap: 0.4rem; }
-.exp-bar-label { width: 52px; font-size: 0.62rem; color: #94a3b8; text-align: right; }
-.exp-bar-track { flex: 1; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+.exp-bar-label { width: 52px; font-size: 0.62rem; color: #8595b0; text-align: right; }
+.exp-bar-track { flex: 1; height: 12px; background: #d3e0f4; border: 1px solid #c4d4ee; border-radius: 6px; overflow: hidden; }
 .exp-bar { height: 100%; border-radius: 6px; }
-.eb-native { background: linear-gradient(90deg, #2563eb, #38bdf8); }
-.eb-direct { background: linear-gradient(90deg, #10b981, #34d399); }
+.eb-native { background: #3b62db; }
+.eb-direct { background: #4ab87d; }
 
 .size-compare { display: flex; gap: 1rem; margin-top: 0.8rem; }
 .size-box {
-  flex: 1; border-radius: 10px; padding: 0.8rem; text-align: center; border: 1px solid;
+  flex: 1; border-radius: 8px; padding: 0.8rem; text-align: center; border: 1px solid;
 }
-.size-box.native { background: #dbeafe; border-color: #93c5fd; }
-.size-box.direct { background: #dcfce7; border-color: #86efac; }
-.size-box .sz-num { font-size: 1.6rem; font-weight: 900; }
-.size-box.native .sz-num { color: #1d4ed8; }
-.size-box.direct .sz-num { color: #15803d; }
-.size-box .sz-label { font-size: 0.7rem; color: #64748b; }
+.size-box.native { background: #eef3fe; border-color: #b6c9ee; }
+.size-box.direct { background: #e9f8f0; border-color: #abdcc3; }
+.size-box .sz-num { font-size: 1.6rem; font-weight: 700; }
+.size-box.native .sz-num { color: #2747b0; }
+.size-box.direct .sz-num { color: #2c7a52; }
+.size-box .sz-label { font-size: 0.7rem; color: #5b6b86; }
 
 /* ══════════════════════════════════════════════
-   FULL-WIDTH INTERLUDE
+   FULL-WIDTH INTERLUDE — solid blue band
 ══════════════════════════════════════════════ */
 .interlude {
   padding: 6rem 4rem; display: flex; align-items: center; justify-content: center;
-  background: #1d4ed8;
+  background: #3b62db;
 }
 .interlude-inner { max-width: 700px; text-align: center; }
 .interlude-inner .int-label {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em;
-  color: #bfdbfe; font-weight: 700; margin-bottom: 1rem;
+  color: #cdd8ff; font-weight: 600; margin-bottom: 1rem;
 }
 .interlude-inner .int-quote {
-  font-size: clamp(1.3rem,2.5vw,2rem); font-weight: 700; color: #ffffff;
-  line-height: 1.4; margin-bottom: 1rem;
+  font-size: clamp(1.2rem,2.4vw,1.85rem); font-weight: 600; color: #ffffff;
+  line-height: 1.45; margin-bottom: 1rem;
 }
-.interlude-inner .int-sub { font-size: 0.95rem; color: rgba(255,255,255,0.7); line-height: 1.7; }
+.interlude-inner .int-sub { font-size: 0.92rem; color: rgba(255,255,255,0.85); line-height: 1.7; }
 
 /* ══════════════════════════════════════════════
    FINAL SUMMARY
 ══════════════════════════════════════════════ */
 .final-section {
   padding: 8rem 4rem;
-  background: linear-gradient(180deg, #dbeafe 0%, #f0f5ff 100%);
-  border-top: 3px solid #2563eb;
+  background: linear-gradient(180deg, #dceafb 0%, #e9f1fd 100%);
+  border-top: 1px solid #3b62db;
 }
 .final-section h2 {
-  font-size: clamp(2rem,4vw,3.5rem); font-weight: 900; color: #1e3a8a;
-  letter-spacing: -0.03em; margin-bottom: 3rem; text-align: center;
+  font-size: clamp(1.9rem,3.6vw,3rem); font-weight: 700; color: #16263f;
+  letter-spacing: -0.02em; margin-bottom: 3rem; text-align: center;
 }
-.final-section h2 span { color: #2563eb; }
+.final-section h2 span { color: #3b62db; }
 .takeaway-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
   gap: 1rem; max-width: 1200px; margin: 0 auto;
 }
 .tk-card {
-  background: #ffffff; border: 1px solid #bfdbfe;
-  border-radius: 14px; padding: 1.5rem 1.6rem;
-  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  background: #ffffff; border: 1px solid #c4d4ee;
+  border-radius: 10px; padding: 1.5rem 1.6rem;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
-.tk-card:hover { border-color: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.12); }
-.tk-num { font-size: 2.2rem; font-weight: 900; color: #bfdbfe; line-height:1; margin-bottom:0.7rem; }
-.tk-card p { color: #475569; font-size: 0.9rem; line-height: 1.7; }
-.tk-card p strong { color: #1d4ed8; }
+.tk-card:hover { border-color: #3b62db; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(59,98,219,0.12); }
+.tk-num { font-size: 2.1rem; font-weight: 700; color: #c4d4ee; line-height:1; margin-bottom:0.7rem; }
+.tk-card p { color: #33445f; font-size: 0.9rem; line-height: 1.7; }
+.tk-card p strong { color: #2747b0; }
 
 /* ══════════════════════════════════════════════
    TIMELINE (history)
@@ -479,7 +499,7 @@ main.content, #quarto-content, .page-columns,
 }
 .timeline::before {
   content: ''; position: absolute; left: 0.6rem; top: 0.5rem; bottom: 0.5rem;
-  width: 2px; background: linear-gradient(180deg, #2563eb, #6366f1, #10b981);
+  width: 2px; background: #3b62db;
   border-radius: 2px;
 }
 .tl-item {
@@ -489,25 +509,26 @@ main.content, #quarto-content, .page-columns,
 .tl-dot {
   position: absolute; left: -1.65rem; top: 1rem;
   width: 14px; height: 14px; border-radius: 50%;
-  background: #2563eb; border: 2px solid #e8f0fe;
+  background: #3b62db; border: 2px solid #dde9fb;
   flex-shrink: 0;
 }
 .tl-year {
-  font-size: 0.75rem; font-weight: 800; color: #2563eb;
+  font-size: 0.75rem; font-weight: 800; color: #3b62db;
   width: 40px; flex-shrink: 0; padding-top: 0.1rem;
 }
 .tl-content {}
-.tl-title { font-size: 0.82rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.2rem; }
-.tl-desc  { font-size: 0.75rem; color: #64748b; line-height: 1.5; }
+.tl-title { font-size: 0.82rem; font-weight: 700; color: #16263f; margin-bottom: 0.2rem; }
+.tl-desc  { font-size: 0.75rem; color: #5b6b86; line-height: 1.5; }
 
 /* ══════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════ */
 @media(max-width:900px){
   .sticky-scrolly { flex-direction: column; }
-  .sticky-left { position: relative; height: 50vh; width: 100%; border-right: none; border-bottom: 1px solid #bfdbfe; }
-  .sticky-panel { position: relative; opacity: 1; transform: none; }
+  .sticky-left { position: relative; height: auto; min-height: 50vh; width: 100%; border-right: none; border-bottom: 1px solid #c4d4ee; }
+  .sticky-panel { position: relative; opacity: 1; transform: none; overflow-y: visible; }
   .sticky-panel:not(.active){ display: none; }
+  .sticky-panel > div { max-width: none; }
   .sticky-right { padding: 2rem 1.5rem; }
   .chapter-intro { padding: 3rem 1.5rem 2rem; flex-direction: column; gap: 1rem; }
   .chapter-intro .ch-num { font-size: 4rem; }
@@ -572,7 +593,7 @@ main.content, #quarto-content, .page-columns,
             <div class="layout-head" style="background:#f1f5f9;color:#475569;border-bottom:1px solid #cbd5e1;">Original Table</div>
             <div style="background:#f8fafc;padding:0.5rem;">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:3px;">
-                <div class="cell" style="background:#1e3a8a;color:#fff;font-size:0.58rem;font-weight:700;">Col A</div>
+                <div class="cell" style="background:#2747b0;color:#fff;font-size:0.58rem;font-weight:700;">Col A</div>
                 <div class="cell" style="background:#14532d;color:#fff;font-size:0.58rem;font-weight:700;">Col B</div>
                 <div class="cell" style="background:#78350f;color:#fff;font-size:0.58rem;font-weight:700;">Col C</div>
                 <div class="cell" style="background:#4c1d95;color:#fff;font-size:0.58rem;font-weight:700;">Col D</div>
@@ -598,7 +619,7 @@ main.content, #quarto-content, .page-columns,
               <div class="cell c-a">A2</div><div class="cell c-b">B2</div><div class="cell c-c">C2</div><div class="cell c-d">D2</div>
               <div class="cell c-a">A3</div><div class="cell c-b">B3</div><div class="cell c-c">C3</div><div class="cell c-d">D3</div>
             </div>
-            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#b91c1c;background:#fff5f5;">All columns per row stored together on disk</div>
+            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#b9692a;background:#fff5f5;">All columns per row stored together on disk</div>
           </div>
 
           <!-- Columnar -->
@@ -610,21 +631,21 @@ main.content, #quarto-content, .page-columns,
               <div class="cell c-c">C1</div><div class="cell c-c">C2</div><div class="cell c-c">C3</div><div class="cell c-c">C4</div>
               <div class="cell c-d">D1</div><div class="cell c-d">D2</div><div class="cell c-d">D3</div><div class="cell c-d">D4</div>
             </div>
-            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#15803d;background:#f0fdf4;">Each column stored contiguously — read only what you need</div>
+            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#2c7a52;background:#f0fdf4;">Each column stored contiguously — read only what you need</div>
           </div>
 
           <!-- Hybrid -->
           <div class="layout-block" style="border-color:#93c5fd;">
             <div class="layout-head hyb-h">Hybrid (Parquet) — Row Groups</div>
             <div style="background:#eff6ff;padding:0.5rem;display:flex;flex-direction:column;gap:4px;">
-              <div style="font-size:0.62rem;color:#1d4ed8;font-weight:700;text-align:center;margin-bottom:2px;">Row Group 1</div>
+              <div style="font-size:0.62rem;color:#2747b0;font-weight:700;text-align:center;margin-bottom:2px;">Row Group 1</div>
               <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;">
                 <div class="cell c-a">A1</div><div class="cell c-a">A2</div>
                 <div class="cell c-b">B1</div><div class="cell c-b">B2</div>
                 <div class="cell c-c">C1</div><div class="cell c-c">C2</div>
                 <div class="cell c-d">D1</div><div class="cell c-d">D2</div>
               </div>
-              <div style="font-size:0.62rem;color:#1d4ed8;font-weight:700;text-align:center;margin-top:4px;margin-bottom:2px;">Row Group 2</div>
+              <div style="font-size:0.62rem;color:#2747b0;font-weight:700;text-align:center;margin-top:4px;margin-bottom:2px;">Row Group 2</div>
               <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;">
                 <div class="cell c-a">A3</div><div class="cell c-a">A4</div>
                 <div class="cell c-b">B3</div><div class="cell c-b">B4</div>
@@ -632,7 +653,7 @@ main.content, #quarto-content, .page-columns,
                 <div class="cell c-d">D3</div><div class="cell c-d">D4</div>
               </div>
             </div>
-            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#1d4ed8;background:#eff6ff;">Rows chunked into groups; within each group, stored columnarly</div>
+            <div style="padding:0.35rem 0.8rem;font-size:0.67rem;color:#2747b0;background:#eff6ff;">Rows chunked into groups; within each group, stored columnarly</div>
           </div>
 
         </div>
@@ -642,7 +663,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel B: format comparison table -->
     <div class="sticky-panel" id="panel-1-1">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">Format comparison</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">Format comparison</div>
         <table class="vis-table">
           <thead>
             <tr>
@@ -668,7 +689,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel C: encoding / size comparison bars -->
     <div class="sticky-panel" id="panel-1-2">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.9rem;">Relative file size — same dataset</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.9rem;">Relative file size — same dataset</div>
         <div class="encode-compare">
           <div class="enc-row">
             <div class="enc-label">JSON</div>
@@ -692,25 +713,25 @@ main.content, #quarto-content, .page-columns,
           </div>
         </div>
         <div style="margin-top:1.1rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:10px;padding:0.8rem 1rem;">
-          <div style="font-size:0.72rem;color:#1d4ed8;font-weight:700;margin-bottom:0.3rem;">Why is Parquet so much smaller?</div>
-          <div style="font-size:0.75rem;color:#1e3a8a;line-height:1.6;">
+          <div style="font-size:0.72rem;color:#2747b0;font-weight:700;margin-bottom:0.3rem;">Why is Parquet so much smaller?</div>
+          <div style="font-size:0.75rem;color:#2747b0;line-height:1.6;">
             Columnar storage groups similar values together, making compression extremely effective. Parquet also uses dictionary encoding, replacing repeated values like <code style="background:#bfdbfe;border-radius:3px;padding:0.05em 0.3em;">"California"</code> with a tiny integer code across all occurrences.
           </div>
         </div>
         <div style="margin-top:0.8rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;text-align:center;">
           <div style="background:#dcfce7;border-radius:8px;padding:0.5rem;border:1px solid #86efac;">
-            <div style="font-size:0.7rem;font-weight:700;color:#15803d;">Parquet</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#16a34a;">1×</div>
+            <div style="font-size:0.7rem;font-weight:700;color:#2c7a52;">Parquet</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#2c7a52;">1×</div>
             <div style="font-size:0.65rem;color:#64748b;">baseline</div>
           </div>
           <div style="background:#fef9c3;border-radius:8px;padding:0.5rem;border:1px solid #fde047;">
-            <div style="font-size:0.7rem;font-weight:700;color:#a16207;">CSV</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#d97706;">2.5×</div>
+            <div style="font-size:0.7rem;font-weight:700;color:#b9692a;">CSV</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#b9692a;">2.5×</div>
             <div style="font-size:0.65rem;color:#64748b;">larger</div>
           </div>
           <div style="background:#fee2e2;border-radius:8px;padding:0.5rem;border:1px solid #fca5a5;">
-            <div style="font-size:0.7rem;font-weight:700;color:#b91c1c;">JSON</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#f87171;">5.6×</div>
+            <div style="font-size:0.7rem;font-weight:700;color:#b9692a;">JSON</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#b9692a;">5.6×</div>
             <div style="font-size:0.65rem;color:#64748b;">larger</div>
           </div>
         </div>
@@ -752,8 +773,8 @@ main.content, #quarto-content, .page-columns,
     <div class="step" data-panel="1-2">
       <div class="step-tag">1.3 · Compression &amp; Encoding</div>
       <h3>Columnar storage compresses information more efficiently</h3>
-      <p>The graphic on the left comes from a real experiment comparing the same dataset stored in all three formats. Each format stores the exact same information from the <a href="https://openpolicing.stanford.edu/" target="_blank" style="color:#2563eb;text-decoration:underline;">Stanford Open Policing Project</a> dataset from Los Angeles. However, the difference is striking in file size: the Parquet file is over 5× smaller than JSON and nearly 2.5× smaller than CSV.</p>
-      <p>This happens for two reasons. First, columnar grouping means similar values sit next to each other in the file, <a href="https://parquet.apache.org/docs/file-format/data-pages/compression/" target="_blank" style="color:#2563eb;text-decoration:underline;"> compression algorithms like Snappy or Zstd</a> exploit this repetition extremely well. Second, Parquet uses <strong style="color:#8a00c2;">dictionary encoding</strong>: if a string column contains the same 50 city names repeated millions of times, Parquet replaces each string with a compact integer and stores a single dictionary. The savings compound to make a strong disparity.</p>
+      <p>The graphic on the left comes from a real experiment comparing the same dataset stored in all three formats. Each format stores the exact same information from the <a href="https://openpolicing.stanford.edu/" target="_blank" style="color:#3b62db;text-decoration:underline;">Stanford Open Policing Project</a> dataset from Los Angeles. However, the difference is striking in file size: the Parquet file is over 5× smaller than JSON and nearly 2.5× smaller than CSV.</p>
+      <p>This happens for two reasons. First, columnar grouping means similar values sit next to each other in the file, <a href="https://parquet.apache.org/docs/file-format/data-pages/compression/" target="_blank" style="color:#3b62db;text-decoration:underline;"> compression algorithms like Snappy or Zstd</a> exploit this repetition extremely well. Second, Parquet uses <strong style="color:#8a00c2;">dictionary encoding</strong>: if a string column contains the same 50 city names repeated millions of times, Parquet replaces each string with a compact integer and stores a single dictionary. The savings compound to make a strong disparity.</p>
       <p>Smaller files mean fewer bytes read from disk, which is usually the primary bottleneck in data analysis. Parquet's compression is not just a storage benefit, it is a query performance benefit too.</p>
       <div class="badge-row">
         <span class="badge bg">Dictionary encoding</span>
@@ -797,7 +818,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel: Parquet file structure -->
     <div class="sticky-panel active" id="panel-2-0">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">Internal layout of a .parquet file</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">Internal layout of a .parquet file</div>
         <div class="parquet-struct">
           <div class="pq-magic">PAR1  (magic bytes — identifies Parquet format)</div>
 
@@ -865,46 +886,46 @@ main.content, #quarto-content, .page-columns,
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#f59e0b;font-weight:700;margin-bottom:0.8rem;">Row group skipping in action</div>
 
-        <div style="font-size:0.78rem;color:#334155;margin-bottom:0.6rem;">Query: <code style="background:#dbeafe;border:1px solid #93c5fd;color:#1d4ed8;padding:0.1em 0.4em;border-radius:4px;">WHERE date &gt; '2023-06-01'</code></div>
+        <div style="font-size:0.78rem;color:#334155;margin-bottom:0.6rem;">Query: <code style="background:#dbeafe;border:1px solid #93c5fd;color:#2747b0;padding:0.1em 0.4em;border-radius:4px;">WHERE date &gt; '2023-06-01'</code></div>
 
         <!-- RG cards -->
         <div style="display:flex;flex-direction:column;gap:0.4rem;">
           <!-- skipped -->
           <div style="border-radius:10px;border:1px solid #fca5a5;background:#fff5f5;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <div style="font-size:0.72rem;font-weight:700;color:#b91c1c;">Row Group 1</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#b9692a;">Row Group 1</div>
               <div style="font-size:0.65rem;color:#94a3b8;">date: 2021-01-01 → 2021-12-31</div>
             </div>
-            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b91c1c;">⏭ SKIPPED</div>
+            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b9692a;">⏭ SKIPPED</div>
           </div>
           <div style="border-radius:10px;border:1px solid #fca5a5;background:#fff5f5;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <div style="font-size:0.72rem;font-weight:700;color:#b91c1c;">Row Group 2</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#b9692a;">Row Group 2</div>
               <div style="font-size:0.65rem;color:#94a3b8;">date: 2022-01-01 → 2022-12-31</div>
             </div>
-            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b91c1c;">⏭ SKIPPED</div>
+            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b9692a;">⏭ SKIPPED</div>
           </div>
           <div style="border-radius:10px;border:1px solid #fca5a5;background:#fff5f5;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <div style="font-size:0.72rem;font-weight:700;color:#b91c1c;">Row Group 3</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#b9692a;">Row Group 3</div>
               <div style="font-size:0.65rem;color:#94a3b8;">date: 2023-01-01 → 2023-05-30</div>
             </div>
-            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b91c1c;">⏭ SKIPPED</div>
+            <div style="background:#fee2e2;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#b9692a;">⏭ SKIPPED</div>
           </div>
           <!-- read -->
           <div style="border-radius:10px;border:1px solid #86efac;background:#f0fdf4;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <div style="font-size:0.72rem;font-weight:700;color:#15803d;">Row Group 4</div>
-              <div style="font-size:0.65rem;color:#16a34a;">date: 2023-06-01 → 2023-12-31</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#2c7a52;">Row Group 4</div>
+              <div style="font-size:0.65rem;color:#2c7a52;">date: 2023-06-01 → 2023-12-31</div>
             </div>
-            <div style="background:#dcfce7;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#15803d;">✓ READ</div>
+            <div style="background:#dcfce7;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#2c7a52;">✓ READ</div>
           </div>
           <div style="border-radius:10px;border:1px solid #86efac;background:#f0fdf4;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <div style="font-size:0.72rem;font-weight:700;color:#15803d;">Row Group 5</div>
-              <div style="font-size:0.65rem;color:#16a34a;">date: 2024-01-01 → 2024-12-31</div>
+              <div style="font-size:0.72rem;font-weight:700;color:#2c7a52;">Row Group 5</div>
+              <div style="font-size:0.65rem;color:#2c7a52;">date: 2024-01-01 → 2024-12-31</div>
             </div>
-            <div style="background:#dcfce7;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#15803d;">✓ READ</div>
+            <div style="background:#dcfce7;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.65rem;font-weight:800;color:#2c7a52;">✓ READ</div>
           </div>
         </div>
 
@@ -917,21 +938,21 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel: Parquet advantages checklist -->
     <div class="sticky-panel" id="panel-2-2">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">Parquet advantages</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">Parquet advantages</div>
         <div style="display:flex;flex-direction:column;gap:0.5rem;">
 
           <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:10px;padding:0.7rem 0.9rem;display:flex;gap:0.7rem;align-items:flex-start;">
             <div style="font-size:1.1rem;flex-shrink:0;"></div>
             <div>
-              <div style="font-size:0.76rem;font-weight:800;color:#1d4ed8;margin-bottom:0.2rem;">Columnar grouped storage</div>
-              <div style="font-size:0.72rem;color:#1e3a8a;line-height:1.5;">Reads only the columns needed: analytical queries touch a fraction of the data</div>
+              <div style="font-size:0.76rem;font-weight:800;color:#2747b0;margin-bottom:0.2rem;">Columnar grouped storage</div>
+              <div style="font-size:0.72rem;color:#2747b0;line-height:1.5;">Reads only the columns needed: analytical queries touch a fraction of the data</div>
             </div>
           </div>
 
           <div style="background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:0.7rem 0.9rem;display:flex;gap:0.7rem;align-items:flex-start;">
             <div style="font-size:1.1rem;flex-shrink:0;"></div>
             <div>
-              <div style="font-size:0.76rem;font-weight:800;color:#15803d;margin-bottom:0.2rem;">Compression efficiency</div>
+              <div style="font-size:0.76rem;font-weight:800;color:#2c7a52;margin-bottom:0.2rem;">Compression efficiency</div>
               <div style="font-size:0.72rem;color:#166534;line-height:1.5;">Built-in Snappy / Zstd compression: Parquet files are consistently 3–10× smaller than equivalent CSVs</div>
             </div>
           </div>
@@ -939,7 +960,7 @@ main.content, #quarto-content, .page-columns,
           <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:0.7rem 0.9rem;display:flex;gap:0.7rem;align-items:flex-start;">
             <div style="font-size:1.1rem;flex-shrink:0;"></div>
             <div>
-              <div style="font-size:0.76rem;font-weight:800;color:#6d28d9;margin-bottom:0.2rem;">Dictionary encoding</div>
+              <div style="font-size:0.76rem;font-weight:800;color:#5b6b86;margin-bottom:0.2rem;">Dictionary encoding</div>
               <div style="font-size:0.72rem;color:#4c1d95;line-height:1.5;">Replaces repeated string values with compact integer codes: huge savings on categorical columns</div>
             </div>
           </div>
@@ -947,7 +968,7 @@ main.content, #quarto-content, .page-columns,
           <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:0.7rem 0.9rem;display:flex;gap:0.7rem;align-items:flex-start;">
             <div style="font-size:1.1rem;flex-shrink:0;"></div>
             <div>
-              <div style="font-size:0.76rem;font-weight:800;color:#a16207;margin-bottom:0.2rem;">Schema embedded in footer</div>
+              <div style="font-size:0.76rem;font-weight:800;color:#b9692a;margin-bottom:0.2rem;">Schema embedded in footer</div>
               <div style="font-size:0.72rem;color:#78350f;line-height:1.5;">Column names, types, and statistics are stored in the file itself: no external schema needed</div>
             </div>
           </div>
@@ -955,7 +976,7 @@ main.content, #quarto-content, .page-columns,
           <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:0.7rem 0.9rem;display:flex;gap:0.7rem;align-items:flex-start;">
             <div style="font-size:1.1rem;flex-shrink:0;"></div>
             <div>
-              <div style="font-size:0.76rem;font-weight:800;color:#15803d;margin-bottom:0.2rem;">Schema evolution</div>
+              <div style="font-size:0.76rem;font-weight:800;color:#2c7a52;margin-bottom:0.2rem;">Schema evolution</div>
               <div style="font-size:0.72rem;color:#166534;line-height:1.5;">Add or remove columns without rewriting the entire file: new tools can simply ignore unknown columns</div>
             </div>
           </div>
@@ -1045,7 +1066,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel: DuckDB architecture layers -->
     <div class="sticky-panel active" id="panel-3-0">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">DuckDB — how it fits in your workflow</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">DuckDB — how it fits in your workflow</div>
         <div class="duck-arch">
           <div class="arch-layer arch-l1">
             <div class="arch-icon"></div>
@@ -1079,7 +1100,7 @@ main.content, #quarto-content, .page-columns,
             </div>
           </div>
         </div>
-        <div style="margin-top:0.8rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:9px;padding:0.65rem 0.9rem;font-size:0.72rem;color:#1d4ed8;line-height:1.5;">
+        <div style="margin-top:0.8rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:9px;padding:0.65rem 0.9rem;font-size:0.72rem;color:#2747b0;line-height:1.5;">
           No server. No users. No config. Install as a package and start querying.
         </div>
       </div>
@@ -1088,7 +1109,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel: DuckDB vs MySQL vs PostgreSQL comparison -->
     <div class="sticky-panel" id="panel-3-1">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">DuckDB vs. MySQL vs. PostgreSQL</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">DuckDB vs. MySQL vs. PostgreSQL</div>
         <style>#panel-3-1 .vis-table td, #panel-3-1 .vis-table th { padding: 0.4rem 0.5rem; }</style>
         <table class="vis-table" style="font-size:0.7rem;table-layout:fixed;width:100%;">
           <thead>
@@ -1117,7 +1138,7 @@ main.content, #quarto-content, .page-columns,
     <!-- Panel: query from parquet example -->
     <div class="sticky-panel" id="panel-3-2">
       <div style="width:100%">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:0.8rem;">Querying files directly — no database needed</div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">Querying files directly — no database needed</div>
         <div class="sql-block" style="font-size:0.79rem;">
 <span class="cm">-- Query a Parquet file directly on disk</span><br>
 <span class="kw">SELECT</span><br>
@@ -1132,7 +1153,7 @@ main.content, #quarto-content, .page-columns,
 <span class="kw">CREATE TABLE</span> <span class="fn">stops</span> <span class="kw">AS</span><br>
 &nbsp;&nbsp;<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="fn">read_parquet</span>(<span class="st">'*.parquet'</span>);
         </div>
-        <div style="margin-top:0.7rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:9px;padding:0.65rem 0.9rem;font-size:0.72rem;color:#1d4ed8;line-height:1.5;">
+        <div style="margin-top:0.7rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:9px;padding:0.65rem 0.9rem;font-size:0.72rem;color:#2747b0;line-height:1.5;">
           DuckDB reads the Parquet footer first, pushes predicates into the scan, and skips irrelevant row groups.
         </div>
       </div>
@@ -1161,7 +1182,7 @@ main.content, #quarto-content, .page-columns,
       <h3>A different kind of SQL database</h3>
       <p>MySQL and PostgreSQL are <strong style="color:#8a00c2;">client-server</strong> databases: a long-running server process manages shared access, handles concurrent transactions, and stores data in row-oriented storage. This architecture is excellent for web applications with many simultaneous users reading and writing small numbers of rows.</p>
       <p>DuckDB makes the opposite trade-offs. It is designed for <strong style="color:#8a00c2;">a single analyst or process</strong> running complex queries over large datasets. Because it runs in-process, there is no network overhead between the query engine and the query. The results come back as in-memory data frames, not network packets like with MySQL or PostgreSQL.</p>
-      <p>The storage engine is also fundamentally different. MySQL stores table data in <a href="SQL_Scrolly.html#sec-ch3" target="_blank" style="color:#2563eb;text-decoration:underline;">B+ trees</a> (row-oriented). DuckDB stores data columnarly with vectorized execution, processing columns in batches of 2,048 values at a time. This is precisely what makes aggregation queries fast: the CPU can operate on contiguous arrays of values rather than jumping between rows.</p>
+      <p>The storage engine is also fundamentally different. MySQL stores table data in <a href="SQL_Scrolly.html#sec-ch3" target="_blank" style="color:#3b62db;text-decoration:underline;">B+ trees</a> (row-oriented). DuckDB stores data columnarly with vectorized execution, processing columns in batches of 2,048 values at a time. This is precisely what makes aggregation queries fast: the CPU can operate on contiguous arrays of values rather than jumping between rows.</p>
       <div class="badge-row">
         <span class="badge bi">Vectorized execution</span>
         <span class="badge bs">No network overhead</span>
