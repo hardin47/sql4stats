@@ -32,7 +32,9 @@ website:
         href: about.qmd
 format:
   html:
-    theme: global_style.scss
+    theme: 
+      - cosmo
+      - global_style.scss
     toc: true
 
 
