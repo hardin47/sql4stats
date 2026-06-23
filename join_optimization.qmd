@@ -3,7 +3,7 @@ title: "Join Algorithms and Join Order in PostgreSQL"
 format:
   html:
     toc: true
-    toc-location: left
+    toc-location: right
     code-fold: true
     code-summary: "Show code"
    
