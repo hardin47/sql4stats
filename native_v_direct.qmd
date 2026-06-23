@@ -60,7 +60,6 @@ This step can be done in many approaches. For this guide, a connection with MySQ
 
 ```{r}
 #| label: build-databases
-#| include: false
 #| eval: false
 
 Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = 1)
@@ -366,7 +365,7 @@ ggplot(plot_df, aes(x = ratio, y = label, colour = color_grp)) +
 
 ## Conclusion
 
-The results show a distinguishable difference that native DuckDB offers faster and more consistent query performance across all of the query types. Direct Parquet offers the advantage that files can be queried immediately after writing and occupy significantly less disk space.
+The results show a distinguishable difference that native DuckDB offers faster and more consistent query performance across most or all of the query types. Direct Parquet offers the advantage that files can be queried immediately after writing and occupy significantly less disk space.
 
 The results can be understood based on the knowledge of how DuckDB querying and direct Parquet querying functions. When data is ingested into a native DuckDB database, DuckDB builds and maintains its own internal columnar storage format, statistics, and metadata that are optimized specifically for its query engine. When a query runs against a native table, DuckDB can exploit these internals directly, for example, reading only the pages it needs, using pre-computed column statistics, and operating entirely within a single file with no coordination overhead. Direct Parquet querying, by contrast, requires DuckDB to open each file, parse its footer, decompress column chunks, and assemble results from separate sources on every query execution. Even though Parquet is also columnar and compressed, this per-query parsing and file-handling overhead adds time that the native format avoids entirely. 
 
