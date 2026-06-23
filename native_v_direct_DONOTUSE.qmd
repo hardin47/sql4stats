@@ -1,0 +1,473 @@
+---
+title: "Native DuckDB vs Direct Parquet: A File Count Benchmark"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    toc-title: "Contents"
+    code-fold: true
+    code-summary: "Show code"
+    self-contained: true
+execute:
+  warning: false
+  message: false
+---
+
+## Introduction
+
+This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to querying the same data: a **native DuckDB database** (`.duckdb` file) and **direct Parquet files** queried via `read_parquet()`. Both storage formats contain identical data sourced from the same MySQL database — the Los Angeles subset of the Stanford Open Policing Project — ensuring that file count is the only variable that distinguishes the direct Parquet configurations from one another, and that the only structural difference between native and direct is the storage format itself.
+
+For background on Parquet's internal structure and how DuckDB reads files directly, see the [Parquet & DuckDB reference page](parquet-duckdb.html).
+
+Three query types are benchmarked to represent varying workloads:
+
+- **`count`** — `COUNT(*)` across all rows; metadata-light, minimal data I/O.
+- **`column`** — `GROUP BY subject_race` with aggregation; moderate I/O, requires reading one column.
+- **`string`** — `ILIKE '%hispanic%'` string pattern match; I/O-intensive, requires reading and scanning a string column.
+
+Each timing result is the median of 10 timed runs per configuration, preceded by one warmup run. A fresh DuckDB connection is opened and closed for every trial to avoid connection-level caching effects. Statistical significance between native and direct is assessed using a two-sided Wilcoxon rank-sum test at α = 0.05.
+
+---
+
+## Setup
+
+```{r}
+#| label: setup
+
+library(arrow)
+library(duckdb)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(here)
+```
+
+## Build Databases {.unnumbered}
+
+The following chunk builds the native DuckDB database and writes the direct Parquet file sets from MySQL. It only needs to be run once — if `traffic_native.duckdb` already exists and is populated, this chunk can be skipped.
+
+```{r}
+#| label: build-databases
+#| include: false
+
+Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = 1)
+
+con_traffic <- DBI::dbConnect(
+  RMySQL::MySQL(),
+  dbname   = "traffic",
+  host     = Sys.getenv("TRAFFIC_HOST"),
+  user     = Sys.getenv("TRAFFIC_USER"),
+  password = Sys.getenv("TRAFFIC_PWD")
+)
+
+# ── Build native DuckDB ──
+con_native <- dbConnect(duckdb(), here::here("traffic_native.duckdb"))
+
+cat("Importing LA data into native DuckDB...\n")
+df <- dbReadTable(con_traffic, "ca_los_angeles_2020_04_01")
+df$source_table <- "ca_los_angeles_2020_04_01"
+dbWriteTable(con_native, "traffic", df, overwrite = TRUE)
+rm(df); gc()
+
+cat("Native DuckDB total rows:",
+    dbGetQuery(con_native, "SELECT COUNT(*) FROM traffic")[[1]], "\n")
+dbDisconnect(con_native, shutdown = TRUE)
+
+# ── Write direct Parquet splits from MySQL ──
+n_files_to_test <- c(1, 2, 4, 8, 16, 32, 64, 88)
+
+total_rows <- dbGetQuery(con_traffic,
+  "SELECT COUNT(*) AS n FROM ca_los_angeles_2020_04_01")[[1]]
+cat("Total LA rows:", total_rows, "\n")
+
+for (n in n_files_to_test) {
+  cat("Writing", n, "Parquet file(s)...\n")
+  folder <- paste0("exp1_split_", n)
+  dir.create(folder, showWarnings = FALSE)
+  existing <- list.files(folder, full.names = TRUE)
+  if (length(existing) > 0) file.remove(existing)
+
+  chunk_size <- ceiling(total_rows / n)
+
+  for (i in seq_len(n)) {
+    offset <- (i - 1) * chunk_size
+    limit  <- if (i < n) chunk_size else total_rows - offset
+    df_chunk <- dbGetQuery(con_traffic, sprintf(
+      "SELECT * FROM ca_los_angeles_2020_04_01 LIMIT %d OFFSET %d",
+      limit, offset
+    ))
+    df_chunk$source_table <- "ca_los_angeles_2020_04_01"
+    outfile <- file.path(folder, sprintf("chunk_%03d.parquet", i))
+    write_parquet(df_chunk, outfile)
+    rm(df_chunk); gc()
+    cat("  chunk", i, "of", n, "\r")
+  }
+  cat("\n  Done:", n, "file(s)\n")
+}
+
+dbDisconnect(con_traffic)
+cat("All data written.\n")
+```
+
+---d=
+
+## Step 1: Verify Data Integrity
+
+Before benchmarking, all Parquet file sets are verified to contain the same row count as the native DuckDB table, confirming that file count is the only variable.
+
+```{r}
+#| label: verify
+
+n_files_to_test <- c(1, 2, 4, 8, 16, 32, 64, 88)
+
+con_check  <- dbConnect(duckdb())
+con_native <- dbConnect(duckdb(), here::here("traffic_native.duckdb"))
+
+native_rows <- dbGetQuery(con_native,
+  "SELECT COUNT(*) AS n FROM traffic WHERE source_table = 'ca_los_angeles_2020_04_01'"
+)[[1]]
+
+dbDisconnect(con_native, shutdown = TRUE)
+
+verification <- data.frame(
+  n_files   = integer(),
+  row_count = integer(),
+  size_mb   = numeric()
+)
+
+for (n in n_files_to_test) {
+  folder  <- paste0("exp1_split_", n)
+  pattern <- file.path(folder, "*.parquet")
+  row_count <- dbGetQuery(con_check, sprintf(
+    "SELECT COUNT(*) AS n FROM read_parquet('%s')", pattern
+  ))[[1]]
+  size_mb <- round(
+    sum(file.size(list.files(folder, full.names = TRUE))) / 1e6, 2
+  )
+  verification <- rbind(verification, data.frame(
+    n_files = n, row_count = row_count, size_mb = size_mb
+  ))
+}
+
+dbDisconnect(con_check, shutdown = TRUE)
+gc()
+
+verification$native_rows <- native_rows
+verification$match <- verification$row_count == native_rows
+
+knitr::kable(verification,
+  col.names = c("Parquet files", "Parquet rows", "Size (MB)",
+                "Native rows", "Rows match"),
+  align = "r",
+  caption = "Row count verification: direct Parquet vs native DuckDB"
+)
+```
+
+---
+
+## Step 2: Benchmark
+
+```{r}
+#| label: benchmark
+
+make_direct_query <- function(folder, query_type) {
+  pattern <- paste0("'", file.path(folder, "*.parquet"), "'")
+  switch(query_type,
+    "count"  = sprintf("SELECT COUNT(*) FROM read_parquet(%s)", pattern),
+    "column" = sprintf("SELECT subject_race, COUNT(*) AS n FROM read_parquet(%s) GROUP BY subject_race ORDER BY n DESC", pattern),
+    "string" = sprintf("SELECT COUNT(*) FROM read_parquet(%s) WHERE raw_descent_description ILIKE '%%hispanic%%'", pattern)
+  )
+}
+
+make_native_query <- function(query_type) {
+  switch(query_type,
+    "count"  = "SELECT COUNT(*) FROM traffic WHERE source_table = 'ca_los_angeles_2020_04_01'",
+    "column" = "SELECT subject_race, COUNT(*) AS n FROM traffic WHERE source_table = 'ca_los_angeles_2020_04_01' GROUP BY subject_race ORDER BY n DESC",
+    "string" = "SELECT COUNT(*) FROM traffic WHERE source_table = 'ca_los_angeles_2020_04_01' AND raw_descent_description ILIKE '%hispanic%'"
+  )
+}
+
+fresh_direct <- function() dbConnect(duckdb())
+fresh_native <- function() dbConnect(duckdb(), here::here("traffic_native.duckdb"))
+
+n_trials    <- 10
+query_types <- c("count", "column", "string")
+
+all_trials <- data.frame(
+  n_files    = integer(),
+  query_type = character(),
+  format     = character(),
+  trial      = integer(),
+  time_ms    = numeric()
+)
+
+for (qt in query_types) {
+  cat("\n=== Query type:", qt, "===\n")
+
+  # Native — run once per query type, replicate across file counts
+  native_q     <- make_native_query(qt)
+  native_times <- numeric(n_trials)
+
+  con_warm <- fresh_native()
+  try(dbGetQuery(con_warm, native_q), silent = TRUE)
+  try(dbDisconnect(con_warm, shutdown = TRUE), silent = TRUE)
+  gc()
+
+  for (i in seq_len(n_trials)) {
+    con_fresh <- fresh_native()
+    tryCatch({
+      native_times[i] <- system.time(
+        dbGetQuery(con_fresh, native_q)
+      )["elapsed"] * 1000
+    }, error = function(e) {
+      native_times[i] <<- NA
+    }, finally = {
+      try(dbDisconnect(con_fresh, shutdown = TRUE), silent = TRUE)
+    })
+    gc()
+  }
+  cat("  Native median:", round(median(native_times, na.rm = TRUE), 1), "ms\n")
+
+  for (n in n_files_to_test) {
+    all_trials <- rbind(all_trials, data.frame(
+      n_files    = n,
+      query_type = qt,
+      format     = "native",
+      trial      = seq_len(n_trials),
+      time_ms    = round(native_times, 3)
+    ))
+  }
+
+  # Direct Parquet — varies by file count
+  for (n in n_files_to_test) {
+    folder <- paste0("exp1_split_", n)
+    if (!dir.exists(folder) || length(list.files(folder)) == 0) next
+
+    direct_q     <- make_direct_query(folder, qt)
+    direct_times <- numeric(n_trials)
+
+    con_warm <- fresh_direct()
+    try(dbGetQuery(con_warm, direct_q), silent = TRUE)
+    try(dbDisconnect(con_warm, shutdown = TRUE), silent = TRUE)
+    gc()
+
+    for (i in seq_len(n_trials)) {
+      con_fresh <- fresh_direct()
+      tryCatch({
+        direct_times[i] <- system.time(
+          dbGetQuery(con_fresh, direct_q)
+        )["elapsed"] * 1000
+      }, error = function(e) {
+        direct_times[i] <<- NA
+      }, finally = {
+        try(dbDisconnect(con_fresh, shutdown = TRUE), silent = TRUE)
+      })
+      gc()
+    }
+    cat("  Direct n =", n, "median:", round(median(direct_times, na.rm = TRUE), 1), "ms\n")
+
+    all_trials <- rbind(all_trials, data.frame(
+      n_files    = n,
+      query_type = qt,
+      format     = "direct",
+      trial      = seq_len(n_trials),
+      time_ms    = round(direct_times, 3)
+    ))
+  }
+}
+```
+
+---
+
+## Results
+
+### Summary Tables
+
+```{r}
+#| label: summary-tables
+
+summary_df <- all_trials %>%
+  group_by(n_files, query_type, format) %>%
+  summarise(
+    median_ms = round(median(time_ms, na.rm = TRUE), 1),
+    mean_ms   = round(mean(time_ms,   na.rm = TRUE), 1),
+    sd_ms     = round(sd(time_ms,     na.rm = TRUE), 1),
+    .groups   = "drop"
+  )
+
+comparison_df <- summary_df %>%
+  select(n_files, query_type, format, median_ms) %>%
+  pivot_wider(names_from = format, values_from = median_ms) %>%
+  mutate(
+    diff_ms = round(direct - native, 1),
+    faster  = ifelse(native < direct, "Native", "Direct Parquet")
+  ) %>%
+  arrange(query_type, n_files)
+
+for (qt in query_types) {
+  cat("\n###", toupper(qt), "query\n\n")
+  tbl <- comparison_df %>%
+    filter(query_type == qt) %>%
+    select(n_files, native, direct, diff_ms, faster)
+  print(knitr::kable(tbl,
+    col.names = c("Parquet files", "Native (ms)", "Direct (ms)", "Diff (ms)", "Faster"),
+    align = "r",
+    caption = paste("Median query time —", qt, "query")
+  ))
+}
+```
+
+### Significance Tests
+
+```{r}
+#| label: significance
+
+sig_results <- data.frame(
+  n_files     = integer(),
+  query_type  = character(),
+  native_med  = numeric(),
+  direct_med  = numeric(),
+  diff_ms     = numeric(),
+  faster      = character(),
+  p_value     = numeric(),
+  significant = character()
+)
+
+for (qt in query_types) {
+  for (n in n_files_to_test) {
+    native_t <- all_trials %>%
+      filter(n_files == n, query_type == qt, format == "native") %>%
+      pull(time_ms)
+    direct_t <- all_trials %>%
+      filter(n_files == n, query_type == qt, format == "direct") %>%
+      pull(time_ms)
+
+    p_val <- tryCatch(
+      wilcox.test(native_t, direct_t, exact = FALSE)$p.value,
+      error = function(e) NA
+    )
+
+    sig_results <- rbind(sig_results, data.frame(
+      n_files     = n,
+      query_type  = qt,
+      native_med  = round(median(native_t, na.rm = TRUE), 1),
+      direct_med  = round(median(direct_t, na.rm = TRUE), 1),
+      diff_ms     = round(median(direct_t, na.rm = TRUE) - median(native_t, na.rm = TRUE), 1),
+      faster      = ifelse(median(native_t, na.rm = TRUE) < median(direct_t, na.rm = TRUE),
+                           "Native", "Direct Parquet"),
+      p_value     = round(p_val, 4),
+      significant = ifelse(!is.na(p_val) & p_val < 0.05, "Yes *", "No")
+    ))
+  }
+}
+
+knitr::kable(
+  sig_results %>% arrange(query_type, n_files),
+  col.names = c("Files", "Query", "Native (ms)", "Direct (ms)",
+                "Diff (ms)", "Faster", "p-value", "Sig."),
+  align = "r",
+  caption = "Wilcoxon rank-sum test: native vs direct Parquet by file count and query type"
+)
+```
+
+### Plots
+
+```{r}
+#| label: plot-count
+#| fig-cap: "Median COUNT(*) query time: native DuckDB vs direct Parquet by file count."
+#| fig-width: 8
+#| fig-height: 4
+
+plot_df <- summary_df %>%
+  mutate(format = recode(format, native = "Native DuckDB", direct = "Direct Parquet"))
+
+ggplot(
+  plot_df %>% filter(query_type == "count"),
+  aes(x = factor(n_files), y = median_ms, colour = format, group = format)
+) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("Native DuckDB" = "#185FA5", "Direct Parquet" = "#0F6E56")) +
+  labs(
+    x      = "Number of Parquet files",
+    y      = "Median time (ms)",
+    colour = NULL,
+    title  = "COUNT(*) — Native DuckDB vs Direct Parquet",
+    subtitle = "Same LA data; storage format and file count vary"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.major.x = element_blank())
+```
+
+```{r}
+#| label: plot-column
+#| fig-cap: "Median GROUP BY subject_race query time: native DuckDB vs direct Parquet by file count."
+#| fig-width: 8
+#| fig-height: 4
+
+ggplot(
+  plot_df %>% filter(query_type == "column"),
+  aes(x = factor(n_files), y = median_ms, colour = format, group = format)
+) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("Native DuckDB" = "#185FA5", "Direct Parquet" = "#0F6E56")) +
+  labs(
+    x      = "Number of Parquet files",
+    y      = "Median time (ms)",
+    colour = NULL,
+    title  = "GROUP BY subject_race — Native DuckDB vs Direct Parquet",
+    subtitle = "Same LA data; storage format and file count vary"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.major.x = element_blank())
+```
+
+```{r}
+#| label: plot-string
+#| fig-cap: "Median ILIKE string search query time: native DuckDB vs direct Parquet by file count."
+#| fig-width: 8
+#| fig-height: 4
+
+ggplot(
+  plot_df %>% filter(query_type == "string"),
+  aes(x = factor(n_files), y = median_ms, colour = format, group = format)
+) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("Native DuckDB" = "#185FA5", "Direct Parquet" = "#0F6E56")) +
+  labs(
+    x      = "Number of Parquet files",
+    y      = "Median time (ms)",
+    colour = NULL,
+    title  = "ILIKE string search — Native DuckDB vs Direct Parquet",
+    subtitle = "Same LA data; storage format and file count vary"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.major.x = element_blank())
+```
+
+---
+
+## Interpretation
+
+### COUNT(\*)
+
+`COUNT(*)` is the most metadata-light query of the three, requiring minimal data I/O. Native DuckDB is expected to perform consistently here regardless of how many Parquet files are used in the direct configuration, since the native table is a single unified structure with no per-file overhead. The direct Parquet configuration incurs a fixed cost for each file opened and parsed, so query time is expected to increase with file count even though the total data volume is constant. Any crossover point — where direct Parquet becomes slower than native — reflects the file-count overhead becoming dominant relative to the baseline query cost.
+
+### GROUP BY subject\_race
+
+This query requires reading and aggregating one column across all rows. Both formats must perform real data I/O, making this a more balanced comparison. Native DuckDB benefits from its internal columnar storage and pre-computed statistics. Direct Parquet must open each file, read the relevant column chunk, and coordinate the partial aggregations. At low file counts the difference is expected to be small; at higher file counts the coordination overhead accumulates and native DuckDB is expected to pull ahead. Statistically significant differences at higher file counts would confirm that per-file coordination cost is a real factor even for column-scan workloads.
+
+### ILIKE String Search
+
+String pattern matching with `ILIKE` is the most I/O-intensive query of the three, requiring DuckDB to read and scan a full string column across every row. Because the cost is dominated by data volume rather than file metadata, the gap between native and direct is expected to be smallest here relative to total query time. However, at high file counts the overhead of opening many files and scanning each independently may still introduce a measurable penalty compared to the single unified native table.
+
+---
+
+## Conclusion
+
+Across all three query types the central question is whether native DuckDB's unified internal storage provides a consistent performance advantage over direct Parquet querying as file count increases. The results characterize this trade-off empirically: `COUNT(*)` isolates per-file metadata overhead, the `GROUP BY` query tests moderate I/O with aggregation, and the `ILIKE` search tests the high-I/O extreme where data volume dominates. Together they provide a representative picture of how storage format choice interacts with query type and file organization when querying the same underlying data.
+
+The practical implication is that native DuckDB offers more predictable performance across query types and file counts, while direct Parquet is competitive at low file counts and avoids the ingestion step entirely. The choice between them depends on whether the data will be queried repeatedly (favoring native DuckDB) or whether storage efficiency and flexibility are the priority (favoring direct Parquet).
