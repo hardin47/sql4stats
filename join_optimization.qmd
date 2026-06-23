@@ -208,101 +208,34 @@ dbGetQuery(con, "
 ")
 ```
 
-## Does it hold up with a cold cache?
+## A note on cold cache
 
-Warm-cache numbers reward queries whose pages already sit in memory. A **cold-cache** test is harsher and closer to a first-of-the-day query. We can't flush the OS page cache without `sudo`, but we can approximate a cold session by reconnecting fresh each iteration and issuing `DISCARD ALL`, which resets all session state.
+Every measurement above is **warm-cache**: the warm-up run loads the
+relevant pages into PostgreSQL's buffer pool, so the timed runs reflect
+the cost of the join algorithm rather than the cost of fetching data from
+disk. This is the right thing to measure for a query that runs often
+enough to keep its pages resident in memory.
 
-```{r}
-#| label: cold-harness
-run_repeated_cold <- function(con, multi_join, n = 10) {
-  map(1:n, function(i) {
+A **cold-cache** test — closer to a first-of-the-day query, or an
+analytics query over tables too large to stay in RAM — would be a useful
+counterpart, but it is genuinely hard to do faithfully here. A real cold
+measurement has to evict data from two separate layers: PostgreSQL's own
+`shared_buffers`, and the operating system's page cache underneath it.
+Neither is reachable from inside a database session. `DISCARD ALL` only
+resets session state (planner settings, prepared statements, temp tables)
+and leaves both caches fully populated; flushing the OS page cache
+requires root access we don't have in this environment. Reconnecting on
+each iteration looks colder but measures essentially the same warm pages.
 
-    # Fresh connection each iteration
-    con <- dbConnect(
-      RPostgres::Postgres(),
-      dbname = "stats",
-      host   = "127.0.0.1",
-      port   = 5432,
-      user   = Sys.info()[["user"]]
-    )
-
-    dbExecute(con, "DISCARD ALL")   # clear session cache (no sudo needed)
-    Sys.sleep(0.5)
-
-    lines <- dbGetQuery(con, paste("EXPLAIN ANALYZE", multi_join))[[1]]
-
-    exec_time <- lines[grep("Execution Time", lines)] |>
-      str_extract("[0-9.]+") |> as.numeric()
-    plan_time <- lines[grep("Planning Time", lines)] |>
-      str_extract("[0-9.]+") |> as.numeric()
-
-    dbDisconnect(con)
-    tibble(run = i, exec_ms = exec_time, plan_ms = plan_time)
-  }) |>
-  list_rbind()
-}
-```
-
-Because each cold iteration opens its own connection, the per-strategy `SET` flags must be re-established on the main connection before each batch, and we issue `DISCARD ALL` between batches to keep them independent.
-
-```{r}
-#| label: cold-runs
-dbExecute(con, "SET max_parallel_workers_per_gather = 0")
-dbExecute(con, "SET join_collapse_limit = 1")
-dbExecute(con, "SET from_collapse_limit = 1")
-
-# --- Nested Loop ---
-dbExecute(con, "SET enable_nestloop = on")
-dbExecute(con, "SET enable_hashjoin = off")
-dbExecute(con, "SET enable_mergejoin = off")
-dbExecute(con, "DISCARD ALL")
-cold_nest_good <- run_repeated_cold(con, sql_good_order, 10) |>
-  mutate(join_type = "Nested Loop", order = "good")
-dbExecute(con, "DISCARD ALL")
-cold_nest_bad  <- run_repeated_cold(con, sql_bad_order, 10) |>
-  mutate(join_type = "Nested Loop", order = "bad")
-
-# --- Hash Join ---
-dbExecute(con, "SET enable_nestloop = off")
-dbExecute(con, "SET enable_hashjoin = on")
-dbExecute(con, "SET enable_mergejoin = off")
-dbExecute(con, "DISCARD ALL")
-cold_hash_good <- run_repeated_cold(con, sql_good_order, 10) |>
-  mutate(join_type = "Hash Join", order = "good")
-dbExecute(con, "DISCARD ALL")
-cold_hash_bad  <- run_repeated_cold(con, sql_bad_order, 10) |>
-  mutate(join_type = "Hash Join", order = "bad")
-
-# --- Merge Join ---
-dbExecute(con, "SET enable_nestloop = off")
-dbExecute(con, "SET enable_hashjoin = off")
-dbExecute(con, "SET enable_mergejoin = on")
-dbExecute(con, "DISCARD ALL")
-cold_merge_good <- run_repeated_cold(con, sql_good_order, 10) |>
-  mutate(join_type = "Merge Join", order = "good")
-dbExecute(con, "DISCARD ALL")
-cold_merge_bad  <- run_repeated_cold(con, sql_bad_order, 10) |>
-  mutate(join_type = "Merge Join", order = "bad")
-```
-
-```{r}
-#| label: cold-plot
-#| fig-cap: "Cold-cache execution time. The order penalty typically widens when pages must be fetched from disk."
-bind_rows(
-  cold_nest_good, cold_nest_bad,
-  cold_hash_good, cold_hash_bad,
-  cold_merge_good, cold_merge_bad
-) |>
-  ggplot(aes(x = join_type, y = exec_ms, color = order)) +
-  geom_boxplot() +
-  labs(
-    title    = "Effect of join strategy on execution time (cold cache)",
-    subtitle = "4-table join: votes, posts, users, badges",
-    x        = "Join Strategy",
-    y        = "Execution time (ms)"
-  ) +
-  theme_minimal()
-```
+So rather than report numbers from a harness that can't actually clear the
+cache, we'll state the expectation instead: with a true cold cache the
+**order penalty should widen, not shrink**. A bad join order carries more
+rows through each step and therefore touches more pages; when those pages
+must be read from disk instead of memory, the extra I/O falls hardest on
+exactly the plan that was already doing the most work — the large-table-first
+Nested Loop. The warm-cache results below are thus a *conservative* picture
+of how much join order matters; on cold data the gap between good and bad
+order would only grow.
 
 ## Why the planner makes these choices: estimated vs. actual rows
 
