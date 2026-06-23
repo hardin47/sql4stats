@@ -569,7 +569,6 @@ main.content, #quarto-content, .page-columns,
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <div class="hero-eyebrow">● Relational Query Operations</div>
     <h1>SQL<br><em>Joins</em></h1>
     <p class="hero-sub">What is a join? How do logical join types differ from the physical strategies the optimizer actually runs — nested loops, sort-merge, and hash?</p>
     <div class="hero-pills">
@@ -1124,27 +1123,7 @@ main.content, #quarto-content, .page-columns,
         </div>
       </div>
     </div>
-
-    <!-- Panel: complexity comparison bars -->
-    <div class="sticky-panel" id="panel-6-1">
-      <div>
-        <div class="anim-label">Cost at a glance</div>
-        <div class="cx-row">
-          <div class="cx-head"><span>Nested loop (unsorted)</span><strong>O(m × n)</strong></div>
-          <div class="cx-track"><div class="cx-fill bad" style="width:100%"></div></div>
-        </div>
-        <div class="cx-row">
-          <div class="cx-head"><span>Sort-merge (pre-sorted)</span><strong>O(m + n)</strong></div>
-          <div class="cx-track"><div class="cx-fill mid" style="width:34%"></div></div>
-        </div>
-        <div class="cx-row">
-          <div class="cx-head"><span>Hash (unsorted, equality)</span><strong>O(N + M)</strong></div>
-          <div class="cx-track"><div class="cx-fill good" style="width:30%"></div></div>
-        </div>
-        <div class="anim-cap">In theory both hash and merge perform well on large tables. The deciding factors are sortedness, the join predicate, memory, and whether a useful index exists.</div>
-      </div>
-    </div>
-
+    
   </div><!-- /sticky-left -->
 
   <div class="sticky-right">
@@ -1161,8 +1140,10 @@ main.content, #quarto-content, .page-columns,
         <span class="badge ba">Nested · small / indexed</span>
       </div>
     </div>
-
-    <div class="step" data-panel="6-1">
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-6 -->
+ 
+<div class="step" data-panel="6-1" style="opacity:1;">
       <div class="step-tag">4.2 · Cost Comparison</div>
       <h3>Sum beats product — when you can get it</h3>
       <p>The headline difference is complexity. Nested loops can degrade to <strong style="color:#b9692a;">O(m × n)</strong> on unsorted inputs, while sort-merge and hash both scale with the <strong style="color:#2747b0;">sum</strong> of the inputs once their setup is paid for.</p>
@@ -1173,9 +1154,6 @@ main.content, #quarto-content, .page-columns,
         <span class="badge bg">Hash O(N + M)</span>
       </div>
     </div>
-
-  </div><!-- /sticky-right -->
-</div><!-- /scrolly-6 -->
 
 <!-- ═══════════════════════════════════════════════════
      FINAL SUMMARY
