@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Pivot Types: Reshaping vs Cross-Tabulation – sql4stats</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-158031087360bce0ff56dc785ce39e06.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">sql4stats</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-informational-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Informational Resources</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-informational-resources">    
+        <li>
+    <a class="dropdown-item" href="./SQL_Scrolly.html">
+ <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./SQL_Joins_Scrolly.html">
+ <span class="dropdown-text">Joins</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./parquet.html">
+ <span class="dropdown-text">File Formats and DuckDB</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-theory-in-practice" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Theory in Practice</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-theory-in-practice">    
+        <li>
+    <a class="dropdown-item" href="./native_v_direct.html">
+ <span class="dropdown-text">DuckDB Native vs.&nbsp;Direct Querying</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./row_v_file.html">
+ <span class="dropdown-text">Parquet Querying Time Exploration</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Tutorials</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
+        <li>
+    <a class="dropdown-item" href="./crosstab_pivot_comp.html">
+ <span class="dropdown-text">Pivoting + Crosstabs</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./sql_upload_guide.html">
+ <span class="dropdown-text">Data Upload Guide</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#part-1-pure-reshaping" id="toc-part-1-pure-reshaping" class="nav-link" data-scroll-target="#part-1-pure-reshaping">Part 1: Pure Reshaping</a>
+  <ul class="collapse">
+  <li><a href="#the-data-structure" id="toc-the-data-structure" class="nav-link" data-scroll-target="#the-data-structure">The data structure</a></li>
+  <li><a href="#approach-1-pivot_wider-in-r-tidyverse" id="toc-approach-1-pivot_wider-in-r-tidyverse" class="nav-link" data-scroll-target="#approach-1-pivot_wider-in-r-tidyverse">Approach 1: <code>pivot_wider()</code> in R (tidyverse)</a></li>
+  <li><a href="#approach-2-duckdb-pivot-without-using" id="toc-approach-2-duckdb-pivot-without-using" class="nav-link" data-scroll-target="#approach-2-duckdb-pivot-without-using">Approach 2: DuckDB <code>PIVOT</code> (without <code>USING</code>)</a></li>
+  <li><a href="#approach-3-manual-reshaping-in-duckdb-case-when" id="toc-approach-3-manual-reshaping-in-duckdb-case-when" class="nav-link" data-scroll-target="#approach-3-manual-reshaping-in-duckdb-case-when">Approach 3: Manual reshaping in DuckDB (<code>CASE WHEN</code>)</a></li>
+  <li><a href="#verifying-all-three-outputs-match" id="toc-verifying-all-three-outputs-match" class="nav-link" data-scroll-target="#verifying-all-three-outputs-match">Verifying all three outputs match</a></li>
+  <li><a href="#can-crosstab-do-pure-reshaping" id="toc-can-crosstab-do-pure-reshaping" class="nav-link" data-scroll-target="#can-crosstab-do-pure-reshaping">Can <code>crosstab()</code> do pure reshaping?</a></li>
+  </ul></li>
+  <li><a href="#part-2-cross-tabulation" id="toc-part-2-cross-tabulation" class="nav-link" data-scroll-target="#part-2-cross-tabulation">Part 2: Cross-Tabulation</a>
+  <ul class="collapse">
+  <li><a href="#the-data-structure-1" id="toc-the-data-structure-1" class="nav-link" data-scroll-target="#the-data-structure-1">The data structure</a></li>
+  <li><a href="#approach-1-manual-case-when-avg" id="toc-approach-1-manual-case-when-avg" class="nav-link" data-scroll-target="#approach-1-manual-case-when-avg">Approach 1: Manual (<code>CASE WHEN</code> + <code>AVG</code>)</a></li>
+  <li><a href="#approach-2-duckdb-pivot-with-using-avg" id="toc-approach-2-duckdb-pivot-with-using-avg" class="nav-link" data-scroll-target="#approach-2-duckdb-pivot-with-using-avg">Approach 2: DuckDB <code>PIVOT</code> with <code>USING avg()</code></a></li>
+  <li><a href="#approach-3-crosstab-in-postgresql" id="toc-approach-3-crosstab-in-postgresql" class="nav-link" data-scroll-target="#approach-3-crosstab-in-postgresql">Approach 3: <code>crosstab()</code> in PostgreSQL</a></li>
+  <li><a href="#verifying-manual-and-duckdb-pivot-match" id="toc-verifying-manual-and-duckdb-pivot-match" class="nav-link" data-scroll-target="#verifying-manual-and-duckdb-pivot-match">Verifying manual and DuckDB PIVOT match</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Pivot Types: Reshaping vs Cross-Tabulation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The word “pivot” covers two different operations:</p>
+<ul>
+<li><strong>Pure reshaping</strong> — changing the <em>shape</em> of data (long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.</li>
+<li><strong>Cross-tabulation</strong> — reshaping <em>plus</em> aggregation. Multiple source rows sharing the same (row-group, column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).</li>
+</ul>
+<p>We’ll demonstrate both using the <code>gapminder</code> dataset, which records country-level statistics at five-year intervals from 1952 to 2007. The variables we’ll use are:</p>
+<ul>
+<li><code>country</code> — the unit of observation</li>
+<li><code>continent</code> — the geographic grouping</li>
+<li><code>year</code> — the time point (1952, 1957, …, 2007)</li>
+<li><code>lifeExp</code> — life expectancy at birth (years)</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gapminder)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(duckdb)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RPostgres)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(gapminder)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(gapminder)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 1,704
+Columns: 6
+$ country   &lt;fct&gt; "Afghanistan", "Afghanistan", "Afghanistan", "Afghanistan", …
+$ continent &lt;fct&gt; Asia, Asia, Asia, Asia, Asia, Asia, Asia, Asia, Asia, Asia, …
+$ year      &lt;int&gt; 1952, 1957, 1962, 1967, 1972, 1977, 1982, 1987, 1992, 1997, …
+$ lifeExp   &lt;dbl&gt; 28.801, 30.332, 31.997, 34.020, 36.088, 38.438, 39.854, 40.8…
+$ pop       &lt;int&gt; 8425333, 9240934, 10267083, 11537966, 13079460, 14880372, 12…
+$ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.1134, …</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="part-1-pure-reshaping" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-pure-reshaping">Part 1: Pure Reshaping</h2>
+<section id="the-data-structure" class="level3">
+<h3 class="anchored" data-anchor-id="the-data-structure">The data structure</h3>
+<p>For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears <strong>exactly once</strong> in the source data. Thus there is nothing to aggregate, only redistribute.</p>
+<p>In our first example:</p>
+<ul>
+<li><strong>Rows:</strong> country</li>
+<li><strong>Columns:</strong> year (each distinct year becomes a column header)</li>
+<li><strong>Cells:</strong> life expectancy</li>
+</ul>
+<p>Each country has exactly one life expectancy per year, so no aggregation is needed or possible. This is the defining condition for pure reshaping.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Confirm each country-year combination is unique</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>gapminder <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(country, year) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">&gt;</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 0 × 3
+# ℹ 3 variables: country &lt;fct&gt;, year &lt;int&gt;, n &lt;int&gt;</code></pre>
+</div>
+</div>
+<p>No rows — every country-year combination is unique. Pure reshaping is appropriate here.</p>
+</section>
+<section id="approach-1-pivot_wider-in-r-tidyverse" class="level3">
+<h3 class="anchored" data-anchor-id="approach-1-pivot_wider-in-r-tidyverse">Approach 1: <code>pivot_wider()</code> in R (tidyverse)</h3>
+<p><code>pivot_wider()</code> is the canonical R function for pure reshaping. It takes three arguments that map directly to the three pivot roles:</p>
+<ul>
+<li><code>id_cols</code> — the row-grouping specification (<code>country</code>)</li>
+<li><code>names_from</code> — the spreading dimension (<code>year</code>)</li>
+<li><code>values_from</code> — the measure (no aggregation, just redistribution of <code>lifeExp</code>)</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>wide_tidyverse <span class="ot">&lt;-</span> gapminder <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country, year, lifeExp) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">id_cols     =</span> country,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from  =</span> year,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> lifeExp</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>wide_tidyverse</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 142 × 13
+   country `1952` `1957` `1962` `1967` `1972` `1977` `1982` `1987` `1992` `1997`
+   &lt;fct&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+ 1 Afghan…   28.8   30.3   32.0   34.0   36.1   38.4   39.9   40.8   41.7   41.8
+ 2 Albania   55.2   59.3   64.8   66.2   67.7   68.9   70.4   72     71.6   73.0
+ 3 Algeria   43.1   45.7   48.3   51.4   54.5   58.0   61.4   65.8   67.7   69.2
+ 4 Angola    30.0   32.0   34     36.0   37.9   39.5   39.9   39.9   40.6   41.0
+ 5 Argent…   62.5   64.4   65.1   65.6   67.1   68.5   69.9   70.8   71.9   73.3
+ 6 Austra…   69.1   70.3   70.9   71.1   71.9   73.5   74.7   76.3   77.6   78.8
+ 7 Austria   66.8   67.5   69.5   70.1   70.6   72.2   73.2   74.9   76.0   77.5
+ 8 Bahrain   50.9   53.8   56.9   59.9   63.3   65.6   69.1   70.8   72.6   73.9
+ 9 Bangla…   37.5   39.3   41.2   43.5   45.3   46.9   50.0   52.8   56.0   59.4
+10 Belgium   68     69.2   70.2   70.9   71.4   72.8   73.9   75.4   76.5   77.5
+# ℹ 132 more rows
+# ℹ 2 more variables: `2002` &lt;dbl&gt;, `2007` &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>Notice the column names (<code>1952</code>, <code>1957</code>, …, <code>2007</code>) came directly from the distinct values in the <code>year</code> column which is the defining feature of any pivot.</p>
+</section>
+<section id="approach-2-duckdb-pivot-without-using" class="level3">
+<h3 class="anchored" data-anchor-id="approach-2-duckdb-pivot-without-using">Approach 2: DuckDB <code>PIVOT</code> (without <code>USING</code>)</h3>
+<p>DuckDB’s <code>PIVOT</code> command without a <code>USING</code> clause performs pure reshaping. This is equivalent to <code>pivot_wider()</code>. No aggregation is specified; values are simply redistributed. The output below only shows 6 rows.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up DuckDB and load the data</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>con_duck <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>())</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_duck, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT country, year, lifeExp FROM gapminder)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">  USING first(lifeExp)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort to match tidyverse output for comparison</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> wide_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(country)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_duckdb, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
+1 Afghanistan 28.801 30.332 31.997 34.020 36.088 38.438 39.854 40.822 41.674
+2     Albania 55.230 59.280 64.820 66.220 67.690 68.930 70.420 72.000 71.581
+3     Algeria 43.077 45.685 48.303 51.407 54.518 58.014 61.368 65.799 67.744
+4      Angola 30.015 31.999 34.000 35.985 37.928 39.483 39.942 39.906 40.647
+5   Argentina 62.485 64.399 65.142 65.634 67.065 68.481 69.942 70.774 71.868
+6   Australia 69.120 70.330 70.930 71.100 71.930 73.490 74.740 76.320 77.560
+    1997   2002   2007
+1 41.763 42.129 43.828
+2 72.950 75.651 76.423
+3 69.152 70.994 72.301
+4 40.963 41.003 42.731
+5 73.275 74.340 75.320
+6 78.830 80.370 81.235</code></pre>
+</div>
+</div>
+<p>Note: even though <code>USING first(lifeExp)</code> looks like an aggregation, since each country-year combination is unique, <code>first()</code> always operates on exactly one value and simply returns it unchanged. The output is structurally identical to the <code>pivot_wider()</code> result, except that this output is not rounded like in Approach 1.</p>
+</section>
+<section id="approach-3-manual-reshaping-in-duckdb-case-when" class="level3">
+<h3 class="anchored" data-anchor-id="approach-3-manual-reshaping-in-duckdb-case-when">Approach 3: Manual reshaping in DuckDB (<code>CASE WHEN</code>)</h3>
+<p>The manual approach makes every column fully explicit, with no built-in pivot mechanism involved at all.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wide_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">    country,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1952 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1957 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1962 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1967 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1972 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1977 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1982 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1987 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1992 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1997 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2002 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2007 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY country</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY country</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_manual, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
+1 Afghanistan 28.801 30.332 31.997 34.020 36.088 38.438 39.854 40.822 41.674
+2     Albania 55.230 59.280 64.820 66.220 67.690 68.930 70.420 72.000 71.581
+3     Algeria 43.077 45.685 48.303 51.407 54.518 58.014 61.368 65.799 67.744
+4      Angola 30.015 31.999 34.000 35.985 37.928 39.483 39.942 39.906 40.647
+5   Argentina 62.485 64.399 65.142 65.634 67.065 68.481 69.942 70.774 71.868
+6   Australia 69.120 70.330 70.930 71.100 71.930 73.490 74.740 76.320 77.560
+    1997   2002   2007
+1 41.763 42.129 43.828
+2 72.950 75.651 76.423
+3 69.152 70.994 72.301
+4 40.963 41.003 42.731
+5 73.275 74.340 75.320
+6 78.830 80.370 81.235</code></pre>
+</div>
+</div>
+<p><code>MAX()</code> is used here not to aggregate multiple values, but because <code>GROUP BY country</code> requires an aggregate function around non-grouped columns, and since each group contains exactly one row per year, <code>MAX()</code> simply returns that single value.</p>
+</section>
+<section id="verifying-all-three-outputs-match" class="level3">
+<h3 class="anchored" data-anchor-id="verifying-all-three-outputs-match">Verifying all three outputs match</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Align column types and order for comparison</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tidy_sorted <span class="ot">&lt;-</span> wide_tidyverse <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(country) <span class="sc">|&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>country, as.numeric))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>duck_sorted <span class="ot">&lt;-</span> wide_duckdb <span class="sc">|&gt;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(country) <span class="sc">|&gt;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, <span class="st">"^lifeExp_"</span>), <span class="sc">-</span>country) <span class="sc">|&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>country, as.numeric))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>manual_sorted <span class="ot">&lt;-</span> wide_manual <span class="sc">|&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(country) <span class="sc">|&gt;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>country, as.numeric))</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(tidy_sorted, duck_sorted,   <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(tidy_sorted, manual_sorted, <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>All three approaches produce identical results — the same countries, the same years as column headers, and the same life expectancy values in every cell.</p>
+</section>
+<section id="can-crosstab-do-pure-reshaping" class="level3">
+<h3 class="anchored" data-anchor-id="can-crosstab-do-pure-reshaping">Can <code>crosstab()</code> do pure reshaping?</h3>
+<p>Short answer: <strong>not cleanly.</strong> <code>crosstab()</code> always expects exactly one (row_id, category, value) triple per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you <em>can</em> technically pass <code>crosstab()</code> a query that produces those triples althought it is a little more complicated than the previous options:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>con_local <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  RPostgres<span class="sc">::</span><span class="fu">Postgres</span>(),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname   =</span> <span class="st">"postgres"</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host     =</span> <span class="st">"localhost"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port     =</span> <span class="dv">5432</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user     =</span> <span class="st">"sebastianpollack"</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"sup"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Requires a local PostgreSQL connection with tablefunc installed</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con_local, <span class="st">"CREATE EXTENSION IF NOT EXISTS tablefunc;"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_local, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>wide_crosstab <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_local, <span class="st">'</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT country,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="st">            "lifeExp"</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY country, year::text</span><span class="sc">\'</span><span class="st">,</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT DISTINCT year::text FROM gapminder ORDER BY year::text</span><span class="sc">\'</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="st">    country text,</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="st">    "1952" float, "1957" float, "1962" float, "1967" float,</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="st">    "1972" float, "1977" float, "1982" float, "1987" float,</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="st">    "1992" float, "1997" float, "2002" float, "2007" float</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="st">'</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_crosstab,<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
+1 Afghanistan 28.801 30.332 31.997 34.020 36.088 38.438 39.854 40.822 41.674
+2     Albania 55.230 59.280 64.820 66.220 67.690 68.930 70.420 72.000 71.581
+3     Algeria 43.077 45.685 48.303 51.407 54.518 58.014 61.368 65.799 67.744
+4      Angola 30.015 31.999 34.000 35.985 37.928 39.483 39.942 39.906 40.647
+5   Argentina 62.485 64.399 65.142 65.634 67.065 68.481 69.942 70.774 71.868
+6   Australia 69.120 70.330 70.930 71.100 71.930 73.490 74.740 76.320 77.560
+    1997   2002   2007
+1 41.763 42.129 43.828
+2 72.950 75.651 76.423
+3 69.152 70.994 72.301
+4 40.963 41.003 42.731
+5 73.275 74.340 75.320
+6 78.830 80.370 81.235</code></pre>
+</div>
+</div>
+<p>This will produce the same output — but notice that <code>crosstab()</code> is doing exactly what <code>pivot_wider()</code> and the manual <code>CASE WHEN</code> do: retrieving one existing value per cell. <code>crosstab()</code>’s mandatory output-column declaration makes it more verbose and more fragile than <code>pivot_wider()</code> for a pure reshaping task.</p>
+<hr>
+</section>
+</section>
+<section id="part-2-cross-tabulation" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-cross-tabulation">Part 2: Cross-Tabulation</h2>
+<section id="the-data-structure-1" class="level3">
+<h3 class="anchored" data-anchor-id="the-data-structure-1">The data structure</h3>
+<p>Cross-tabulation is appropriate when <strong>multiple source rows share the same (row-group, column-group) combination</strong>, and those rows must be collapsed into a single cell via an aggregation function.</p>
+<p>In our second example:</p>
+<ul>
+<li><strong>Rows:</strong> continent</li>
+<li><strong>Columns:</strong> year</li>
+<li><strong>Cells:</strong> average life expectancy across all countries in that continent-year combination</li>
+</ul>
+<p>Each continent contains multiple countries, so each (continent, year) pair has multiple source rows — aggregation is not optional, it’s required.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># How many countries per continent-year?</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>gapminder <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(continent, year) <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> year, <span class="at">values_from =</span> n)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 13
+  continent `1952` `1957` `1962` `1967` `1972` `1977` `1982` `1987` `1992`
+  &lt;fct&gt;      &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;  &lt;int&gt;
+1 Africa        52     52     52     52     52     52     52     52     52
+2 Americas      25     25     25     25     25     25     25     25     25
+3 Asia          33     33     33     33     33     33     33     33     33
+4 Europe        30     30     30     30     30     30     30     30     30
+5 Oceania        2      2      2      2      2      2      2      2      2
+# ℹ 3 more variables: `1997` &lt;int&gt;, `2002` &lt;int&gt;, `2007` &lt;int&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="approach-1-manual-case-when-avg" class="level3">
+<h3 class="anchored" data-anchor-id="approach-1-manual-case-when-avg">Approach 1: Manual (<code>CASE WHEN</code> + <code>AVG</code>)</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ct_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">    continent,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1952 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1957 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1962 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1967 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1972 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1977 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1982 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1987 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1992 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1997 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2002 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2007 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>ct_manual</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  continent  1952  1957  1962  1967  1972  1977  1982  1987  1992  1997  2002
+1    Africa 39.14 41.27 43.32 45.33 47.45 49.58 51.59 53.34 53.63 53.60 53.33
+2  Americas 53.28 55.96 58.40 60.41 62.39 64.39 66.23 68.09 69.57 71.15 72.42
+3      Asia 46.31 49.32 51.56 54.66 57.32 59.61 62.62 64.85 66.54 68.02 69.23
+4    Europe 64.41 66.70 68.54 69.74 70.78 71.94 72.81 73.64 74.44 75.51 76.70
+5   Oceania 69.26 70.30 71.09 71.31 71.91 72.85 74.29 75.32 76.94 78.19 79.74
+   2007
+1 54.81
+2 73.61
+3 70.73
+4 77.65
+5 80.72</code></pre>
+</div>
+</div>
+<p>Here <code>AVG()</code> is taking the average of life expectancy per year for every continent.</p>
+</section>
+<section id="approach-2-duckdb-pivot-with-using-avg" class="level3">
+<h3 class="anchored" data-anchor-id="approach-2-duckdb-pivot-with-using-avg">Approach 2: DuckDB <code>PIVOT</code> with <code>USING avg()</code></h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ct_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT continent, year, lifeExp FROM gapminder)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="st">  USING ROUND(AVG(lifeExp), 2)</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>ct_duckdb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  continent  1952  1957  1962  1967  1972  1977  1982  1987  1992  1997  2002
+1    Africa 39.14 41.27 43.32 45.33 47.45 49.58 51.59 53.34 53.63 53.60 53.33
+2  Americas 53.28 55.96 58.40 60.41 62.39 64.39 66.23 68.09 69.57 71.15 72.42
+3      Asia 46.31 49.32 51.56 54.66 57.32 59.61 62.62 64.85 66.54 68.02 69.23
+4    Europe 64.41 66.70 68.54 69.74 70.78 71.94 72.81 73.64 74.44 75.51 76.70
+5   Oceania 69.26 70.30 71.09 71.31 71.91 72.85 74.29 75.32 76.94 78.19 79.74
+   2007
+1 54.81
+2 73.61
+3 70.73
+4 77.65
+5 80.72</code></pre>
+</div>
+</div>
+<p>The <code>USING avg(lifeExp)</code> clause is now performing averaging life expectancy given the specified conditions and formatting.</p>
+</section>
+<section id="approach-3-crosstab-in-postgresql" class="level3">
+<h3 class="anchored" data-anchor-id="approach-3-crosstab-in-postgresql">Approach 3: <code>crosstab()</code> in PostgreSQL</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_local, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con_local, <span class="st">"</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT continent,</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="st">            ROUND(AVG(</span><span class="sc">\"</span><span class="st">lifeExp</span><span class="sc">\"</span><span class="st">)::numeric, 2)</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="st">     GROUP BY continent, year</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY continent, year::text',</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT DISTINCT year::text FROM gapminder ORDER BY year::text'</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="st">    continent text,</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span><span class="st"> numeric</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This is <code>crosstab()</code>’s main use case: the source query performs the <code>GROUP BY continent, year</code> aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure <code>crosstab()</code> requires. It then reshapes those triples into the wide format.</p>
+</section>
+<section id="verifying-manual-and-duckdb-pivot-match" class="level3">
+<h3 class="anchored" data-anchor-id="verifying-manual-and-duckdb-pivot-match">Verifying manual and DuckDB PIVOT match</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>manual_sorted_ct <span class="ot">&lt;-</span> ct_manual <span class="sc">|&gt;</span> <span class="fu">arrange</span>(continent)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>duck_sorted_ct   <span class="ot">&lt;-</span> ct_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(continent)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(manual_sorted_ct, duck_sorted_ct, <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Pure Reshaping</th>
+<th>Cross-Tabulation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Row count changes?</strong></td>
+<td>No</td>
+<td>Yes (fewer rows out)</td>
+</tr>
+<tr class="even">
+<td><strong>Aggregation required?</strong></td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td><strong>R tidyverse</strong></td>
+<td><code>pivot_wider()</code></td>
+<td><code>pivot_wider()</code> + pre-aggregation</td>
+</tr>
+<tr class="even">
+<td><strong>DuckDB <code>PIVOT</code></strong></td>
+<td><code>PIVOT ... ON ... USING first()</code></td>
+<td><code>PIVOT ... ON ... USING avg()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Manual SQL</strong></td>
+<td><code>MAX(CASE WHEN ...)</code> + <code>GROUP BY</code></td>
+<td><code>AVG(CASE WHEN ...)</code> + <code>GROUP BY</code></td>
+</tr>
+<tr class="even">
+<td><strong>PostgreSQL <code>crosstab()</code></strong></td>
+<td>Works but awkward, no native mode for it</td>
+<td>Natural fit, designed for pre-aggregated input</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

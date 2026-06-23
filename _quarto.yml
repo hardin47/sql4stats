@@ -16,16 +16,18 @@ website:
             text: Joins
           - href: parquet.qmd
             text: File Formats and DuckDB
+      - text: "Theory in Practice"
+        menu:
+          - href: native_v_direct.qmd
+            text: DuckDB Native vs. Direct Querying
+          - href: row_v_file.qmd
+            text: Parquet Querying Time Exploration
       - text: "Tutorials"
         menu: 
           - href: crosstab_pivot_comp.qmd
             text: Pivoting + Crosstabs
           - href: sql_upload_guide.qmd
             text: Data Upload Guide
-      - text: "Thoery in Practice"
-        menu:
-          - href: row_v_file.qmd
-            text: Parquet Querying Time Exploration
 
 format:
   html:
