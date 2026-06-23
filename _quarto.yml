@@ -32,6 +32,7 @@ website:
         href: about.qmd
       - text: "References"
         href: references.qmd
+
 format:
   html:
     theme: 
