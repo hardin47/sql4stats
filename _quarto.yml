@@ -5,12 +5,9 @@ website:
   title: "sql4stats"
   navbar:
     left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
       - text: "Informational Resources"
         menu:
-          - href: SQL_Scrolly.qmd
+          - href: SQL_Scrolly_reformatted.qmd
             text: SQL:Indexing and B-Trees
           - href: SQL_Joins_Scrolly.qmd
             text: Joins
@@ -22,17 +19,20 @@ website:
             text: DuckDB Native vs. Direct Querying
           - href: row_v_file.qmd
             text: Parquet Querying Time Exploration
+          - href: join_optimization.qmd
+            text: Join Algorithms and Join Order
       - text: "Tutorials"
         menu: 
           - href: crosstab_pivot_comp.qmd
             text: Pivoting + Crosstabs
           - href: sql_upload_guide.qmd
             text: Data Upload Guide
-
+      - text: "About"
+        href: about.qmd
 format:
   html:
     theme: cosmo
-    css: styles.css
+    css: global_style.scss
     toc: true
 
 
