@@ -60,14 +60,6 @@ con_traffic <- DBI::dbConnect(
   user     = Sys.getenv("TRAFFIC_USER"),
   password = Sys.getenv("TRAFFIC_PWD")
 )
-```
-
-```{r}
-dbListFields(con_traffic, "ca_los_angeles_2020_04_01")
-dbListFields(con_traffic, "ca_san_francisco_2020_04_01")
-dbListFields(con_traffic, "ca_san_jose_2020_04_01")
-
-```
 
 # ── Build native DuckDB ──
 con_native <- dbConnect(duckdb(), here::here("traffic_native.duckdb"))
