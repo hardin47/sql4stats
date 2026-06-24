@@ -13,7 +13,6 @@ execute:
 
 ```{=html}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&display=swap');
 /* ══════════════════════════════════════════════
    LIGHT-BLUE THEME — soft blue canvas, white mono
    tables w/ royal-blue headers, orange + green as
@@ -38,7 +37,7 @@ execute:
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Source Code Pro', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Fira Code', 'Cascadia Code', ui-monospace, 'SF Mono', Menlo, monospace;
   background: #e9f1fd;
   color: #16263f;
   overflow-x: hidden;
@@ -239,7 +238,7 @@ main.content, #quarto-content, .page-columns,
 .sql-block {
   background: #11244a; border: 1px solid #1d3a6e;
   border-radius: 8px; padding: 0.95rem 1.2rem;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
   font-size: 0.78rem; line-height: 1.6; color: #d8e3f7;
   margin: 0.8rem 0; overflow-x: auto;
 }
@@ -256,7 +255,7 @@ main.content, #quarto-content, .page-columns,
   width: 100%; border-collapse: collapse;
   border: 1px solid #c4cbe0;
   font-size: 0.85rem;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
   background: #ffffff;
 }
 .vis-table th {
@@ -289,7 +288,7 @@ main.content, #quarto-content, .page-columns,
 .rel-head {
   padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 600;
   letter-spacing: 0.02em; text-transform: none;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
 }
 .rel-head.ind { background: #3b62db; color: #fff; }
 .rel-head.pur { background: #3b62db; color: #fff; }
@@ -297,7 +296,7 @@ main.content, #quarto-content, .page-columns,
   padding: 0.45rem 1rem; font-size: 0.8rem; color: #16181d;
   border-bottom: 1px solid #e2e5ee;
   display: flex; align-items: center; gap: 0.5rem;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
 }
 .rel-field:last-child { border-bottom: none; }
 .pk-badge {
@@ -330,7 +329,7 @@ main.content, #quarto-content, .page-columns,
   background: #ffffff; border: 1px solid #d2d6e2;
   padding: 0.5rem 0.8rem; margin-bottom: 0.3rem;
   font-size: 0.8rem; color: #16181d; display: flex; align-items: center; gap: 0.5rem;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
 }
 .idx-row .rn { color: #8595b0; font-size: 0.7rem; }
 .idx-row.sorted { background: #4ab87d; border-color: #3ba06c; color: #08120c; font-weight: 600; }
@@ -426,7 +425,7 @@ main.content, #quarto-content, .page-columns,
 .comp-row {
   display: flex; border-radius: 5px; overflow: hidden;
   border: 1px solid #d2d6e2; font-size: 0.78rem;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Fira Code','Cascadia Code',monospace;
 }
 .comp-a { background: #3b62db; color: #ffffff; padding: 0.4rem 0.75rem; font-weight: 600; }
 .comp-b { background: #ffffff; color: #16181d; padding: 0.4rem 0.75rem; flex: 1; }
@@ -514,19 +513,13 @@ main.content, #quarto-content, .page-columns,
 .bt { color: #2b7e8c; border-color: #a8d4db; background: #e6f4f6; }
 
 /* Video animation frame inside sticky-left panels.
-   The source animations have a black backdrop, so the frame is a dark
-   navy "player" (matching the SQL code blocks) — the black video blends
-   into intentional dark chrome instead of floating on the light page. */
+   The animations are transparent webms, so they sit directly on the
+   light-blue page with no surrounding chrome. */
 .anim-frame {
   width: 100%;
-  background: #000000;
-  border: 1px solid #1d3a6e;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 22px rgba(17,36,74,0.22);
-  padding: 0.5rem;
+  background: transparent;
 }
-.anim-frame video { width: 100%; height: auto; display: block; background: #000000; border-radius: 6px; }
+.anim-frame video { width: 100%; height: auto; display: block; background: transparent; }
 .anim-label {
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em;
   color: #2747b0; font-weight: 700; margin-bottom: 0.7rem;
@@ -569,6 +562,7 @@ main.content, #quarto-content, .page-columns,
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
+    <div class="hero-eyebrow">● Relational Query Operations</div>
     <h1>SQL<br><em>Joins</em></h1>
     <p class="hero-sub">What is a join? How do logical join types differ from the physical strategies the optimizer actually runs — nested loops, sort-merge, and hash?</p>
     <div class="hero-pills">
@@ -742,7 +736,7 @@ main.content, #quarto-content, .page-columns,
       <div>
         <div class="anim-label">From SQL text to executed join</div>
         <div style="display:flex;flex-direction:column;align-items:stretch;gap:0.5rem;">
-          <div style="background:#11244a;border:1px solid #1d3a6e;border-radius:8px;padding:0.7rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#d8e3f7;">
+          <div style="background:#11244a;border:1px solid #1d3a6e;border-radius:8px;padding:0.7rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#d8e3f7;">
             <span style="color:#8fb0ff;font-weight:600;">SELECT</span> * <span style="color:#8fb0ff;font-weight:600;">FROM</span> <span style="color:#fff;">A</span> <span style="color:#8fb0ff;font-weight:600;">JOIN</span> <span style="color:#fff;">B</span><br>&nbsp;&nbsp;<span style="color:#8fb0ff;font-weight:600;">ON</span> A.dept = B.dept;
           </div>
           <div style="text-align:center;color:#2747b0;font-size:0.85rem;">↓ logical join (what)</div>
@@ -1002,14 +996,14 @@ main.content, #quarto-content, .page-columns,
       <div>
         <div class="anim-label">A hash table: keys → buckets</div>
         <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.8rem;">
-          <div style="background:#3b62db;color:#fff;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.8rem;font-weight:600;">key</div>
+          <div style="background:#3b62db;color:#fff;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">key</div>
           <span style="color:#2747b0;font-size:1.2rem;">→ hash() →</span>
-          <div style="background:#fdf0e3;border:1px solid #f2cba3;color:#b9692a;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Source Code Pro',monospace;font-size:0.8rem;font-weight:600;">bucket #</div>
+          <div style="background:#fdf0e3;border:1px solid #f2cba3;color:#b9692a;border-radius:8px;padding:0.5rem 0.9rem;font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;">bucket #</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.35rem;">
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">5&nbsp;&nbsp;Math</span></div>
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">7&nbsp;&nbsp;Music</span></div>
-          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Source Code Pro',monospace;font-size:0.78rem;color:#16181d;">2&nbsp;&nbsp;Art</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">5&nbsp;&nbsp;Math</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">7&nbsp;&nbsp;Music</span></div>
+          <div style="background:#11244a;border-radius:7px;padding:0.45rem;display:flex;justify-content:center;"><span style="background:#fff;border-radius:5px;padding:0.2rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;color:#16181d;">2&nbsp;&nbsp;Art</span></div>
         </div>
         <div class="anim-cap">A hash table stores key-value pairs in a fixed-size array. A key "hashes" to a specific bucket, so lookups need only hash the key — no scanning.</div>
       </div>
@@ -1123,7 +1117,27 @@ main.content, #quarto-content, .page-columns,
         </div>
       </div>
     </div>
-    
+
+    <!-- Panel: complexity comparison bars -->
+    <div class="sticky-panel" id="panel-6-1">
+      <div>
+        <div class="anim-label">Cost at a glance</div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Nested loop (unsorted)</span><strong>O(m × n)</strong></div>
+          <div class="cx-track"><div class="cx-fill bad" style="width:100%"></div></div>
+        </div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Sort-merge (pre-sorted)</span><strong>O(m + n)</strong></div>
+          <div class="cx-track"><div class="cx-fill mid" style="width:34%"></div></div>
+        </div>
+        <div class="cx-row">
+          <div class="cx-head"><span>Hash (unsorted, equality)</span><strong>O(N + M)</strong></div>
+          <div class="cx-track"><div class="cx-fill good" style="width:30%"></div></div>
+        </div>
+        <div class="anim-cap">In theory both hash and merge perform well on large tables. The deciding factors are sortedness, the join predicate, memory, and whether a useful index exists.</div>
+      </div>
+    </div>
+
   </div><!-- /sticky-left -->
 
   <div class="sticky-right">
@@ -1140,10 +1154,8 @@ main.content, #quarto-content, .page-columns,
         <span class="badge ba">Nested · small / indexed</span>
       </div>
     </div>
-  </div><!-- /sticky-right -->
-</div><!-- /scrolly-6 -->
- 
-<div class="step" data-panel="6-1" style="opacity:1;">
+
+    <div class="step" data-panel="6-1">
       <div class="step-tag">4.2 · Cost Comparison</div>
       <h3>Sum beats product — when you can get it</h3>
       <p>The headline difference is complexity. Nested loops can degrade to <strong style="color:#b9692a;">O(m × n)</strong> on unsorted inputs, while sort-merge and hash both scale with the <strong style="color:#2747b0;">sum</strong> of the inputs once their setup is paid for.</p>
@@ -1154,6 +1166,9 @@ main.content, #quarto-content, .page-columns,
         <span class="badge bg">Hash O(N + M)</span>
       </div>
     </div>
+
+  </div><!-- /sticky-right -->
+</div><!-- /scrolly-6 -->
 
 <!-- ═══════════════════════════════════════════════════
      FINAL SUMMARY
