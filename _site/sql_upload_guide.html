@@ -58,26 +58,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -267,7 +248,7 @@ div.csl-indent {
 <h2 class="anchored" data-anchor-id="part-1-getting-data-into-a-database">Part 1: Getting Data Into a Database</h2>
 <section id="where-the-data-comes-from" class="level3">
 <h3 class="anchored" data-anchor-id="where-the-data-comes-from">Where the Data Comes From</h3>
-<p>For this guide, the source data comes from the <a href="https://github.com/hhllcks/snldb">snldb GitHub repository</a> <span class="citation" data-cites="hilleckes">(<a href="#ref-hilleckes" role="doc-biblioref">Hilleckes and Morris 2017</a>)</span>, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of <em>this</em> scraper don’t matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: <strong>most real-world data starts out as scraped, exported, or otherwise messy flat files</strong>, and getting it into a proper database is itself a meaningful step.</p>
+<p>For this guide, the source data comes from the <a href="https://github.com/hhllcks/snldb">snldb GitHub repository</a> <span class="citation" data-cites="hilleckes">(Hilleckes and Morris 2017)</span>, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of <em>this</em> scraper don’t matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: <strong>most real-world data starts out as scraped, exported, or otherwise messy flat files</strong>, and getting it into a proper database is itself a meaningful step.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_single_episode.sh</span>   <span class="co"># test run: one episode</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_all.sh</span>               <span class="co"># full crawl: every episode</span></span>
@@ -289,7 +270,7 @@ div.csl-indent {
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>A practice worth adopting immediately, regardless of what data you’re working with: <strong>never write credentials directly into a script.</strong> Store them as environment variables in a <code>.Renviron</code> file (which should never be committed to version control), and read them in using <code>Sys.getenv()</code> <span class="citation" data-cites="wickham2023rpkgs">(<a href="#ref-wickham2023rpkgs" role="doc-biblioref">Wickham and Bryan 2023</a>)</span>.</p>
+<p>A practice worth adopting immediately, regardless of what data you’re working with: <strong>never write credentials directly into a script.</strong> Store them as environment variables in a <code>.Renviron</code> file (which should never be committed to version control), and read them in using <code>Sys.getenv()</code> <span class="citation" data-cites="wickham2023rpkgs">(Wickham and Bryan 2023)</span>.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -958,19 +939,11 @@ div.csl-indent {
 <p>Querying <code>information_schema</code> on every standard SQL database shows its own structure through this same metadata schema, so the exact query pattern (perhaps with a different <code>table_schema</code>name) works for inspecting keys in any database you encounter, not just this one.</p>
 
 
-
 </section>
 </section>
 
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
-<div id="ref-hilleckes" class="csl-entry" role="listitem">
-Hilleckes, Hendrik, and Colin Morris. 2017. <em>Snldb: A Saturday Night Live Database</em>. <a href="https://github.com/hhllcks/snldb">https://github.com/hhllcks/snldb</a>.
-</div>
-<div id="ref-wickham2023rpkgs" class="csl-entry" role="listitem">
-Wickham, Hadley, and Jennifer Bryan. 2023. <em>R Packages</em>. 2nd ed. O’Reilly Media. <a href="https://r-pkgs.org">https://r-pkgs.org</a>.
-</div>
-</div></section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
 <li id="fn1"><p>The syntax represents <code>table.variable</code> where table is the table name and variable is the variable name. <code>actors.aid</code> means the column <code>aid</code> from the table <code>actors</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>

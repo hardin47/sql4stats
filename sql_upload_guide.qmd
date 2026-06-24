@@ -10,6 +10,9 @@ format:
     toc-depth: 2
     code-fold: true
     code-summary: "Show the code"
+
+bibliography: references.bib
+suppress-bibliography: true
 ---
 
 ## Why Should a Statistician Care About SQL Databases?
