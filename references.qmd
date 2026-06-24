@@ -1,5 +1,5 @@
 ---
 title: "References"
-bibliography: "/Users/sebastianpollack/Desktop/Summer 2026/sql4stats/references.bib"
+bibliography: references.bib
 nocite: '@*'
 ---
