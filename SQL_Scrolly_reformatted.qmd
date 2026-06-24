@@ -919,7 +919,7 @@ main.content, #quarto-content, .page-columns,
           />
         </div>
         <div style="font-size:0.75rem;color:#5b6b86;line-height:1.5;background:#eef3fe;border-radius:8px;padding:0.6rem 0.8rem;border:1px solid #b6c9ee;">
-          Root node (top) → branch nodes (middle) → leaf nodes (bottom, linked in sorted order). Photo credit: <a href="references.qmd" target="_blank" style="color:#5b6b86;text-decoration:underline;">(Winland, 2026)</a>
+          Root node (top) → branch nodes (middle) → leaf nodes (bottom, linked in sorted order). Photo credit: <a href="references.qmd" target="_blank" style="color:#5b6b86;text-decoration:underline;">(Winand, 2026)</a>
         </div>
       </div>
     </div>
