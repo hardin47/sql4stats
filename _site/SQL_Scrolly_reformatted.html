@@ -5267,7 +5267,7 @@ transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
       </div>
     </div>
 
-    <div class="step" data-panel="4-1">
+    <div class="step" data-panel="4-1" id="oltp-vs-olap">
       <div class="step-tag">4.2 · Guidelines</div>
       <h3 class="anchored">Indexes make SQL fast for row-based, transactional queries</h3>
       <p>SQL indexes are purpose-built for <strong style="color:#2747b0;">OLTP</strong> — Online Transactional Processing. These are queries that locate and return a small number of specific rows: find one customer, update one order, look up one student. The B+ tree traverses from root to leaf in O(log n) and lands on exactly the rows you need, touching almost nothing else in the table.</p>

@@ -1122,7 +1122,7 @@ main.content, #quarto-content, .page-columns,
           </thead>
           <tbody>
             <tr><td style="white-space:nowrap;">Architecture</td><td class="cell-good">Client-server</td><td class="cell-good">Client-server</td><td class="cell-good">In-process</td></tr>
-            <tr><td style="white-space:nowrap;">Optimized for</td><td class="cell-good">OLTP</td><td class="cell-good">OLTP + OLAP</td><td class="cell-good">OLAP</td></tr>
+            <tr><td style="white-space:nowrap;">Optimized for</td><td class="cell-good"><a href="SQL_Scrolly_reformatted.qmd#oltp-vs-olap">OLTP</a></td><td class="cell-good"><a href="SQL_Scrolly_reformatted.html#oltp-vs-olap">OLTP + OLAP</a></td><td class="cell-good"><a href="SQL_Scrolly_reformatted.html#oltp-vs-olap">OLAP</a></td></tr>
             <tr><td style="white-space:nowrap;">Setup required</td><td class="cell-bad">Server + config</td><td class="cell-bad">Server + config</td><td class="cell-good">pip/install.packages</td></tr>
             <tr><td style="white-space:nowrap;">Storage layout</td><td class="cell-good">Row (B+ tree)</td><td class="cell-good">Row (heap)</td><td class="cell-good">Columnar</td></tr>
             <tr><td style="white-space:nowrap;">Query files directly</td><td class="cell-bad">No</td><td class="cell-bad">No</td><td class="cell-good">Yes (CSV/Parquet/JSON)</td></tr>
