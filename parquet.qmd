@@ -1234,11 +1234,11 @@ main.content, #quarto-content, .page-columns,
     </div>
     <div class="tk-card">
       <div class="tk-num">05</div>
-      <p><strong>Once ingested into DuckDB, the source format is irrelevant.</strong> DuckDB normalizes CSV, Parquet, and JSON into its own internal columnar representation. Query performance converges regardless of source. Parquet is still the best source format because it ingests information faster and the file is smaller on disk.</p>
+      <p><strong>Once ingested into DuckDB, the source format is irrelevant.</strong> DuckDB normalizes CSV, Parquet, and JSON into its own internal columnar representation. Query performance converges regardless of source once source is uploaded into DuckDB.</p>
     </div>
     <div class="tk-card">
       <div class="tk-num">06</div>
-      <p><strong>Native DuckDB and direct Parquet are both columnar but not the same.</strong> Parquet is a file format read on demand from disk. DuckDB ingests data into its own internal columnar storage. Once inside, the source format no longer matters. The trade-off is storage (DuckDB takes ~3× more space) versus speed (DuckDB is faster for repeated queries). Choose direct Parquet for one-off queries; choose native DuckDB when querying the same data frequently.</p>
+      <p><strong>Native DuckDB and direct Parquet are both columnar but not the same.</strong> Parquet is a file format read on demand from disk. DuckDB ingests data into its own internal columnar storage. Once inside, the source format no longer matters. The trade-off is storage (DuckDB takes ~3× more space) versus speed (DuckDB is faster for repeated queries). <a href="native_v_direct.qmd" target="_blank" style="color:#3b62db;text-decoration:underline;">Click here to see an exploration on Native DuckDB and direct Parquet Querying.</a></p>
     </div>
   </div>
 </section>
