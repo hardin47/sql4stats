@@ -15,7 +15,7 @@ execute:
 
 ## Introduction
 
-This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself.
+This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) [@openpolicing2023] — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself.
 
 For background on Parquet's internal structure and how DuckDB reads files directly, see the [Parquet & DuckDB reference page](parquet.qmd).
 
