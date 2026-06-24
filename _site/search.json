@@ -193,6 +193,6 @@
     "href": "sql_upload_guide.html#footnotes",
     "title": "SQL Upload Guide",
     "section": "Footnotes",
-    "text": "Footnotes\n\n\nThe syntax can represents table.variable where table is the table name and variable is the variable name. actors.aid means the column aid from the table actors.↩︎"
+    "text": "Footnotes\n\n\nThe syntax represents table.variable where table is the table name and variable is the variable name. actors.aid means the column aid from the table actors.↩︎"
   }
 ]

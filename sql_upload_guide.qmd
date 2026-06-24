@@ -293,7 +293,7 @@ For a column to serve as a primary key, it must satisfy two conditions and ideal
 2. **Every value is unique.** If a value repeats, it can't distinguish between the rows that share it.
 3. **It represents a natural identifier for the entity.** This one is more judgment-based. Choosing a column that *means* something as an identifier (an actor's ID, a patient's ID, a transaction's ID) rather than an arbitrary column that happens to be unique by coincidence.
 
-For the SNL data, the natural candidates were the existing ID columns scraped along with the data: `actors.aid`, `characters.charid`, `episodes.epid`, `impressions.impid`, `seasons.sid`, `sketches.skid`, and `titles.tid`^[The syntax can represents table.variable where table is the table name and variable is the variable name. `actors.aid` means the column `aid` from the table `actors`.]. This is a common situation where *the data often arrives with implicit identifiers already in place*, and using them as keys is best practice.
+For the SNL data, the natural candidates were the existing ID columns scraped along with the data: `actors.aid`, `characters.charid`, `episodes.epid`, `impressions.impid`, `seasons.sid`, `sketches.skid`, and `titles.tid`^[The syntax represents `table.variable` where table is the table name and variable is the variable name. `actors.aid` means the column `aid` from the table `actors`.]. This is a common situation where *the data often arrives with implicit identifiers already in place*, and using them as keys is best practice.
 
 ### Checking Candidates Before Committing
 
