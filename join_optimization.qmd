@@ -10,6 +10,8 @@ format:
 execute:
   warning: false
   message: false
+bibliography: references.bib
+suppress=bibliography: true
 ---
 
 ## Introduction
@@ -20,16 +22,16 @@ When you write a multi-table `JOIN`, you specify which tables connect and on wha
 This simulation isolates and measures the impacts of two main optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
-For more information on these strategies, see the <a href="https://sql4stats.netlify.app/joins">Joins page</a>.
+For more information on these strategies, see the <a href="joins.qmd">Joins page</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
 Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is mostly a teaching device — in production you almost always let the planner decide.
 
 
 
-### Setup
+## Setup
 
-For this simulation, we'll be using a modified version of PostgreSQL 13.1 which @Han2021 used in their paper on cardinality estimation methods. Use <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">these instructions</a> to set up PostgreSQL on your own computer. 
+For this simulation, we'll be using a modified version of PostgreSQL 13.1 which [@Han2021](references.qmd) used in their paper on cardinality estimation methods. Use the instructions from their <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> to set up PostgreSQL on your own computer. 
 
 
 ```{r}
@@ -54,9 +56,9 @@ con <- dbConnect(
 
 First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability. 
 
-We'll be using <a href ="https://relational.fit.cvut.cz/dataset/Stats"> STATS </a>, an anonymized dump of user-contributed content from the Stats StackExchange network, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by @Han2021 and included in the paper's <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. 
+We'll be using STATS-CEB, an anonymized dump of user-contributed content from the <a href ="https://stats.stackexchange.com/"> Stats StackExchange Network </a>, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by [@Han2021](references.qmd) and included in the paper's <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. Follow the instructions in the README for downloading PostgreSQL and the dataset. 
 
-For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="sql_upload_guide.qmd">Data Upload Tutorial</a>
+For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="sql_upload_guide.qmd">Data Upload Tutorial</a>. 
 
 
 ### Indexing the Tables
@@ -70,7 +72,7 @@ dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owner
 dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)")
 ```
 
-## How the planner can be controlled
+### Simulation Settings
 
 In PostgreSQL, session variables can be specifically controlled to simulate different optimizer decisions. 
 
@@ -88,7 +90,7 @@ dbExecute(con, "SET join_collapse_limit = 1")
 dbExecute(con, "SET from_collapse_limit = 1")
 ```
 
-## The two queries: good order vs. bad order
+### Query Syntax: Good vs. Bad Order
 
 Both queries below answer the **exact same question** — count the rows produced by joining votes to their posts, those posts to their owners, and those owners to their badges, keeping only upvotes (`votetypeid = 2`) on well-scored posts (`score > 10`) owned by high-reputation users (`reputation > 1000`). They return identical results. The only difference is the order the tables are listed in.
 
@@ -129,7 +131,9 @@ dbGetQuery(con, sql_good_order)
 dbGetQuery(con, sql_bad_order)
 ```
 
-## A repeatable timing harness (warm cache)
+## Running the Simulation
+
+### RUN_REPEATED
 
 To get a stable measurement we run one throwaway query first. This loads the relevant data pages into PostgreSQL's buffer cache (a **warm-cache** measurement). Then, we run the query `n` more times, scraping the `Execution Time` and `Planning Time` lines out of each query plan.
 
@@ -164,10 +168,9 @@ run_repeated_warm <- function(con, query, n = 10) {
 
 We now cross the two join orders with the three join strategies, forcing one strategy at a time by toggling the `enable_*` flags. That gives six timing distributions of ten runs each.
 
+#### Nested Loop
 
-Running the nested loop join: 
-
-First, we disable hash and merge join algorithms. 
+First, we enable the nested loop and disable hash and merge join algorithms. 
 ```{r}
 #| output: false
 dbExecute(con, "SET enable_nestloop  = on")
@@ -175,8 +178,6 @@ dbExecute(con, "SET enable_hashjoin  = off")
 dbExecute(con, "SET enable_mergejoin = off")
 
 ```
-
-
 
 We'll run the query once to warm the cache, then extract the results of the next 10 repetitions. 
 
@@ -211,10 +212,15 @@ results_merge_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Merge Join", order = "good")
 results_merge_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Merge Join", order = "bad")
+
+dbExecute(con, "DISCARD ALL")
 ```
 
 
 ### Results
+#### Plot of Execution Times by Order and Algorithm
+
+Here's a plot comparing execution times between different join orders and algorithms. 
 ```{r}
 #| label: warm-plot
 #| fig-cap: "Warm-cache execution time across the six strategy × order combinations."
@@ -235,6 +241,41 @@ bind_rows(
 ```
 
 **What the plot shows.** Each strategy responds differently to a bad join order. A **Nested Loop** is the most order-sensitive: for every row from the outer side it probes the inner side, so if the outer side starts large (bad order) the probe count explodes. A **Hash Join** builds a hash table on one input and streams the other past it, which makes it far more forgiving of a bad starting order. A **Merge Join** requires both inputs sorted on the join key, so its cost is dominated by sorting and it sits somewhere in between. In short: a good join order helps every strategy, but it *rescues* the Nested Loop.
+
+### Interpreting Query Plans
+
+To understand why some queries take longer than others, it can be helpful to read the plans created by the query optimizer. Wrapping a query in `EXPLAIN ANALYZE` allows us to read the query plan and see exactly how long each step of the query takes. 
+
+#### Auto-Optimized Join
+First, we'll run the query and allow the engine to optimize freely. 
+```{r}
+dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))
+```
+
+It's important to recognize that query plans need to be read from bottom to top--that is, the step labeled "1" in the plan is actually the last portion of the query. 
+
+
+
+
+
+#### Manually Defined, Inefficient Join
+
+For comparison, we'll run the same query, but this time, we'll force the engine to run nested loop joins on our defined "bad order" without allowing the optimizer to manipulate it. 
+
+```{r}
+#| output: false
+dbExecute(con, "SET max_parallel_workers_per_gather = 0")
+dbExecute(con, "SET join_collapse_limit = 1")
+dbExecute(con, "SET from_collapse_limit = 1")
+dbExecute(con, "SET enable_nestloop  = on")
+dbExecute(con, "SET enable_hashjoin  = off")
+dbExecute(con, "SET enable_mergejoin = off")
+```
+
+```{r}
+dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))
+```
+
 
 
 ## A note on cold cache

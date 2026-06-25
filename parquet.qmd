@@ -551,7 +551,7 @@ main.content, #quarto-content, .page-columns,
   <div class="hero-glow"></div>
   <div class="hero-inner">
     <div class="hero-eyebrow">● Data Storage Essentials</div>
-    <h1>File Formats,<br>Parquet &amp;<br><em>DuckDB</em></h1>
+    <h1>File Formats<br><em> and DuckDB</em></h1>
     <p class="hero-sub">How data is stored on disk shapes how fast you can query it along with the space it takes up on the disk. From row-based CSVs to columnar Parquet files to embedded analytical databases every format has benefits and trade-offs.</p>
     <div class="hero-pills">
       <span class="hero-pill hero-pill-1">Storage Layouts</span>

@@ -222,17 +222,19 @@ div.csl-indent {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a>
   <ul class="collapse">
-  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#indexing-the-tables" id="toc-indexing-the-tables" class="nav-link" data-scroll-target="#indexing-the-tables">Indexing the Tables</a></li>
+  <li><a href="#simulation-settings" id="toc-simulation-settings" class="nav-link" data-scroll-target="#simulation-settings">Simulation Settings</a></li>
+  <li><a href="#query-syntax-good-vs.-bad-order" id="toc-query-syntax-good-vs.-bad-order" class="nav-link" data-scroll-target="#query-syntax-good-vs.-bad-order">Query Syntax: Good vs.&nbsp;Bad Order</a></li>
   </ul></li>
-  <li><a href="#how-the-planner-can-be-controlled" id="toc-how-the-planner-can-be-controlled" class="nav-link" data-scroll-target="#how-the-planner-can-be-controlled">How the planner can be controlled</a></li>
-  <li><a href="#the-two-queries-good-order-vs.-bad-order" id="toc-the-two-queries-good-order-vs.-bad-order" class="nav-link" data-scroll-target="#the-two-queries-good-order-vs.-bad-order">The two queries: good order vs.&nbsp;bad order</a></li>
-  <li><a href="#a-repeatable-timing-harness-warm-cache" id="toc-a-repeatable-timing-harness-warm-cache" class="nav-link" data-scroll-target="#a-repeatable-timing-harness-warm-cache">A repeatable timing harness (warm cache)</a>
+  <li><a href="#running-the-simulation" id="toc-running-the-simulation" class="nav-link" data-scroll-target="#running-the-simulation">Running the Simulation</a>
   <ul class="collapse">
+  <li><a href="#run_repeated" id="toc-run_repeated" class="nav-link" data-scroll-target="#run_repeated">RUN_REPEATED</a></li>
   <li><a href="#running-all-six-combinations" id="toc-running-all-six-combinations" class="nav-link" data-scroll-target="#running-all-six-combinations">Running all six combinations</a></li>
   <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#interpreting-query-plans" id="toc-interpreting-query-plans" class="nav-link" data-scroll-target="#interpreting-query-plans">Interpreting Query Plans</a></li>
   </ul></li>
   <li><a href="#a-note-on-cold-cache" id="toc-a-note-on-cold-cache" class="nav-link" data-scroll-target="#a-note-on-cold-cache">A note on cold cache</a></li>
   <li><a href="#why-the-planner-makes-these-choices-estimated-vs.-actual-rows" id="toc-why-the-planner-makes-these-choices-estimated-vs.-actual-rows" class="nav-link" data-scroll-target="#why-the-planner-makes-these-choices-estimated-vs.-actual-rows">Why the planner makes these choices: estimated vs.&nbsp;actual rows</a></li>
@@ -268,13 +270,14 @@ div.csl-indent {
 <p>When you write a multi-table <code>JOIN</code>, you specify which tables connect and on what columns — but you do not specify how the database should physically combine them, nor in what order. Normally, the query optimizer uses the distribution of data within the tables to estimate the size of intermediate results and create a query plan.</p>
 <p>This simulation isolates and measures the impacts of two main optimization decisions:</p>
 <ul>
-<li><strong>Join strategy</strong> — the physical algorithm used to match rows between two tables. PostgreSQL has three: <strong>Nested Loop</strong>, <strong>Hash Join</strong>, and <strong>Merge Join</strong>. For more information on these strategies, see the <a href="https://sql4stats.netlify.app/joins">Joins page</a>.</li>
+<li><strong>Join strategy</strong> — the physical algorithm used to match rows between two tables. PostgreSQL has three: <strong>Nested Loop</strong>, <strong>Hash Join</strong>, and <strong>Merge Join</strong>. For more information on these strategies, see the <a href="./joins.html">Joins page</a>.</li>
 <li><strong>Join order</strong> — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.</li>
 </ul>
 <p>Normally the planner picks both automatically using table statistics and cost estimates.To <em>see</em> the effect of each choice, we override the planner with session-level <code>SET</code> commands, force one strategy and one order at a time, and time the result. This is mostly a teaching device — in production you almost always let the planner decide.</p>
-<section id="setup" class="level3">
-<h3 class="anchored" data-anchor-id="setup">Setup</h3>
-<p>For this simulation, we’ll be using a modified version of PostgreSQL 13.1 which <span class="citation" data-cites="Han2021">Han et al. (<a href="#ref-Han2021" role="doc-biblioref">2021</a>)</span> used in their paper on cardinality estimation methods. Use <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">these instructions</a> to set up PostgreSQL on your own computer.</p>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>For this simulation, we’ll be using a modified version of PostgreSQL 13.1 which <a href="./references.html"><span class="citation" data-cites="Han2021">Han et al. (<span>2021</span>)</span></a> used in their paper on cardinality estimation methods. Use the instructions from their <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> to set up PostgreSQL on your own computer.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -298,9 +301,8 @@ div.csl-indent {
 </details>
 </div>
 <p>First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability.</p>
-<p>We’ll be using <a href="https://relational.fit.cvut.cz/dataset/Stats"> STATS </a>, an anonymized dump of user-contributed content from the Stats StackExchange network, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by <span class="citation" data-cites="Han2021">Han et al. (<a href="#ref-Han2021" role="doc-biblioref">2021</a>)</span> and included in the paper’s <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment.</p>
-<p>For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="./sql_upload_guide.html">Data Upload Tutorial</a></p>
-</section>
+<p>We’ll be using STATS-CEB, an anonymized dump of user-contributed content from the <a href="https://stats.stackexchange.com/"> Stats StackExchange Network </a>, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by <a href="./references.html"><span class="citation" data-cites="Han2021">Han et al. (<span>2021</span>)</span></a> and included in the paper’s <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. Follow the instructions in the README for downloading PostgreSQL and the dataset.</p>
+<p>For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="./sql_upload_guide.html">Data Upload Tutorial</a>.</p>
 <section id="indexing-the-tables" class="level3">
 <h3 class="anchored" data-anchor-id="indexing-the-tables">Indexing the Tables</h3>
 <p>First, we need to create indexes on the columns involved in the joins we’re performing. This ensures that the nested loop algorithm will be as efficient as possible. For more information on how indexes are structured in SQL, see the <a href="./SQL_Scrolly_reformatted.html#sec-ch3"> indexes and b-trees page </a>.</p>
@@ -313,9 +315,8 @@ div.csl-indent {
 </details>
 </div>
 </section>
-</section>
-<section id="how-the-planner-can-be-controlled" class="level2">
-<h2 class="anchored" data-anchor-id="how-the-planner-can-be-controlled">How the planner can be controlled</h2>
+<section id="simulation-settings" class="level3">
+<h3 class="anchored" data-anchor-id="simulation-settings">Simulation Settings</h3>
 <p>In PostgreSQL, session variables can be specifically controlled to simulate different optimizer decisions.</p>
 <ul>
 <li><code>enable_nestloop</code>, <code>enable_hashjoin</code>, <code>enable_mergejoin</code> — turn each physical algorithm on or off. By enabling exactly one at a time, we force the planner to use that strategy.</li>
@@ -324,8 +325,8 @@ div.csl-indent {
 </ul>
 <p>A key idea: because <code>join_collapse_limit = 1</code> makes the engine respect the written order, the <em>same logical query</em> written with its tables in a different sequence becomes a different physical plan.</p>
 </section>
-<section id="the-two-queries-good-order-vs.-bad-order" class="level2">
-<h2 class="anchored" data-anchor-id="the-two-queries-good-order-vs.-bad-order">The two queries: good order vs.&nbsp;bad order</h2>
+<section id="query-syntax-good-vs.-bad-order" class="level3">
+<h3 class="anchored" data-anchor-id="query-syntax-good-vs.-bad-order">Query Syntax: Good vs.&nbsp;Bad Order</h3>
 <p>Both queries below answer the <strong>exact same question</strong> — count the rows produced by joining votes to their posts, those posts to their owners, and those owners to their badges, keeping only upvotes (<code>votetypeid = 2</code>) on well-scored posts (<code>score &gt; 10</code>) owned by high-reputation users (<code>reputation &gt; 1000</code>). They return identical results. The only difference is the order the tables are listed in.</p>
 <div class="cell">
 <details class="code-fold">
@@ -378,8 +379,11 @@ div.csl-indent {
 </div>
 </div>
 </section>
-<section id="a-repeatable-timing-harness-warm-cache" class="level2">
-<h2 class="anchored" data-anchor-id="a-repeatable-timing-harness-warm-cache">A repeatable timing harness (warm cache)</h2>
+</section>
+<section id="running-the-simulation" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-simulation">Running the Simulation</h2>
+<section id="run_repeated" class="level3">
+<h3 class="anchored" data-anchor-id="run_repeated">RUN_REPEATED</h3>
 <p>To get a stable measurement we run one throwaway query first. This loads the relevant data pages into PostgreSQL’s buffer cache (a <strong>warm-cache</strong> measurement). Then, we run the query <code>n</code> more times, scraping the <code>Execution Time</code> and <code>Planning Time</code> lines out of each query plan.</p>
 <p><code>EXPLAIN ANALYZE</code> is the tool doing the real work here: it actually executes the query and reports how long each step took, as opposed to plain <code>EXPLAIN</code>, which only prints the query plan.</p>
 <div class="cell">
@@ -406,11 +410,13 @@ div.csl-indent {
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+</section>
 <section id="running-all-six-combinations" class="level3">
 <h3 class="anchored" data-anchor-id="running-all-six-combinations">Running all six combinations</h3>
 <p>We now cross the two join orders with the three join strategies, forcing one strategy at a time by toggling the <code>enable_*</code> flags. That gives six timing distributions of ten runs each.</p>
-<p>Running the nested loop join:</p>
-<p>First, we disable hash and merge join algorithms.</p>
+<section id="nested-loop" class="level4">
+<h4 class="anchored" data-anchor-id="nested-loop">Nested Loop</h4>
+<p>First, we enable the nested loop and disable hash and merge join algorithms.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -452,29 +458,107 @@ div.csl-indent {
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>results_merge_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>results_merge_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
+</section>
 <section id="results" class="level3">
 <h3 class="anchored" data-anchor-id="results">Results</h3>
+</section>
+<section id="interpreting-query-plans" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-query-plans">Interpreting Query Plans</h3>
+<p>To understand why some queries take longer than others, it can be helpful to read the plans created by the query optimizer. Wrapping a query in <code>EXPLAIN ANALYZE</code> allows us to read the query plan and see exactly how long each step of the query takes.</p>
+<p>First, we’ll run the query and allow the engine to optimize freely.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  results_nest_good, results_nest_bad,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  results_hash_good, results_hash_bad,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  results_merge_good, results_merge_bad</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Effect of join strategy on execution time"</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="st">"Join Strategy"</span>,</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Execution time (ms)"</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql_bad_order))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                                                                                          QUERY PLAN
+1                                                  Aggregate  (cost=2904.66..2904.67 rows=1 width=8) (actual time=1233.227..1233.229 rows=1 loops=1)
+2                                       -&gt;  Nested Loop  (cost=805.26..2898.52 rows=2457 width=0) (actual time=5.428..1005.329 rows=5854758 loops=1)
+3                                                                                                                     Join Filter: (u.id = b.userid)
+4                                             -&gt;  Nested Loop  (cost=804.97..2858.88 rows=71 width=8) (actual time=5.416..49.935 rows=45869 loops=1)
+5                                               -&gt;  Hash Join  (cost=804.55..2773.90 rows=25 width=12) (actual time=5.308..15.063 rows=2287 loops=1)
+6                                                                                                                  Hash Cond: (p.owneruserid = u.id)
+7                                       -&gt;  Seq Scan on posts p  (cost=0.00..1959.70 rows=3676 width=8) (actual time=0.011..8.941 rows=3552 loops=1)
+8                                                                                                                               Filter: (score &gt; 10)
+9                                                                                                                      Rows Removed by Filter: 88424
+10                                                      -&gt;  Hash  (cost=801.06..801.06 rows=279 width=4) (actual time=5.289..5.290 rows=305 loops=1)
+11                                                                                                     Buckets: 1024  Batches: 1  Memory Usage: 19kB
+12                                         -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.004..5.214 rows=305 loops=1)
+13                                                                                                                       Filter: (reputation &gt; 1000)
+14                                                                                                                     Rows Removed by Filter: 40020
+15                  -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.014 rows=20 loops=2287)
+16                                                                                                                       Index Cond: (postid = p.id)
+17                                                                                                                          Filter: (votetypeid = 2)
+18                                                                                                                         Rows Removed by Filter: 3
+19         -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.002..0.012 rows=128 loops=45869)
+20                                                                                                              Index Cond: (userid = p.owneruserid)
+21                                                                                                                                   Heap Fetches: 0
+22                                                                                                                           Planning Time: 1.528 ms
+23                                                                                                                       Execution Time: 1233.281 ms</code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop  = on"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin  = off"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql_bad_order))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                                                                                                 QUERY PLAN
+1                                                         Aggregate  (cost=3758.02..3758.03 rows=1 width=8) (actual time=1336.698..1336.699 rows=1 loops=1)
+2                                                -&gt;  Nested Loop  (cost=1.01..3751.87 rows=2457 width=0) (actual time=0.034..1091.987 rows=5854758 loops=1)
+3                                                                                                                            Join Filter: (u.id = b.userid)
+4                                                      -&gt;  Nested Loop  (cost=0.71..3712.23 rows=71 width=8) (actual time=0.028..60.975 rows=45869 loops=1)
+5                                                      -&gt;  Nested Loop  (cost=0.29..3627.26 rows=25 width=12) (actual time=0.020..21.147 rows=2287 loops=1)
+6                                                 -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.009..3.514 rows=305 loops=1)
+7                                                                                                                               Filter: (reputation &gt; 1000)
+8                                                                                                                             Rows Removed by Filter: 40020
+9                      -&gt;  Index Scan using idx_posts_owneruserid on posts p  (cost=0.29..10.12 rows=1 width=8) (actual time=0.013..0.057 rows=7 loops=305)
+10                                                                                                                         Index Cond: (owneruserid = u.id)
+11                                                                                                                                     Filter: (score &gt; 10)
+12                                                                                                                              Rows Removed by Filter: 108
+13                         -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.016 rows=20 loops=2287)
+14                                                                                                                              Index Cond: (postid = p.id)
+15                                                                                                                                 Filter: (votetypeid = 2)
+16                                                                                                                                Rows Removed by Filter: 3
+17                -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.002..0.013 rows=128 loops=45869)
+18                                                                                                                     Index Cond: (userid = p.owneruserid)
+19                                                                                                                                          Heap Fetches: 0
+20                                                                                                                                  Planning Time: 0.323 ms
+21                                                                                                                              Execution Time: 1336.745 ms</code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  results_nest_good, results_nest_bad,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  results_hash_good, results_hash_bad,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  results_merge_good, results_merge_bad</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Effect of join strategy on execution time"</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="st">"Join Strategy"</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Execution time (ms)"</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -500,74 +584,74 @@ div.csl-indent {
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>extract_estimates <span class="ot">&lt;-</span> <span class="cf">function</span>(con, sql, label) {</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  plan <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql))[[<span class="dv">1</span>]]</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Keep only nodes that report actual timing</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  node_lines <span class="ot">&lt;-</span> plan[<span class="fu">grep</span>(<span class="st">"actual time"</span>, plan)]</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(node_lines, <span class="cf">function</span>(line) {</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    operation <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line,</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"</span>)</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    estimated <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"rows=([0-9]+)</span><span class="sc">\\</span><span class="st">s+width"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    actual <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"actual time=[0-9.]+</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.[0-9.]+ rows=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+$"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    loops <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"loops=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">label        =</span> label,</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">operation    =</span> operation,</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimated    =</span> estimated,</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual       =</span> actual,</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">loops        =</span> loops,</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual_total =</span> actual <span class="sc">*</span> loops,</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span></span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(operation), <span class="sc">!</span><span class="fu">is.na</span>(estimated), <span class="sc">!</span><span class="fu">is.na</span>(actual))</span>
-<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>extract_estimates <span class="ot">&lt;-</span> <span class="cf">function</span>(con, sql, label) {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  plan <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql))[[<span class="dv">1</span>]]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Keep only nodes that report actual timing</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  node_lines <span class="ot">&lt;-</span> plan[<span class="fu">grep</span>(<span class="st">"actual time"</span>, plan)]</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(node_lines, <span class="cf">function</span>(line) {</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    operation <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    estimated <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"rows=([0-9]+)</span><span class="sc">\\</span><span class="st">s+width"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    actual <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"actual time=[0-9.]+</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.[0-9.]+ rows=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+$"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    loops <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"loops=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">label        =</span> label,</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">operation    =</span> operation,</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimated    =</span> estimated,</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual       =</span> actual,</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">loops        =</span> loops,</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual_total =</span> actual <span class="sc">*</span> loops,</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(operation), <span class="sc">!</span><span class="fu">is.na</span>(estimated), <span class="sc">!</span><span class="fu">is.na</span>(actual))</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 0"</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Forced orders: planner not allowed to reorder</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>good_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"forced good order"</span>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>bad_estimates  <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_bad_order,  <span class="st">"forced bad order"</span>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-optimized: planner free to choose its own order</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>auto_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"auto-optimized"</span>)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset session to normal behaviour</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 4"</span>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(good_estimates, bad_estimates, auto_estimates)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 0"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Forced orders: planner not allowed to reorder</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>good_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"forced good order"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>bad_estimates  <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_bad_order,  <span class="st">"forced bad order"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-optimized: planner free to choose its own order</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>auto_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"auto-optimized"</span>)</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset session to normal behaviour</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 4"</span>)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(good_estimates, bad_estimates, auto_estimates)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="sc">|&gt;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
 <col style="width: 25%">
 <col style="width: 22%">
-<col style="width: 14%">
+<col style="width: 13%">
 <col style="width: 11%">
-<col style="width: 8%">
+<col style="width: 9%">
 <col style="width: 18%">
 </colgroup>
 <thead>
@@ -591,7 +675,7 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">2421</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
@@ -599,7 +683,7 @@ div.csl-indent {
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced good order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">71</td>
 <td style="text-align: right;">45869</td>
 <td style="text-align: right;">1</td>
@@ -607,7 +691,7 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">10416</td>
 <td style="text-align: right;">70198</td>
 <td style="text-align: right;">1</td>
@@ -615,35 +699,35 @@ div.csl-indent {
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced good order</td>
-<td style="text-align: left;">Index Scan</td>
-<td style="text-align: right;">260603</td>
-<td style="text-align: right;">261599</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">261599</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Seq Scan</td>
 <td style="text-align: right;">3676</td>
 <td style="text-align: right;">3552</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3552</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">forced good order</td>
+<td style="text-align: left;">Index Scan</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">3552</td>
+<td style="text-align: right;">71040</td>
+</tr>
 <tr class="odd">
 <td style="text-align: left;">forced good order</td>
-<td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">279</td>
-<td style="text-align: right;">305</td>
+<td style="text-align: left;">Index Scan</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">305</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">70198</td>
+<td style="text-align: right;">70198</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Index Only Scan</td>
-<td style="text-align: right;">79851</td>
-<td style="text-align: right;">5920667</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">5920667</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">45869</td>
+<td style="text-align: right;">5871232</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced bad order</td>
@@ -655,7 +739,7 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">2457</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
@@ -663,35 +747,19 @@ div.csl-indent {
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Index Scan</td>
-<td style="text-align: right;">260603</td>
-<td style="text-align: right;">261579</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">261579</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">867</td>
 <td style="text-align: right;">292650</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">292650</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">552</td>
 <td style="text-align: right;">12371</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">12371</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Index Only Scan</td>
-<td style="text-align: right;">79851</td>
-<td style="text-align: right;">77609</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">77609</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced bad order</td>
@@ -703,11 +771,27 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced bad order</td>
-<td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">3676</td>
-<td style="text-align: right;">3552</td>
+<td style="text-align: left;">Index Only Scan</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">305</td>
+<td style="text-align: right;">12505</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">forced bad order</td>
+<td style="text-align: left;">Index Scan</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">3552</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">12371</td>
+<td style="text-align: right;">296904</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">forced bad order</td>
+<td style="text-align: left;">Index Scan</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">292650</td>
+<td style="text-align: right;">5853000</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">auto-optimized</td>
@@ -719,7 +803,7 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Merge Join</td>
+<td style="text-align: left;">Nested Loop</td>
 <td style="text-align: right;">2421</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
@@ -727,35 +811,19 @@ div.csl-indent {
 </tr>
 <tr class="odd">
 <td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Index Scan</td>
-<td style="text-align: right;">260603</td>
-<td style="text-align: right;">261579</td>
+<td style="text-align: left;">Nested Loop</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">45869</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">261579</td>
+<td style="text-align: right;">45869</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Merge Join</td>
-<td style="text-align: right;">853</td>
-<td style="text-align: right;">292650</td>
+<td style="text-align: left;">Nested Loop</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">2287</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">292650</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Merge Join</td>
-<td style="text-align: right;">552</td>
-<td style="text-align: right;">12371</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">12371</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Index Only Scan</td>
-<td style="text-align: right;">79851</td>
-<td style="text-align: right;">77609</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">77609</td>
+<td style="text-align: right;">2287</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">auto-optimized</td>
@@ -767,11 +835,27 @@ div.csl-indent {
 </tr>
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>
-<td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">3676</td>
-<td style="text-align: right;">3552</td>
+<td style="text-align: left;">Index Scan</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">3552</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">305</td>
+<td style="text-align: right;">2135</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">auto-optimized</td>
+<td style="text-align: left;">Index Scan</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">2287</td>
+<td style="text-align: right;">45740</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">auto-optimized</td>
+<td style="text-align: left;">Index Only Scan</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">45869</td>
+<td style="text-align: right;">5871232</td>
 </tr>
 </tbody>
 </table>
