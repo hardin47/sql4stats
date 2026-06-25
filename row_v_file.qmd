@@ -15,7 +15,7 @@ execute:
 
 ## Introduction
 
-This page reports the results of two controlled benchmarking experiments examining how DuckDB query performance changes as a function of (1) the number of Parquet files queried and (2) the total number of rows in those files. Both experiments use DuckDB's `read_parquet()` function to query files directly from disk without loading them into a native DuckDB database first. For background on Parquet's internal structure and how DuckDB reads Parquet files, see the [Parquet & DuckDB reference page](parquet.qmd).
+This page reports the results of two controlled benchmarking experiments examining how DuckDB query performance changes as a function of (1) the number of Parquet files queried and (2) the total number of rows in those files. Both experiments use DuckDB’s `read_parquet()` function to query files directly from disk without loading them into a native DuckDB database first. For background on Parquet’s internal structure and how DuckDB reads Parquet files, see the [Informational Resource on File Formats, Parquet & DuckDB.](parquet.qmd).
 
 Two query types are benchmarked throughout:
 
@@ -34,6 +34,7 @@ When the total number of rows is held constant, does splitting that data across 
 
 ### Setup
 
+The first code chunk loads all R packages needed for the experiment, including duckdb for the database engine, ggplot2 and scales for plotting, and glue for string interpolation in SQL queries.
 ```{r}
 #| label: setup
 
@@ -45,6 +46,7 @@ library(scales)
 library(glue)
 ```
 
+Next, we must define all experiment parameters in one place: the total row count, the file split sizes to test, the number of warmup and timed runs, and the directory where Parquet files will be written. Keeping these here makes the experiment easy to re-run with different settings by changing only this chunk.
 ```{r}
 #| label: config
 
@@ -59,7 +61,9 @@ One million rows are written to disk, split evenly across varying numbers of Par
 
 ```{r}
 #| label: generate-table
-
+#| output: false
+#| warning: false
+#| message: false
 con <- dbConnect(duckdb())
 
 dbExecute(con, glue::glue("
@@ -78,6 +82,10 @@ dbExecute(con, glue::glue("
   FROM range({as.integer(TOTAL_ROWS)})
 "))
 ```
+
+The code chunk above opens an in-memory DuckDB connection and creates a base table of one million rows with ten integer columns, where every value in each column is its row number. This table is the single source of truth that all Parquet splits will be derived from. 
+
+The code chunk below loops through each file count in `SPLITS` and writes the base table to disk as that many evenly-sized Parquet files using DuckDB's `COPY` command. Each split gets its own subfolder, so for example the 50-file configuration writes 50 `.parquet` files each containing 20,000 rows.
 
 ```{r}
 #| label: write-parquet
@@ -103,6 +111,7 @@ for (n_files in SPLITS) {
 
 ### Benchmark
 
+Next we define a `bench_query()` function that runs a given SQL query a fixed number of warmup times (discarded) then a fixed number of timed times, returning the mean elapsed time in milliseconds. It then applies this function to both a `COUNT(*)` query and a `SELECT c5` query across each Parquet file split, collecting the results into a single data frame.
 ```{r}
 #| label: benchmark
 
@@ -238,7 +247,7 @@ ggplot(results_long, aes(x = factor(n_files), y = ms,
 
 ### Interpretation
 
-**`COUNT(*)`** shows a clear and consistent increase with file count even though the total number of rows never changes. This is attributable to per-file overhead: DuckDB must open, parse the footer of, and coordinate each Parquet file individually before aggregating the result. When the data is stored in a single file this overhead is incurred once; at 200 files it is incurred 200 times. Since `COUNT(*)` requires minimal data I/O — DuckDB can satisfy it from footer statistics alone — this per-file cost is the dominant factor and the relationship is approximately linear.
+**`COUNT(*)`** shows a clear and consistent increase with file count even though the total number of rows never changes. This is attributable to per-file overhead: DuckDB must open, parse the footer of, and coordinate each Parquet file individually before aggregating the result. When the data is stored in a single file this overhead is incurred once; at 200 files it is incurred 200 times. Since `COUNT(*)` requires minimal data I/O — DuckDB can satisfy the command from footer statistics alone — this per-file cost is the dominant factor.
 
 **`SELECT c5`** is less sensitive to file count at low file numbers, because the cost of physically reading and decompressing a full column of data is substantially higher than file-opening overhead. At higher file counts (50+), the coordination overhead becomes more visible and the two trends converge. The key distinction is that for I/O-bound queries, data volume matters more than file count; for metadata-bound queries like `COUNT(*)`, file count matters more than data volume.
 
@@ -264,9 +273,9 @@ When the number of Parquet files is held constant at 50, how does query time sca
 #| label: config2
 
 ROW_COUNTS  <- c(100, 10000, 100000, 500000, 1000000, 2000000)
-N_FILES     <- 50
+N_FILES     <- 100
 WARMUP_RUNS <- 5
-TIMED_RUNS  <- 25
+TIMED_RUNS  <- 50
 PARQUET_DIR <- file.path(tempdir(), "parquet_rowtest")
 ```
 
@@ -319,6 +328,8 @@ for (total_rows in ROW_COUNTS) {
 ```
 
 ### Benchmark
+
+Defines a bench_query() function that runs a given SQL query a fixed number of warmup times (discarded) then a fixed number of timed times, returning the mean elapsed time in milliseconds. It then applies this function to both a COUNT(*) query and a SELECT c5 query across each Parquet file level and row count, collecting the results into a single data frame.
 
 ```{r}
 #| label: benchmark-2
@@ -385,7 +396,12 @@ ggplot(count_long2, aes(x = total_rows, y = mean_ms,
                          colour = condition, group = condition)) +
   geom_line(linewidth = 1.1) +
   geom_point(size = 3) +
-  scale_x_log10(labels = label_comma(), breaks = ROW_COUNTS) +
+  scale_x_log10(
+  labels = function(x) ifelse(x >= 1e6, paste0(x/1e6, "M"),
+                       ifelse(x >= 1e3, paste0(x/1e3, "K"), x)),
+  breaks = ROW_COUNTS,
+  guide  = guide_axis(angle = 45)
+) +
   scale_y_continuous(labels = function(x) paste0(round(x, 2), " ms")) +
   scale_colour_manual(values = c("1 file" = "#185FA5", "50 files" = "#A32D2D")) +
   labs(
@@ -417,7 +433,12 @@ ggplot(select_long2, aes(x = total_rows, y = mean_ms,
                           colour = condition, group = condition)) +
   geom_line(linewidth = 1.1) +
   geom_point(size = 3) +
-  scale_x_log10(labels = label_comma(), breaks = ROW_COUNTS) +
+  scale_x_log10(
+  labels = function(x) ifelse(x >= 1e6, paste0(x/1e6, "M"),
+                       ifelse(x >= 1e3, paste0(x/1e3, "K"), x)),
+  breaks = ROW_COUNTS,
+  guide  = guide_axis(angle = 45)
+) +
   scale_y_continuous(labels = function(x) paste0(round(x, 2), " ms")) +
   scale_colour_manual(values = c("1 file" = "#185FA5", "50 files" = "#0F6E56")) +
   labs(
