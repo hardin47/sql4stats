@@ -111,7 +111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="floating nav-fixed quarto-light">
+<body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -138,7 +138,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./SQL_Joins_Scrolly.html">
+    <a class="dropdown-item" href="./joins.html">
  <span class="dropdown-text">Joins</span></a>
   </li>  
         <li>
@@ -199,8 +199,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
-    <nav id="TOC" role="doc-toc" class="toc-active">
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -220,17 +221,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
-<!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Join Algorithms and Join Order in PostgreSQL</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<h1 class="title">Join Algorithms and Join Order in PostgreSQL</h1>
 </div>
 
 
@@ -303,7 +300,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
-{"columns":[{"label":["QUERY PLAN"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"Finalize Aggregate  (cost=5542.35..5542.36 rows=1 width=8) (actual time=33.503..34.064 rows=1 loops=1)"},{"1":"->  Gather  (cost=5542.24..5542.35 rows=1 width=8) (actual time=33.441..34.058 rows=2 loops=1)"},{"1":"Workers Planned: 1"},{"1":"Workers Launched: 1"},{"1":"->  Partial Aggregate  (cost=4542.24..4542.25 rows=1 width=8) (actual time=29.467..29.467 rows=1 loops=2)"},{"1":"->  Parallel Seq Scan on votes  (cost=0.00..4059.79 rows=192979 width=0) (actual time=0.013..17.652 rows=164032 loops=2)"},{"1":"Planning Time: 1.154 ms"},{"1":"Execution Time: 34.235 ms"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["QUERY PLAN"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"Finalize Aggregate  (cost=5542.35..5542.36 rows=1 width=8) (actual time=27.259..27.962 rows=1 loops=1)"},{"1":"->  Gather  (cost=5542.24..5542.35 rows=1 width=8) (actual time=27.155..27.954 rows=2 loops=1)"},{"1":"Workers Planned: 1"},{"1":"Workers Launched: 1"},{"1":"->  Partial Aggregate  (cost=4542.24..4542.25 rows=1 width=8) (actual time=22.086..22.086 rows=1 loops=2)"},{"1":"->  Parallel Seq Scan on votes  (cost=0.00..4059.79 rows=192979 width=0) (actual time=0.012..13.394 rows=164032 loops=2)"},{"1":"Planning Time: 1.771 ms"},{"1":"Execution Time: 28.572 ms"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -933,8 +930,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Two takeaways. First, <strong>join order matters most for Nested Loops</strong>: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner’s choices flow directly from its <strong>row estimates</strong>, so accurate statistics (and thus low q-error) are what let it pick the right strategy and order on its own. Forcing these settings is useful for <em>understanding</em> the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the planner.</p>
 
 
-<!-- -->
-
 </section>
 
 </main> <!-- /main -->
@@ -1008,57 +1003,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         container: window.document.getElementById('quarto-embedded-source-code-modal')
       });
       clipboardModal.on('success', onCopySuccess);
-    }
-    const viewSource = window.document.getElementById('quarto-view-source') ||
-                       window.document.getElementById('quarto-code-tools-source');
-    if (viewSource) {
-      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-      viewSource.addEventListener("click", function(e) {
-        if (sourceUrl) {
-          // rstudio viewer pane
-          if (/\bcapabilities=\b/.test(window.location)) {
-            window.open(sourceUrl);
-          } else {
-            window.location.href = sourceUrl;
-          }
-        } else {
-          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-          modal.show();
-        }
-        return false;
-      });
-    }
-    function toggleCodeHandler(show) {
-      return function(e) {
-        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-        for (let i=0; i<detailsSrc.length; i++) {
-          const details = detailsSrc[i].parentElement;
-          if (show) {
-            details.open = true;
-          } else {
-            details.removeAttribute("open");
-          }
-        }
-        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-        const fromCls = show ? "hidden" : "unhidden";
-        const toCls = show ? "unhidden" : "hidden";
-        for (let i=0; i<cellCodeDivs.length; i++) {
-          const codeDiv = cellCodeDivs[i];
-          if (codeDiv.classList.contains(fromCls)) {
-            codeDiv.classList.remove(fromCls);
-            codeDiv.classList.add(toCls);
-          } 
-        }
-        return false;
-      }
-    }
-    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-    if (hideAllCode) {
-      hideAllCode.addEventListener("click", toggleCodeHandler(false));
-    }
-    const showAllCode = window.document.getElementById("quarto-show-all-code");
-    if (showAllCode) {
-      showAllCode.addEventListener("click", toggleCodeHandler(true));
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
@@ -1388,391 +1332,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
-  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Join Algorithms and Join Order in PostgreSQL"</span></span>
-<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
-<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
-<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
-<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a><span class="co">    toc-location: left</span></span>
-<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
-<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a><span class="co">    code-summary: "Show code"</span></span>
-<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
-<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a><span class="co">    df-print: paged</span></span>
-<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
-<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
-<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
-<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb91-17"><a href="#cb91-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-18"><a href="#cb91-18" aria-hidden="true" tabindex="-1"></a>When you write a multi-table <span class="in">`JOIN`</span>, you specify *which* tables connect and *on what columns* — but you do **not** specify *how* the database should physically combine them, nor *in what order*. Those two decisions belong to the query optimizer, and they are the most important influences  on how fast a join runs.</span>
-<span id="cb91-19"><a href="#cb91-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-20"><a href="#cb91-20" aria-hidden="true" tabindex="-1"></a>This simulation isolates and measures two optimization decisions:</span>
-<span id="cb91-21"><a href="#cb91-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-22"><a href="#cb91-22" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.</span>
-<span id="cb91-23"><a href="#cb91-23" aria-hidden="true" tabindex="-1"></a>For more information on these strategies, see the <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">"_site/SQL_Joins_Scrolly.qmd"</span><span class="dt">&gt;</span>Joins page<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span>.</span>
-<span id="cb91-24"><a href="#cb91-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.</span>
-<span id="cb91-25"><a href="#cb91-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-26"><a href="#cb91-26" aria-hidden="true" tabindex="-1"></a>Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level <span class="in">`SET`</span> commands, force one strategy and one order at a time, and time the result. This is purely a teaching device — in production you almost always let the planner decide.</span>
-<span id="cb91-27"><a href="#cb91-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-28"><a href="#cb91-28" aria-hidden="true" tabindex="-1"></a>We use the Stack Exchange <span class="in">`stats`</span> dataset (the Cross Validated dump), which has four tables we can chain together: <span class="in">`votes`</span>, <span class="in">`posts`</span>, <span class="in">`users`</span>, and <span class="in">`badges`</span>.</span>
-<span id="cb91-29"><a href="#cb91-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-30"><a href="#cb91-30" aria-hidden="true" tabindex="-1"></a><span class="fu">### Setup</span></span>
-<span id="cb91-31"><a href="#cb91-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-32"><a href="#cb91-32" aria-hidden="true" tabindex="-1"></a>We connect to the database, build indexes on the join columns, and confirm the connection with a trivial query. Indexes matter here: a Nested Loop join is only competitive when the inner side can be probed through an index rather than scanned in full.</span>
-<span id="cb91-33"><a href="#cb91-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-36"><a href="#cb91-36" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-37"><a href="#cb91-37" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
-<span id="cb91-38"><a href="#cb91-38" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
-<span id="cb91-39"><a href="#cb91-39" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RPostgres)</span>
-<span id="cb91-40"><a href="#cb91-40" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
-<span id="cb91-41"><a href="#cb91-41" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb91-42"><a href="#cb91-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-43"><a href="#cb91-43" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
-<span id="cb91-44"><a href="#cb91-44" aria-hidden="true" tabindex="-1"></a>  RPostgres<span class="sc">::</span><span class="fu">Postgres</span>(),</span>
-<span id="cb91-45"><a href="#cb91-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname =</span> <span class="st">"stats"</span>,</span>
-<span id="cb91-46"><a href="#cb91-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">host   =</span> <span class="st">"127.0.0.1"</span>,</span>
-<span id="cb91-47"><a href="#cb91-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">port   =</span> <span class="dv">5432</span>,</span>
-<span id="cb91-48"><a href="#cb91-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">user   =</span> <span class="fu">Sys.info</span>()[[<span class="st">"user"</span>]]</span>
-<span id="cb91-49"><a href="#cb91-49" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb91-50"><a href="#cb91-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-51"><a href="#cb91-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Index the columns that appear in our JOIN ... ON clauses</span></span>
-<span id="cb91-52"><a href="#cb91-52" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)"</span>)</span>
-<span id="cb91-53"><a href="#cb91-53" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)"</span>)</span>
-<span id="cb91-54"><a href="#cb91-54" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)"</span>)</span>
-<span id="cb91-55"><a href="#cb91-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-56"><a href="#cb91-56" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">"EXPLAIN ANALYZE SELECT COUNT(*) FROM votes"</span>)</span>
-<span id="cb91-57"><a href="#cb91-57" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-58"><a href="#cb91-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-59"><a href="#cb91-59" aria-hidden="true" tabindex="-1"></a><span class="fu">## How the planner can be controlled</span></span>
-<span id="cb91-60"><a href="#cb91-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-61"><a href="#cb91-61" aria-hidden="true" tabindex="-1"></a>PostgreSQL exposes a set of session variables that let us switch individual planner behaviours on and off. These are the knobs we use throughout:</span>
-<span id="cb91-62"><a href="#cb91-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-63"><a href="#cb91-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`enable_nestloop`</span>, <span class="in">`enable_hashjoin`</span>, <span class="in">`enable_mergejoin`</span> — turn each physical strategy on or off. By enabling exactly one at a time, we force the planner to use that strategy.</span>
-<span id="cb91-64"><a href="#cb91-64" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`join_collapse_limit`</span> / <span class="in">`from_collapse_limit`</span> — when set to <span class="in">`1`</span>, the planner is forbidden from reordering the tables and must join them in the literal order written in the <span class="in">`FROM`</span> clause. This is what lets us dictate join *order*.</span>
-<span id="cb91-65"><a href="#cb91-65" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`max_parallel_workers_per_gather`</span> — set to <span class="in">`0`</span> to turn off parallelism, so timing differences reflect the algorithm and not the number of workers.</span>
-<span id="cb91-66"><a href="#cb91-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-67"><a href="#cb91-67" aria-hidden="true" tabindex="-1"></a>A key idea: because <span class="in">`join_collapse_limit = 1`</span> makes the engine respect the written order, the *same logical query* written with its tables in a different sequence becomes a different physical plan.</span>
-<span id="cb91-68"><a href="#cb91-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-71"><a href="#cb91-71" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-72"><a href="#cb91-72" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: planner-knobs</span></span>
-<span id="cb91-73"><a href="#cb91-73" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 0"</span>)</span>
-<span id="cb91-74"><a href="#cb91-74" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
-<span id="cb91-75"><a href="#cb91-75" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET from_collapse_limit = 1"</span>)</span>
-<span id="cb91-76"><a href="#cb91-76" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-77"><a href="#cb91-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-78"><a href="#cb91-78" aria-hidden="true" tabindex="-1"></a><span class="fu">## The two queries: good order vs. bad order</span></span>
-<span id="cb91-79"><a href="#cb91-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-80"><a href="#cb91-80" aria-hidden="true" tabindex="-1"></a>Both queries below answer the **exact same question** — count the rows produced by joining votes to their posts, those posts to their owners, and those owners to their badges, keeping only upvotes (<span class="in">`votetypeid = 2`</span>) on well-scored posts (<span class="in">`score &gt; 10`</span>) owned by high-reputation users (<span class="in">`reputation &gt; 1000`</span>). They return identical results. The only difference is the order the tables are listed in.</span>
-<span id="cb91-81"><a href="#cb91-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-82"><a href="#cb91-82" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Good order** leads with <span class="in">`votes`</span> and <span class="in">`posts`</span>, where the <span class="in">`WHERE`</span> filters are most selective, so the very first join already works on a shrunken set of rows.</span>
-<span id="cb91-83"><a href="#cb91-83" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Bad order** leads with <span class="in">`badges`</span> and <span class="in">`users`</span>, the large tables whose filters don't bite until later, so early intermediate results stay huge.</span>
-<span id="cb91-84"><a href="#cb91-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-87"><a href="#cb91-87" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-88"><a href="#cb91-88" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: define-queries</span></span>
-<span id="cb91-89"><a href="#cb91-89" aria-hidden="true" tabindex="-1"></a><span class="co"># Good order: filtered/small tables first</span></span>
-<span id="cb91-90"><a href="#cb91-90" aria-hidden="true" tabindex="-1"></a>sql_good_order <span class="ot">&lt;-</span> <span class="st">"</span></span>
-<span id="cb91-91"><a href="#cb91-91" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT COUNT(*)</span></span>
-<span id="cb91-92"><a href="#cb91-92" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM votes v</span></span>
-<span id="cb91-93"><a href="#cb91-93" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN posts  p ON v.postid = p.id</span></span>
-<span id="cb91-94"><a href="#cb91-94" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN users  u ON p.owneruserid = u.id</span></span>
-<span id="cb91-95"><a href="#cb91-95" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN badges b ON b.userid = u.id</span></span>
-<span id="cb91-96"><a href="#cb91-96" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE v.votetypeid = 2</span></span>
-<span id="cb91-97"><a href="#cb91-97" aria-hidden="true" tabindex="-1"></a><span class="st">    AND p.score &gt; 10</span></span>
-<span id="cb91-98"><a href="#cb91-98" aria-hidden="true" tabindex="-1"></a><span class="st">    AND u.reputation &gt; 1000</span></span>
-<span id="cb91-99"><a href="#cb91-99" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
-<span id="cb91-100"><a href="#cb91-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-101"><a href="#cb91-101" aria-hidden="true" tabindex="-1"></a><span class="co"># Bad order: large/unfiltered tables first</span></span>
-<span id="cb91-102"><a href="#cb91-102" aria-hidden="true" tabindex="-1"></a>sql_bad_order <span class="ot">&lt;-</span> <span class="st">"</span></span>
-<span id="cb91-103"><a href="#cb91-103" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT COUNT(*)</span></span>
-<span id="cb91-104"><a href="#cb91-104" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM badges b</span></span>
-<span id="cb91-105"><a href="#cb91-105" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN users  u ON b.userid = u.id</span></span>
-<span id="cb91-106"><a href="#cb91-106" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN posts  p ON p.owneruserid = u.id</span></span>
-<span id="cb91-107"><a href="#cb91-107" aria-hidden="true" tabindex="-1"></a><span class="st">  JOIN votes  v ON v.postid = p.id</span></span>
-<span id="cb91-108"><a href="#cb91-108" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE v.votetypeid = 2</span></span>
-<span id="cb91-109"><a href="#cb91-109" aria-hidden="true" tabindex="-1"></a><span class="st">    AND p.score &gt; 10</span></span>
-<span id="cb91-110"><a href="#cb91-110" aria-hidden="true" tabindex="-1"></a><span class="st">    AND u.reputation &gt; 1000</span></span>
-<span id="cb91-111"><a href="#cb91-111" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
-<span id="cb91-112"><a href="#cb91-112" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-113"><a href="#cb91-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-114"><a href="#cb91-114" aria-hidden="true" tabindex="-1"></a><span class="fu">## A repeatable timing harness (warm cache)</span></span>
-<span id="cb91-115"><a href="#cb91-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-116"><a href="#cb91-116" aria-hidden="true" tabindex="-1"></a>To get a stable measurement we wrap <span class="in">`EXPLAIN ANALYZE`</span> in a small helper. It runs one throwaway query first to load the relevant data pages into PostgreSQL's buffer cache (a **warm-cache** measurement), then runs the query <span class="in">`n`</span> more times, scraping the <span class="in">`Execution Time`</span> and <span class="in">`Planning Time`</span> lines out of each plan.</span>
-<span id="cb91-117"><a href="#cb91-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-118"><a href="#cb91-118" aria-hidden="true" tabindex="-1"></a><span class="in">`EXPLAIN ANALYZE`</span> is the tool doing the real work here: it actually executes the query and reports how long each step took, as opposed to plain <span class="in">`EXPLAIN`</span>, which only prints the planner's estimate.</span>
-<span id="cb91-119"><a href="#cb91-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-122"><a href="#cb91-122" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-123"><a href="#cb91-123" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: warm-harness</span></span>
-<span id="cb91-124"><a href="#cb91-124" aria-hidden="true" tabindex="-1"></a>run_repeated_warm <span class="ot">&lt;-</span> <span class="cf">function</span>(con, query, <span class="at">n =</span> <span class="dv">10</span>) {</span>
-<span id="cb91-125"><a href="#cb91-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-126"><a href="#cb91-126" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Warm-up run: loads pages into cache, result discarded</span></span>
-<span id="cb91-127"><a href="#cb91-127" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))</span>
-<span id="cb91-128"><a href="#cb91-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-129"><a href="#cb91-129" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Timed trials</span></span>
-<span id="cb91-130"><a href="#cb91-130" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(i) {</span>
-<span id="cb91-131"><a href="#cb91-131" aria-hidden="true" tabindex="-1"></a>    lines <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))[[<span class="dv">1</span>]]</span>
-<span id="cb91-132"><a href="#cb91-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-133"><a href="#cb91-133" aria-hidden="true" tabindex="-1"></a>    exec_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Execution Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb91-134"><a href="#cb91-134" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-135"><a href="#cb91-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-136"><a href="#cb91-136" aria-hidden="true" tabindex="-1"></a>    plan_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Planning Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb91-137"><a href="#cb91-137" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-138"><a href="#cb91-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-139"><a href="#cb91-139" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(<span class="at">run =</span> i, <span class="at">exec_ms =</span> exec_time, <span class="at">plan_ms =</span> plan_time)</span>
-<span id="cb91-140"><a href="#cb91-140" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb91-141"><a href="#cb91-141" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>()</span>
-<span id="cb91-142"><a href="#cb91-142" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb91-143"><a href="#cb91-143" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-144"><a href="#cb91-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-145"><a href="#cb91-145" aria-hidden="true" tabindex="-1"></a><span class="fu">### Running all six combinations</span></span>
-<span id="cb91-146"><a href="#cb91-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-147"><a href="#cb91-147" aria-hidden="true" tabindex="-1"></a>We now cross the two join orders with the three join strategies, forcing one strategy at a time by toggling the <span class="in">`enable_*`</span> flags. That gives six timing distributions of ten runs each.</span>
-<span id="cb91-148"><a href="#cb91-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-151"><a href="#cb91-151" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-152"><a href="#cb91-152" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: warm-runs</span></span>
-<span id="cb91-153"><a href="#cb91-153" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Nested Loop ---</span></span>
-<span id="cb91-154"><a href="#cb91-154" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop  = on"</span>)</span>
-<span id="cb91-155"><a href="#cb91-155" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin  = off"</span>)</span>
-<span id="cb91-156"><a href="#cb91-156" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span>
-<span id="cb91-157"><a href="#cb91-157" aria-hidden="true" tabindex="-1"></a>results_nest_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-158"><a href="#cb91-158" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-159"><a href="#cb91-159" aria-hidden="true" tabindex="-1"></a>results_nest_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-160"><a href="#cb91-160" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-161"><a href="#cb91-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-162"><a href="#cb91-162" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Hash Join ---</span></span>
-<span id="cb91-163"><a href="#cb91-163" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop  = off"</span>)</span>
-<span id="cb91-164"><a href="#cb91-164" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin  = on"</span>)</span>
-<span id="cb91-165"><a href="#cb91-165" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span>
-<span id="cb91-166"><a href="#cb91-166" aria-hidden="true" tabindex="-1"></a>results_hash_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-167"><a href="#cb91-167" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-168"><a href="#cb91-168" aria-hidden="true" tabindex="-1"></a>results_hash_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-169"><a href="#cb91-169" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-170"><a href="#cb91-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-171"><a href="#cb91-171" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Merge Join ---</span></span>
-<span id="cb91-172"><a href="#cb91-172" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop  = off"</span>)</span>
-<span id="cb91-173"><a href="#cb91-173" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin  = off"</span>)</span>
-<span id="cb91-174"><a href="#cb91-174" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = on"</span>)</span>
-<span id="cb91-175"><a href="#cb91-175" aria-hidden="true" tabindex="-1"></a>results_merge_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-176"><a href="#cb91-176" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-177"><a href="#cb91-177" aria-hidden="true" tabindex="-1"></a>results_merge_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-178"><a href="#cb91-178" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-179"><a href="#cb91-179" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-180"><a href="#cb91-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-183"><a href="#cb91-183" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-184"><a href="#cb91-184" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: warm-plot</span></span>
-<span id="cb91-185"><a href="#cb91-185" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Warm-cache execution time across the six strategy × order combinations."</span></span>
-<span id="cb91-186"><a href="#cb91-186" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb91-187"><a href="#cb91-187" aria-hidden="true" tabindex="-1"></a>  results_nest_good, results_nest_bad,</span>
-<span id="cb91-188"><a href="#cb91-188" aria-hidden="true" tabindex="-1"></a>  results_hash_good, results_hash_bad,</span>
-<span id="cb91-189"><a href="#cb91-189" aria-hidden="true" tabindex="-1"></a>  results_merge_good, results_merge_bad</span>
-<span id="cb91-190"><a href="#cb91-190" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb91-191"><a href="#cb91-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
-<span id="cb91-192"><a href="#cb91-192" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb91-193"><a href="#cb91-193" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb91-194"><a href="#cb91-194" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Effect of join strategy on execution time"</span>,</span>
-<span id="cb91-195"><a href="#cb91-195" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
-<span id="cb91-196"><a href="#cb91-196" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="st">"Join Strategy"</span>,</span>
-<span id="cb91-197"><a href="#cb91-197" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Execution time (ms)"</span></span>
-<span id="cb91-198"><a href="#cb91-198" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb91-199"><a href="#cb91-199" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
-<span id="cb91-200"><a href="#cb91-200" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-201"><a href="#cb91-201" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-202"><a href="#cb91-202" aria-hidden="true" tabindex="-1"></a>**What the plot shows.** Each strategy responds differently to a bad join order, and that is the whole point. A **Nested Loop** is the most order-sensitive: for every row from the outer side it probes the inner side, so if the outer side starts large (bad order) the probe count explodes. A **Hash Join** builds a hash table on one input and streams the other past it, which makes it far more forgiving of a bad starting order. A **Merge Join** requires both inputs sorted on the join key, so its cost is dominated by sorting and it sits somewhere in between. In short: a good join order helps every strategy, but it *rescues* the Nested Loop.</span>
-<span id="cb91-203"><a href="#cb91-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-204"><a href="#cb91-204" aria-hidden="true" tabindex="-1"></a><span class="fu">## Sanity check: the two orders return the same answer</span></span>
-<span id="cb91-205"><a href="#cb91-205" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-206"><a href="#cb91-206" aria-hidden="true" tabindex="-1"></a>Before trusting the timings, we confirm that "good" and "bad" really are the same query logically — same count — and we list the indexes currently in place.</span>
-<span id="cb91-207"><a href="#cb91-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-210"><a href="#cb91-210" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-211"><a href="#cb91-211" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: verify-equal</span></span>
-<span id="cb91-212"><a href="#cb91-212" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, sql_good_order)</span>
-<span id="cb91-213"><a href="#cb91-213" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, sql_bad_order)</span>
-<span id="cb91-214"><a href="#cb91-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-215"><a href="#cb91-215" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">"</span></span>
-<span id="cb91-216"><a href="#cb91-216" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT tablename, indexname</span></span>
-<span id="cb91-217"><a href="#cb91-217" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM pg_indexes</span></span>
-<span id="cb91-218"><a href="#cb91-218" aria-hidden="true" tabindex="-1"></a><span class="st">  WHERE schemaname = 'public'</span></span>
-<span id="cb91-219"><a href="#cb91-219" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY tablename</span></span>
-<span id="cb91-220"><a href="#cb91-220" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
-<span id="cb91-221"><a href="#cb91-221" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-222"><a href="#cb91-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-223"><a href="#cb91-223" aria-hidden="true" tabindex="-1"></a><span class="fu">## Does it hold up with a cold cache?</span></span>
-<span id="cb91-224"><a href="#cb91-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-225"><a href="#cb91-225" aria-hidden="true" tabindex="-1"></a>Warm-cache numbers reward queries whose pages already sit in memory. A **cold-cache** test is harsher and closer to a first-of-the-day query. We can't flush the OS page cache without <span class="in">`sudo`</span>, but we can approximate a cold session by reconnecting fresh each iteration and issuing <span class="in">`DISCARD ALL`</span>, which resets all session state.</span>
-<span id="cb91-226"><a href="#cb91-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-229"><a href="#cb91-229" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-230"><a href="#cb91-230" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: cold-harness</span></span>
-<span id="cb91-231"><a href="#cb91-231" aria-hidden="true" tabindex="-1"></a>run_repeated_cold <span class="ot">&lt;-</span> <span class="cf">function</span>(con, multi_join, <span class="at">n =</span> <span class="dv">10</span>) {</span>
-<span id="cb91-232"><a href="#cb91-232" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(i) {</span>
-<span id="cb91-233"><a href="#cb91-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-234"><a href="#cb91-234" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Fresh connection each iteration</span></span>
-<span id="cb91-235"><a href="#cb91-235" aria-hidden="true" tabindex="-1"></a>    con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
-<span id="cb91-236"><a href="#cb91-236" aria-hidden="true" tabindex="-1"></a>      RPostgres<span class="sc">::</span><span class="fu">Postgres</span>(),</span>
-<span id="cb91-237"><a href="#cb91-237" aria-hidden="true" tabindex="-1"></a>      <span class="at">dbname =</span> <span class="st">"stats"</span>,</span>
-<span id="cb91-238"><a href="#cb91-238" aria-hidden="true" tabindex="-1"></a>      <span class="at">host   =</span> <span class="st">"127.0.0.1"</span>,</span>
-<span id="cb91-239"><a href="#cb91-239" aria-hidden="true" tabindex="-1"></a>      <span class="at">port   =</span> <span class="dv">5432</span>,</span>
-<span id="cb91-240"><a href="#cb91-240" aria-hidden="true" tabindex="-1"></a>      <span class="at">user   =</span> <span class="fu">Sys.info</span>()[[<span class="st">"user"</span>]]</span>
-<span id="cb91-241"><a href="#cb91-241" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb91-242"><a href="#cb91-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-243"><a href="#cb91-243" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)   <span class="co"># clear session cache (no sudo needed)</span></span>
-<span id="cb91-244"><a href="#cb91-244" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="fl">0.5</span>)</span>
-<span id="cb91-245"><a href="#cb91-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-246"><a href="#cb91-246" aria-hidden="true" tabindex="-1"></a>    lines <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, multi_join))[[<span class="dv">1</span>]]</span>
-<span id="cb91-247"><a href="#cb91-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-248"><a href="#cb91-248" aria-hidden="true" tabindex="-1"></a>    exec_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Execution Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb91-249"><a href="#cb91-249" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-250"><a href="#cb91-250" aria-hidden="true" tabindex="-1"></a>    plan_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Planning Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb91-251"><a href="#cb91-251" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-252"><a href="#cb91-252" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-253"><a href="#cb91-253" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dbDisconnect</span>(con)</span>
-<span id="cb91-254"><a href="#cb91-254" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(<span class="at">run =</span> i, <span class="at">exec_ms =</span> exec_time, <span class="at">plan_ms =</span> plan_time)</span>
-<span id="cb91-255"><a href="#cb91-255" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb91-256"><a href="#cb91-256" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>()</span>
-<span id="cb91-257"><a href="#cb91-257" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb91-258"><a href="#cb91-258" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-259"><a href="#cb91-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-260"><a href="#cb91-260" aria-hidden="true" tabindex="-1"></a>Because each cold iteration opens its own connection, the per-strategy <span class="in">`SET`</span> flags must be re-established on the main connection before each batch, and we issue <span class="in">`DISCARD ALL`</span> between batches to keep them independent.</span>
-<span id="cb91-261"><a href="#cb91-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-264"><a href="#cb91-264" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-265"><a href="#cb91-265" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: cold-runs</span></span>
-<span id="cb91-266"><a href="#cb91-266" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 0"</span>)</span>
-<span id="cb91-267"><a href="#cb91-267" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
-<span id="cb91-268"><a href="#cb91-268" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET from_collapse_limit = 1"</span>)</span>
-<span id="cb91-269"><a href="#cb91-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-270"><a href="#cb91-270" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Nested Loop ---</span></span>
-<span id="cb91-271"><a href="#cb91-271" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop = on"</span>)</span>
-<span id="cb91-272"><a href="#cb91-272" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin = off"</span>)</span>
-<span id="cb91-273"><a href="#cb91-273" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span>
-<span id="cb91-274"><a href="#cb91-274" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-275"><a href="#cb91-275" aria-hidden="true" tabindex="-1"></a>cold_nest_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-276"><a href="#cb91-276" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-277"><a href="#cb91-277" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-278"><a href="#cb91-278" aria-hidden="true" tabindex="-1"></a>cold_nest_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-279"><a href="#cb91-279" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-280"><a href="#cb91-280" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-281"><a href="#cb91-281" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Hash Join ---</span></span>
-<span id="cb91-282"><a href="#cb91-282" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop = off"</span>)</span>
-<span id="cb91-283"><a href="#cb91-283" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin = on"</span>)</span>
-<span id="cb91-284"><a href="#cb91-284" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span>
-<span id="cb91-285"><a href="#cb91-285" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-286"><a href="#cb91-286" aria-hidden="true" tabindex="-1"></a>cold_hash_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-287"><a href="#cb91-287" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-288"><a href="#cb91-288" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-289"><a href="#cb91-289" aria-hidden="true" tabindex="-1"></a>cold_hash_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-290"><a href="#cb91-290" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-291"><a href="#cb91-291" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-292"><a href="#cb91-292" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Merge Join ---</span></span>
-<span id="cb91-293"><a href="#cb91-293" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_nestloop = off"</span>)</span>
-<span id="cb91-294"><a href="#cb91-294" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_hashjoin = off"</span>)</span>
-<span id="cb91-295"><a href="#cb91-295" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = on"</span>)</span>
-<span id="cb91-296"><a href="#cb91-296" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-297"><a href="#cb91-297" aria-hidden="true" tabindex="-1"></a>cold_merge_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-298"><a href="#cb91-298" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb91-299"><a href="#cb91-299" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span>
-<span id="cb91-300"><a href="#cb91-300" aria-hidden="true" tabindex="-1"></a>cold_merge_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_cold</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-301"><a href="#cb91-301" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
-<span id="cb91-302"><a href="#cb91-302" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-303"><a href="#cb91-303" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-306"><a href="#cb91-306" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-307"><a href="#cb91-307" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: cold-plot</span></span>
-<span id="cb91-308"><a href="#cb91-308" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Cold-cache execution time. The order penalty typically widens when pages must be fetched from disk."</span></span>
-<span id="cb91-309"><a href="#cb91-309" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb91-310"><a href="#cb91-310" aria-hidden="true" tabindex="-1"></a>  cold_nest_good, cold_nest_bad,</span>
-<span id="cb91-311"><a href="#cb91-311" aria-hidden="true" tabindex="-1"></a>  cold_hash_good, cold_hash_bad,</span>
-<span id="cb91-312"><a href="#cb91-312" aria-hidden="true" tabindex="-1"></a>  cold_merge_good, cold_merge_bad</span>
-<span id="cb91-313"><a href="#cb91-313" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb91-314"><a href="#cb91-314" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
-<span id="cb91-315"><a href="#cb91-315" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb91-316"><a href="#cb91-316" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb91-317"><a href="#cb91-317" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Effect of join strategy on execution time (cold cache)"</span>,</span>
-<span id="cb91-318"><a href="#cb91-318" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
-<span id="cb91-319"><a href="#cb91-319" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="st">"Join Strategy"</span>,</span>
-<span id="cb91-320"><a href="#cb91-320" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Execution time (ms)"</span></span>
-<span id="cb91-321"><a href="#cb91-321" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb91-322"><a href="#cb91-322" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
-<span id="cb91-323"><a href="#cb91-323" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-324"><a href="#cb91-324" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-325"><a href="#cb91-325" aria-hidden="true" tabindex="-1"></a><span class="fu">## Why the planner makes these choices: estimated vs. actual rows</span></span>
-<span id="cb91-326"><a href="#cb91-326" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-327"><a href="#cb91-327" aria-hidden="true" tabindex="-1"></a>The planner doesn't time queries — it *estimates* how many rows each step will emit and picks the cheapest plan based on those estimates. When the estimates are wrong, the plan is wrong. The function below pulls every node out of a plan and compares the planner's **estimated** row count to the **actual** row count, computing a **q-error**: the ratio of the larger to the smaller. A q-error near 1 means the estimate was accurate; a large q-error means the planner was badly misled at that node.</span>
-<span id="cb91-328"><a href="#cb91-328" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-331"><a href="#cb91-331" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-332"><a href="#cb91-332" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: estimate-harness</span></span>
-<span id="cb91-333"><a href="#cb91-333" aria-hidden="true" tabindex="-1"></a>extract_estimates <span class="ot">&lt;-</span> <span class="cf">function</span>(con, sql, label) {</span>
-<span id="cb91-334"><a href="#cb91-334" aria-hidden="true" tabindex="-1"></a>  plan <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql))[[<span class="dv">1</span>]]</span>
-<span id="cb91-335"><a href="#cb91-335" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-336"><a href="#cb91-336" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Keep only nodes that report actual timing</span></span>
-<span id="cb91-337"><a href="#cb91-337" aria-hidden="true" tabindex="-1"></a>  node_lines <span class="ot">&lt;-</span> plan[<span class="fu">grep</span>(<span class="st">"actual time"</span>, plan)]</span>
-<span id="cb91-338"><a href="#cb91-338" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-339"><a href="#cb91-339" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(node_lines, <span class="cf">function</span>(line) {</span>
-<span id="cb91-340"><a href="#cb91-340" aria-hidden="true" tabindex="-1"></a>    operation <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line,</span>
-<span id="cb91-341"><a href="#cb91-341" aria-hidden="true" tabindex="-1"></a>      <span class="st">"(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"</span>)</span>
-<span id="cb91-342"><a href="#cb91-342" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-343"><a href="#cb91-343" aria-hidden="true" tabindex="-1"></a>    estimated <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"rows=([0-9]+)</span><span class="sc">\\</span><span class="st">s+width"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-344"><a href="#cb91-344" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-345"><a href="#cb91-345" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-346"><a href="#cb91-346" aria-hidden="true" tabindex="-1"></a>    actual <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"actual time=[0-9.]+</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.[0-9.]+ rows=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-347"><a href="#cb91-347" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+$"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-348"><a href="#cb91-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-349"><a href="#cb91-349" aria-hidden="true" tabindex="-1"></a>    loops <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"loops=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb91-350"><a href="#cb91-350" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb91-351"><a href="#cb91-351" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-352"><a href="#cb91-352" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(</span>
-<span id="cb91-353"><a href="#cb91-353" aria-hidden="true" tabindex="-1"></a>      <span class="at">label        =</span> label,</span>
-<span id="cb91-354"><a href="#cb91-354" aria-hidden="true" tabindex="-1"></a>      <span class="at">operation    =</span> operation,</span>
-<span id="cb91-355"><a href="#cb91-355" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimated    =</span> estimated,</span>
-<span id="cb91-356"><a href="#cb91-356" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual       =</span> actual,</span>
-<span id="cb91-357"><a href="#cb91-357" aria-hidden="true" tabindex="-1"></a>      <span class="at">loops        =</span> loops,</span>
-<span id="cb91-358"><a href="#cb91-358" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual_total =</span> actual <span class="sc">*</span> loops,</span>
-<span id="cb91-359"><a href="#cb91-359" aria-hidden="true" tabindex="-1"></a>      <span class="at">q_error      =</span> <span class="fu">round</span>(<span class="fu">pmax</span>(estimated <span class="sc">/</span> actual, actual <span class="sc">/</span> estimated), <span class="dv">1</span>)</span>
-<span id="cb91-360"><a href="#cb91-360" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb91-361"><a href="#cb91-361" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb91-362"><a href="#cb91-362" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span></span>
-<span id="cb91-363"><a href="#cb91-363" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(operation), <span class="sc">!</span><span class="fu">is.na</span>(estimated), <span class="sc">!</span><span class="fu">is.na</span>(actual))</span>
-<span id="cb91-364"><a href="#cb91-364" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb91-365"><a href="#cb91-365" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-366"><a href="#cb91-366" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-369"><a href="#cb91-369" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-370"><a href="#cb91-370" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: estimate-runs</span></span>
-<span id="cb91-371"><a href="#cb91-371" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 0"</span>)</span>
-<span id="cb91-372"><a href="#cb91-372" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-373"><a href="#cb91-373" aria-hidden="true" tabindex="-1"></a><span class="co"># Forced orders: planner not allowed to reorder</span></span>
-<span id="cb91-374"><a href="#cb91-374" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
-<span id="cb91-375"><a href="#cb91-375" aria-hidden="true" tabindex="-1"></a>good_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"forced good order"</span>)</span>
-<span id="cb91-376"><a href="#cb91-376" aria-hidden="true" tabindex="-1"></a>bad_estimates  <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_bad_order,  <span class="st">"forced bad order"</span>)</span>
-<span id="cb91-377"><a href="#cb91-377" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-378"><a href="#cb91-378" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-optimized: planner free to choose its own order</span></span>
-<span id="cb91-379"><a href="#cb91-379" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
-<span id="cb91-380"><a href="#cb91-380" aria-hidden="true" tabindex="-1"></a>auto_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"auto-optimized"</span>)</span>
-<span id="cb91-381"><a href="#cb91-381" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-382"><a href="#cb91-382" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset session to normal behaviour</span></span>
-<span id="cb91-383"><a href="#cb91-383" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET max_parallel_workers_per_gather = 4"</span>)</span>
-<span id="cb91-384"><a href="#cb91-384" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
-<span id="cb91-385"><a href="#cb91-385" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-386"><a href="#cb91-386" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(good_estimates, bad_estimates, auto_estimates)</span>
-<span id="cb91-387"><a href="#cb91-387" aria-hidden="true" tabindex="-1"></a>all_estimates</span>
-<span id="cb91-388"><a href="#cb91-388" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-389"><a href="#cb91-389" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-390"><a href="#cb91-390" aria-hidden="true" tabindex="-1"></a>**Reading this table.** The <span class="in">`auto-optimized`</span> rows show what the planner does when left alone (<span class="in">`join_collapse_limit = 8`</span> lets it reorder up to eight tables freely). Comparing q-errors across the three labels shows where estimation breaks down: nodes deep in the bad-order plan tend to carry the largest q-errors, because each early misestimate compounds as it feeds the next join. This is the mechanism behind the timing differences — a bad order isn't slow by fiat, it's slow because the planner's row estimates drift further from reality at every step, and the <span class="in">`actual_total`</span> (rows × loops) balloons.</span>
-<span id="cb91-391"><a href="#cb91-391" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-394"><a href="#cb91-394" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb91-395"><a href="#cb91-395" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: cleanup</span></span>
-<span id="cb91-396"><a href="#cb91-396" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span>
-<span id="cb91-397"><a href="#cb91-397" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb91-398"><a href="#cb91-398" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-399"><a href="#cb91-399" aria-hidden="true" tabindex="-1"></a><span class="fu">## Summary</span></span>
-<span id="cb91-400"><a href="#cb91-400" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-401"><a href="#cb91-401" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>                                <span class="pp">|</span> Nested Loop                          <span class="pp">|</span> Hash Join                              <span class="pp">|</span> Merge Join                          <span class="pp">|</span></span>
-<span id="cb91-402"><a href="#cb91-402" aria-hidden="true" tabindex="-1"></a><span class="pp">| ------------------------------</span> <span class="pp">| ------------------------------------</span> <span class="pp">| --------------------------------------</span> <span class="pp">| -----------------------------------</span> <span class="pp">|</span></span>
-<span id="cb91-403"><a href="#cb91-403" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **How it matches rows**        <span class="pp">|</span> Probe inner table once per outer row <span class="pp">|</span> Build hash on one side, stream other   <span class="pp">|</span> Sort both sides, walk in lockstep   <span class="pp">|</span></span>
-<span id="cb91-404"><a href="#cb91-404" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Needs an index?**            <span class="pp">|</span> Strongly benefits from inner index   <span class="pp">|</span> No                                      <span class="pp">|</span> Benefits from pre-sorted inputs     <span class="pp">|</span></span>
-<span id="cb91-405"><a href="#cb91-405" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Sensitivity to join order**  <span class="pp">|</span> Very high                            <span class="pp">|</span> Low                                     <span class="pp">|</span> Moderate                            <span class="pp">|</span></span>
-<span id="cb91-406"><a href="#cb91-406" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Best when**                  <span class="pp">|</span> Outer side is small after filtering  <span class="pp">|</span> Inputs are large and unsorted          <span class="pp">|</span> Inputs already sorted on the key    <span class="pp">|</span></span>
-<span id="cb91-407"><a href="#cb91-407" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-408"><a href="#cb91-408" aria-hidden="true" tabindex="-1"></a>Two takeaways. First, **join order matters most for Nested Loops**: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner's choices flow directly from its **row estimates**, so accurate statistics (and thus low q-error) are what let it pick the right strategy and order on its own. Forcing these settings is useful for *understanding* the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the planner.</span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
-</div></div></div></div></div>
+  </script>
 </div> <!-- /content -->
 
 
