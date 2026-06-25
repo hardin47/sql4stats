@@ -14,8 +14,8 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 The word "pivot" covers two different operations:
 
-- **Pure reshaping** — changing the *shape* of data (long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.
-- **Cross-tabulation** — reshaping *plus* aggregation. Multiple source rows sharing the same (row-group, column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).
+- **Pure reshaping** — changing the *shape* of data (e.g, long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.
+- **Cross-tabulation** — reshaping *plus* aggregation. Multiple source rows sharing the same (e.g, row-group or column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).
 
 We'll demonstrate both using the `gapminder` dataset, which records country-level statistics at five-year intervals from 1952 to 2007. The variables we'll use are:
 
@@ -41,7 +41,7 @@ glimpse(gapminder)
 
 ### The data structure
 
-For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears **exactly once** in the source data. Thus there is nothing to aggregate, only redistribute.
+For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears **exactly once** in the source data. Thus, there is nothing to aggregate, only redistribute.
 
 In our first example:
 
@@ -58,7 +58,7 @@ gapminder |>
   filter(n > 1)
 ```
 
-No rows — every country-year combination is unique. Pure reshaping is appropriate here.
+The output from above has no rows — every country-year combination is unique. Pure reshaping is appropriate here.
 
 ### Approach 1: `pivot_wider()` in R (tidyverse)
 
@@ -84,7 +84,7 @@ Notice the column names (`1952`, `1957`, ..., `2007`) came directly from the dis
 
 ### Approach 2: DuckDB `PIVOT` (without `USING`)
 
-DuckDB's `PIVOT` command without a `USING` clause performs pure reshaping. This is equivalent to `pivot_wider()`. No aggregation is specified; values are simply redistributed. The output below only shows 6 rows.
+DuckDB's `PIVOT` command without a `USING` clause performs pure reshaping. This is equivalent to `pivot_wider()`. No aggregation is specified; values are simply redistributed. The output below shows the first 6 rows.
 
 ```{r}
 # Set up DuckDB and load the data
@@ -107,7 +107,7 @@ Note: even though `USING first(lifeExp)` looks like an aggregation, since each c
 
 ### Approach 3: Manual reshaping in DuckDB (`CASE WHEN`)
 
-The manual approach makes every column fully explicit, with no built-in pivot mechanism involved at all.
+The manual approach makes every column fully explicit, with no built-in pivot mechanism involved at all. Each `CASE WHEN` expression acts as a conditional value selector: for a given row, if the `year` column matches the specified value, it returns `lifeExp`; otherwise it returns `NULL`. Wrapping each expression in `MAX()` then collapses all rows for a given country into one, picking out the single `non-NULL` life expectancy value for each year.
 
 ```{r}
 wide_manual <- dbGetQuery(con_duck, "
@@ -133,7 +133,7 @@ wide_manual <- dbGetQuery(con_duck, "
 head(wide_manual, 6)
 ```
 
-`MAX()` is used here not to aggregate multiple values, but because `GROUP BY country` requires an aggregate function around non-grouped columns, and since each group contains exactly one row per year, `MAX()` simply returns that single value.
+`MAX()` is used here not to aggregate multiple values, but because `GROUP BY country` requires an aggregate function around non-grouped columns, and since each group contains exactly one row per year, `MAX()` simply returns that single value. The use of `MAX()` as a pseudo-aggregate function is similar to the use of `first()` as an aggregate function in Approach 2.
 
 ### Verifying all three outputs match
 
@@ -156,11 +156,11 @@ all.equal(tidy_sorted, duck_sorted,   check.attributes = FALSE)
 all.equal(tidy_sorted, manual_sorted, check.attributes = FALSE)
 ```
 
-All three approaches produce identical results — the same countries, the same years as column headers, and the same life expectancy values in every cell.
+It is important to note that all three approaches produce identical results — the same countries, the same years as column headers, and the same life expectancy values in every cell.
 
 ### Can `crosstab()` do pure reshaping?
 
-Short answer: **not cleanly.** `crosstab()` always expects exactly one (row_id, category, value) triple per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you *can* technically pass `crosstab()` a query that produces those triples althought it is a little more complicated than the previous options:
+Short answer: **not cleanly.** `crosstab()` always expects exactly one triple (row_id, category, value) per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you *can* technically pass `crosstab()` a query that produces those triples although the code is slightly more complicated than the previous options.
 
 ```{r}
 con_local <- dbConnect(
@@ -168,8 +168,8 @@ con_local <- dbConnect(
   dbname   = "postgres",
   host     = "localhost",
   port     = 5432,
-  user     = "sebastianpollack",
-  password = "sup"
+  user     = Sys.getenv("PG_USER"),
+  password = Sys.getenv("PG_PWD")
 )
 ```
 
@@ -198,7 +198,7 @@ wide_crosstab <- dbGetQuery(con_local, '
 head(wide_crosstab,6)
 ```
 
-This will produce the same output — but notice that `crosstab()` is doing exactly what `pivot_wider()` and the manual `CASE WHEN` do: retrieving one existing value per cell. `crosstab()`'s mandatory output-column declaration makes it more verbose and more fragile than `pivot_wider()` for a pure reshaping task.
+While crosstab() does produce the same output, notice that `crosstab()` is doing exactly what `pivot_wider()` and the manual `CASE WHEN` do: retrieving one existing value per cell. `crosstab()`'s mandatory output-column declaration makes it more verbose and more fragile than `pivot_wider()` for a pure reshaping task.
 
 ---
 
@@ -214,7 +214,7 @@ In our second example:
 - **Columns:** year
 - **Cells:** average life expectancy across all countries in that continent-year combination
 
-Each continent contains multiple countries, so each (continent, year) pair has multiple source rows — aggregation is not optional, it's required.
+Each continent contains multiple countries, so each (continent, year) pair has multiple source rows — aggregation is not optional, it’s required.
 
 ```{r}
 # How many countries per continent-year?
@@ -250,7 +250,7 @@ ct_manual <- dbGetQuery(con_duck, "
 ct_manual
 ```
 
-Here `AVG()` is taking the average of life expectancy per year for every continent.
+Here `AVG()` is taking the average of life expectancy for every unique year-continent combination.
 
 ### Approach 2: DuckDB `PIVOT` with `USING avg()`
 
@@ -266,7 +266,7 @@ ct_duckdb <- dbGetQuery(con_duck, "
 ct_duckdb
 ```
 
-The `USING avg(lifeExp)` clause is now performing averaging life expectancy given the specified conditions and formatting.
+The `USING avg(lifeExp)` clause is now performing averaging life expectancy given the specified conditions and formatting. The `PIVOT` keyword restructures the query result by taking the distinct values of the `ON` column (`year`) and turning each one into its own output column. The `USING` clause then defines what value to place in each of those new columns — in this case `ROUND(AVG(lifeExp), 2)`, which computes the average life expectancy across all rows that share the same continent and year combination.
 
 ### Approach 3: `crosstab()` in PostgreSQL
 
@@ -293,7 +293,7 @@ dbGetQuery(con_local, "
 ")
 ```
 
-This is `crosstab()`'s main use case: the source query performs the `GROUP BY continent, year` aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure `crosstab()` requires. It then reshapes those triples into the wide format.
+Cross-tabulation is `crosstab()`'s main use case (good naming choice!): the source query performs the `GROUP BY continent, year` aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure `crosstab()` requires. It then reshapes those triples into the expected wide format.
 
 ### Verifying manual and DuckDB PIVOT match
 
@@ -310,7 +310,7 @@ all.equal(manual_sorted_ct, duck_sorted_ct, check.attributes = FALSE)
 
 | | Pure Reshaping | Cross-Tabulation |
 |---|---|---|
-| **Row count changes?** | No | Yes (fewer rows out) |
+| **Row count changes?** | No | Yes (potentially fewer rows) |
 | **Aggregation required?** | No | Yes |
 | **R tidyverse** | `pivot_wider()` | `pivot_wider()` + pre-aggregation |
 | **DuckDB `PIVOT`** | `PIVOT ... ON ... USING first()` | `PIVOT ... ON ... USING avg()` |
