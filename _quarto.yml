@@ -30,8 +30,12 @@ website:
             text: Data Upload Guide
       - text: "About"
         href: about.qmd
-      - text: "References"
-        href: references.qmd
+      - text: "Acknowledgments"
+        menu:
+          - href: references.qmd
+            text: References
+          - href: packages.qmd
+            text: R Packages
 
 bibliography: references.bib
 
