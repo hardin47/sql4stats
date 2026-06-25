@@ -39,6 +39,7 @@ library(DBI)
 library(RPostgres)
 library(purrr)
 library(tidyverse)
+library(knitr)
 ```
 
 ```{r}
@@ -270,6 +271,7 @@ order would only grow.
 The planner doesn't time queries — it *estimates* how many rows each step will emit and picks the cheapest plan based on those estimates. When the estimates are wrong, the plan is wrong. The function below pulls every node out of a plan and compares the planner's **estimated** row count to the **actual** row count, computing a **q-error**: the ratio of the larger to the smaller. A q-error near 1 means the estimate was accurate; a large q-error means the planner was badly misled at that node.
 
 ```{r}
+#| output: false
 #| label: estimate-harness
 extract_estimates <- function(con, sql, label) {
   plan <- dbGetQuery(con, paste("EXPLAIN ANALYZE", sql))[[1]]
@@ -305,6 +307,7 @@ extract_estimates <- function(con, sql, label) {
 ```
 
 ```{r}
+#| output: false
 #| label: estimate-runs
 dbExecute(con, "SET max_parallel_workers_per_gather = 0")
 
@@ -322,8 +325,14 @@ dbExecute(con, "SET max_parallel_workers_per_gather = 4")
 dbExecute(con, "SET join_collapse_limit = 8")
 
 all_estimates <- bind_rows(good_estimates, bad_estimates, auto_estimates)
-all_estimates
+
 ```
+
+```{r}
+all_estimates |>
+  knitr:: kable()
+```
+
 
 **Reading this table.** The `auto-optimized` rows show what the planner does when left alone (`join_collapse_limit = 8` lets it reorder up to eight tables freely). Comparing q-errors across the three labels shows where estimation breaks down: nodes deep in the bad-order plan tend to carry the largest q-errors, because each early misestimate compounds as it feeds the next join. This is the mechanism behind the timing differences — a bad order isn't slow by fiat, it's slow because the planner's row estimates drift further from reality at every step, and the `actual_total` (rows × loops) balloons. 
 
