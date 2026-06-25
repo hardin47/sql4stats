@@ -17,9 +17,9 @@ suppress-bibliography: true
 
 ## Introduction
 
-This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) [[@openpolicing2023]](references.qmd) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself.
+This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data using the DuckDB package in R: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) [[@openpolicing2023]](references.qmd) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself. In both methods, DuckDB is used to execute the queries. Direct Parquet file querying means that DuckDB reads the .parquet files directly from disk on every query execution, without first loading the data into a database: the files remain as standalone compressed columnar files and DuckDB parses, decompresses, and queries them in place each time a query is run.
 
-For background on Parquet's internal structure and how DuckDB reads files directly, see the [Parquet & DuckDB reference page](parquet.qmd).
+For background on Parquet's internal structure and how DuckDB reads files directly, see the [Informational Resource on File Formats, Parquet & DuckDB](parquet.qmd). Also for an more on direct Parquet querying check out the [Theory in Practice Parquet Querying Time Exploration](row_v_file.qmd)
 
 Six query types are benchmarked to represent a range of workloads, from simple counts to cross-table aggregations:
 
@@ -31,11 +31,13 @@ Six query types are benchmarked to represent a range of workloads, from simple c
 | **Q4** | String filter — `ILIKE` pattern match on a string column |
 | **Q5** | Cross-table `GROUP BY subject_race` — aggregation across all three cities |
 
+Note that Q2 - Q5 are also all `COUNT(*)` tasks, but with additional constraints.
+
 Each timing result is the **mean of 20 timed runs**, preceded by 3 warmup runs. A fresh DuckDB connection is opened and closed for every trial to avoid connection-level caching effects.
 
 ### Statistical Significance
 
-Differences between native DuckDB and direct Parquet are tested using a **two-sided Wilcoxon rank-sum test** at α = 0.05. This non-parametric test is appropriate here because query times are non-negative, right-skewed, and not guaranteed to follow a normal distribution. A result marked **Yes*** indicates the observed difference in timing distributions is statistically unlikely to have occurred by chance, and we can conclude the two approaches differ meaningfully in performance for that query. A result marked **No** means the difference is not statistically distinguishable from random variation.
+Differences between native DuckDB and direct Parquet are tested using a **two-sided Wilcoxon rank-sum test** at α = 0.05. This non-parametric test is appropriate here because query times are non-negative, right-skewed, and not guaranteed to follow a normal distribution. A result marked **Yes** indicates the observed difference in timing distributions is statistically unlikely to have occurred by chance, and we can conclude the two approaches differ meaningfully in performance for that query. A result marked **No** means the difference is not statistically distinguishable from random variation.
 
 ---
 
@@ -58,7 +60,7 @@ library(RMySQL)
 
 ## Step 1: Build Storage Formats {.unnumbered}
 
-This step can be done in many approaches. For this guide, a connection with MySQL is setup, then three tables from the entire SQL database are used to write to its own Parquet file. Then a native DuckDB database is built with each city (Parquet file) as its own table. This only needs to run once so set `eval: false` after the databases are built.
+One concrete advantage of direct Parquet over native DuckDB is storage footprint. Because Parquet files are written with columnar compression applied at the column level, they are typically substantially smaller than an equivalent DuckDB database, which stores data in its own internal format optimized for query performance rather than disk compactness.
 
 ```{r}
 #| label: build-databases
@@ -147,7 +149,7 @@ Beyond storage size, direct Parquet also avoids the ingestion step entirely. The
 
 ## Step 3: Benchmark
 
-This section contains the code for creating the queries and obtaining the mean times for each query. In this code, 5 queries were performed and are meant to represent varying forms of queries, from counting rows to cross-table queries.
+This section contains the code for creating the queries and obtaining the mean times for each query. In this code, 5 queries were performed and are meant to represent varying forms of queries, from counting rows to cross-table queries. The first code chunk defines the paruqet files and the 5 queries.
 
 ```{r}
 #| label: define-queries
@@ -300,7 +302,7 @@ sig_col <- mapply(function(qid) {
     wilcox.test(nt, dt, exact = FALSE)$p.value,
     error = function(e) NA
   )
-  ifelse(!is.na(p) & p < 0.05, "Yes *", "No")
+  ifelse(!is.na(p) & p < 0.05, "Yes", "No")
 }, summary_df$query_id)
 
 summary_df$significant <- sig_col
@@ -367,8 +369,9 @@ ggplot(plot_df, aes(x = ratio, y = label, colour = color_grp)) +
 
 ## Conclusion
 
+
 The results show a distinguishable difference that native DuckDB offers faster and more consistent query performance across most or all of the query types. Direct Parquet offers the advantage that files can be queried immediately after writing and occupy significantly less disk space.
 
-The results can be understood based on the knowledge of how DuckDB querying and direct Parquet querying functions. When data is ingested into a native DuckDB database, DuckDB builds and maintains its own internal columnar storage format, statistics, and metadata that are optimized specifically for its query engine. When a query runs against a native table, DuckDB can exploit these internals directly, for example, reading only the pages it needs, using pre-computed column statistics, and operating entirely within a single file with no coordination overhead. Direct Parquet querying, by contrast, requires DuckDB to open each file, parse its footer, decompress column chunks, and assemble results from separate sources on every query execution. Even though Parquet is also columnar and compressed, this per-query parsing and file-handling overhead adds time that the native format avoids entirely. 
+The results can be understood based on the knowledge of how DuckDB querying and direct Parquet querying functions. When data is ingested into a native DuckDB database, DuckDB builds and maintains its own internal columnar storage format, statistics, and metadata that are optimized specifically for its query engine. When a query runs against a native table, DuckDB can exploit these internals directly, for example, reading only the pages it needs, using pre-computed column statistics, and operating entirely within a single file with no coordination overhead. Direct Parquet querying, by contrast, requires DuckDB to open each file, parse its footer, decompress column chunks, and assemble results from separate sources on every query execution. Even though Parquet is also columnar and compressed, this per-query parsing and file-handling overhead adds time that the native format avoids entirely.
 
-For workflows involving repeated analytical queries over stable data, native DuckDB is the stronger choice. For workflows where storage efficiency, portability, or avoiding ingestion latency matters more than raw query speed, direct Parquet is competitive and in some cases faster.
+For workflows involving repeated analytical queries over stable data, native DuckDB is the stronger choice. For workflows where storage efficiency, portability, or avoiding ingestion latency matters more than raw query speed, direct Parquet is competitive and, in some cases, faster.
