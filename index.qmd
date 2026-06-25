@@ -1,5 +1,10 @@
----
-title: "sql4stats"
----
 
-Welcome to the SQL for Statistics site! This site is designed to help you learn SQL in the context of statistical analysis. Here, you'll find tutorials, examples, and resources that will guide you through using SQL to manipulate and analyze data effectively. Whether you're a beginner or looking to enhance your SQL skills for statistical applications, this site has something for you.
+```{=html}
+<div style="max-width: 700px; margin: 0 auto; text-align: center;">
+  <video autoplay muted loop playsinline style="display: block; margin: 0 auto; max-width: 100%; height: auto;">
+    <source src="SQL4Stats.webm" type="video/webm">
+  </video>
+
+  <p>Welcome to the SQL for Statistics site! This site is designed to help you learn SQL in the context of statistical analysis. Here, you'll find tutorials, examples, and resources that will guide you through using SQL to manipulate and analyze data effectively. Whether you're a beginner or looking to enhance your SQL skills for statistical applications, this site has something for you.</p>
+</div>
+```

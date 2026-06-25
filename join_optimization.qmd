@@ -11,7 +11,7 @@ execute:
   warning: false
   message: false
 bibliography: references.bib
-suppress=bibliography: true
+suppress-bibliography: true
 ---
 
 ## Introduction
@@ -218,7 +218,6 @@ dbExecute(con, "DISCARD ALL")
 
 
 ### Results
-#### Plot of Execution Times by Order and Algorithm
 
 Here's a plot comparing execution times between different join orders and algorithms. 
 ```{r}
@@ -242,25 +241,41 @@ bind_rows(
 
 **What the plot shows.** Each strategy responds differently to a bad join order. A **Nested Loop** is the most order-sensitive: for every row from the outer side it probes the inner side, so if the outer side starts large (bad order) the probe count explodes. A **Hash Join** builds a hash table on one input and streams the other past it, which makes it far more forgiving of a bad starting order. A **Merge Join** requires both inputs sorted on the join key, so its cost is dominated by sorting and it sits somewhere in between. In short: a good join order helps every strategy, but it *rescues* the Nested Loop.
 
-### Interpreting Query Plans
+### Reading Query Plans
 
 To understand why some queries take longer than others, it can be helpful to read the plans created by the query optimizer. Wrapping a query in `EXPLAIN ANALYZE` allows us to read the query plan and see exactly how long each step of the query takes. 
 
+Before unpacking the query plans themselves, it's important to recognize that they are most easily read from bottom to top. Each node/line pulls on the results from the child nodes indented below it. In other words, even though it initializes the query plan, the step labeled "1" in the plan actually finishes last. Additionally, the last 3 lines are summary statistics describing the number of heap fetches (when an Index Only Scan has to go back to the table because the index alone is insufficient), the planning time, and the execution time of the query.
+
+
+Before unpacking the query plans themselves, it's important to recognize that they are structured as trees and most easily read from bottom to top. Each node pulls rows from the child nodes indented beneath it, so the leaf nodes produce the first rows and the topmost node — labeled "1" — is the last to finish, even though it's the first one called. (A few node types, like `Hash` and `Sort`, are exceptions in that they must consume their entire input before passing anything up, but the overall direction of reading still holds.) Finally, the last two lines report the planning time and execution time for the whole query, and any `Heap Fetches` line belongs to an Index Only Scan directly above it — it counts the times that scan had to return to the table because the index alone couldn't confirm a row's visibility.
+
+
 #### Auto-Optimized Join
-First, we'll run the query and allow the engine to optimize freely. 
+
+First, we'll run the query and allow the engine to optimize freely.
+
 ```{r}
-dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))
+#| label: auto-plan
+auto_plan <- dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))[[1]]
+
+auto_exec <- auto_plan |> str_subset("Execution Time") |>
+  str_extract("[0-9.]+") |> as.numeric()
+auto_plan_time <- auto_plan |> str_subset("Planning Time") |>
+  str_extract("[0-9.]+") |> as.numeric()
+
+auto_plan  # print the plan for the reader
 ```
 
-It's important to recognize that query plans need to be read from bottom to top--that is, the step labeled "1" in the plan is actually the last portion of the query. 
+Following the rows from the bottom up: PostgreSQL begins with two filtered scans. It scans `posts` and keeps only the 3,552 rows with `score > 10` (line 7, discarding 88,424), and scans `users` to keep the 305 with `reputation > 1000` (line 12), building a hash table on those users (line 10). Those two filtered inputs meet at the `hash join` (line 5), which matches `posts` to their `owners` on `owneruserid` and emits 2,287 rows. From there the rows flow upward through two `nested loops`: the first probes `votes` by index once per post (line 15), growing the result to 45,869 rows, and the second probes `badges` by index once per user (line 19), ballooning it to 5,854,758. Those rows finally arrive at the `Aggregate` (line 1), which collapses them into a single count.
 
+Notice that we wrote the bad order in the `FROM` clause, but with reordering left enabled (`join_collapse_limit` at its default), the planner ignored our written order entirely. It led with `posts` and `users` — the two tables carrying the `WHERE` filters, and therefore the most selective — and pushed the unfiltered fan-out to the very end. Left to its own devices, the planner reconstructs something close to the good order on its own.
 
-
-
+Each node reports `actual time=startup..total`, where the total is cumulative and measured per loop. Reading these upward shows the cost concentrating in one place: everything through the hash join finishes early, the first nested loop shortly after, and then the top nested loop dominates the runtime. That final node is the whole query. It turns 45,869 input rows into 5,854,758 output rows because each user owns roughly 128 badges (`rows=128 loops=45869` on line 19), and pushing those 5.85 million rows through the join filter is where the bulk of the `r round(auto_exec)` ms runtime lives.
 
 #### Manually Defined, Inefficient Join
 
-For comparison, we'll run the same query, but this time, we'll force the engine to run nested loop joins on our defined "bad order" without allowing the optimizer to manipulate it. 
+For comparison, we'll run the same query, but this time, we'll force the engine to run nested loop joins on our defined "bad order" without allowing the optimizer to manipulate it.
 
 ```{r}
 #| output: false
@@ -273,9 +288,23 @@ dbExecute(con, "SET enable_mergejoin = off")
 ```
 
 ```{r}
-dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))
+#| label: forced-plan
+forced_plan <- dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))[[1]]
+
+forced_exec <- forced_plan |> str_subset("Execution Time") |>
+  str_extract("[0-9.]+") |> as.numeric()
+forced_plan_time <- forced_plan |> str_subset("Planning Time") |>
+  str_extract("[0-9.]+") |> as.numeric()
+
+forced_plan  # print the plan for the reader
 ```
 
+ Following the rows from the bottom up: with reordering forbidden (`join_collapse_limit = 1`), the engine must honor the literal `FROM` order, so it starts where we told it to — the unfiltered tables. It scans `users`, keeping the 305 rows with `reputation > 1000` (line 5), and for each one probes `badges` by index (line 8), producing 12,371 rows. That result drives a nested loop into `posts` (line 11), probed once per badge — 12,371 loops — which grows the result to 292,650 rows. Those in turn drive a nested loop into `votes` (line 15), probed 292,650 times, fanning out to 5,854,758 rows before the `Aggregate` (line 1) collapses them to a single count. Every join is a nested loop, and no hash table appears anywhere.
+
+Compare the intermediate row counts to the free plan. There, the engine led with the two filtered tables and kept early results tiny — the first join carried 2,287 rows, the next 45,869. Here, forbidden from leading with the selective filters, the engine carries 12,371 rows out of the very first join and 292,650 out of the second. The same 5.85 million rows arrive at the top in both plans, but the forced order hauls a far larger intermediate result through the back half of the tree, and pays for it one row at a time: the `votes` index scan (line 15) executes across 292,650 loops rather than the 2,287 loops of the free plan. The slowdown shows up directly in the totals — execution time rises from roughly `r round(auto_exec)` ms to `r round(forced_exec)` ms (line 20), a `r round(forced_exec / auto_exec, 1)`-fold penalty for a query returning the identical single number.
+
+
+This is the worst case the earlier boxplots only hinted at — a bad order and the most order-sensitive algorithm, combined, on a query the planner would otherwise have rescued. The top join still emits the same 5.85 million rows it always did, and the planner still expected only 2,457; what changed is that we stripped away its two best safeguards — the freedom to lead with the selective tables, and the option to use a hash join where a nested loop explodes. Left alone, it used both. Forced, it can use neither.
 
 
 ## A note on cold cache
@@ -309,7 +338,7 @@ order would only grow.
 
 ## Why the planner makes these choices: estimated vs. actual rows
 
-The planner doesn't time queries — it *estimates* how many rows each step will emit and picks the cheapest plan based on those estimates. When the estimates are wrong, the plan is wrong. The function below pulls every node out of a plan and compares the planner's **estimated** row count to the **actual** row count, computing a **q-error**: the ratio of the larger to the smaller. A q-error near 1 means the estimate was accurate; a large q-error means the planner was badly misled at that node.
+The planner doesn't time queries — it *estimates* how many rows each step will emit and picks the cheapest plan based on those estimates. When the estimates are wrong, the plan is wrong. The function below pulls every node out of a plan and compares the planner's **estimated** row count to the **actual** row count, computing a **q-error** defined as $\max\left(\dfrac{\text{estimated}}{\text{actual}}, \dfrac{\text{actual}}{\text{estimated}}\right)$. A q-error near 1 means the estimate was accurate; a large q-error means the planner was badly misled at that node.
 
 ```{r}
 #| output: false
@@ -340,6 +369,7 @@ extract_estimates <- function(con, sql, label) {
       actual       = actual,
       loops        = loops,
       actual_total = actual * loops,
+      q_error = max(estimated/actual_total, actual_total/estimated)
     )
   }) |>
   list_rbind() |>
@@ -361,9 +391,6 @@ bad_estimates  <- extract_estimates(con, sql_bad_order,  "forced bad order")
 dbExecute(con, "SET join_collapse_limit = 8")
 auto_estimates <- extract_estimates(con, sql_good_order, "auto-optimized")
 
-# Reset session to normal behaviour
-dbExecute(con, "SET max_parallel_workers_per_gather = 4")
-dbExecute(con, "SET join_collapse_limit = 8")
 
 all_estimates <- bind_rows(good_estimates, bad_estimates, auto_estimates)
 
@@ -375,7 +402,11 @@ all_estimates |>
 ```
 
 
-**Reading this table.** The `auto-optimized` rows show what the planner does when left alone (`join_collapse_limit = 8` lets it reorder up to eight tables freely). Comparing q-errors across the three labels shows where estimation breaks down: nodes deep in the bad-order plan tend to carry the largest q-errors, because each early misestimate compounds as it feeds the next join. This is the mechanism behind the timing differences — a bad order isn't slow by fiat, it's slow because the planner's row estimates drift further from reality at every step, and the `actual_total` (rows × loops) balloons. 
+Reading this table. The auto-optimized rows show what the planner does when left alone (join_collapse_limit = 8 lets it reorder up to eight tables freely); the two forced labels show the plans we dictated. The first thing to notice is that the worst single q-error isn't unique to the bad plan — the badges Index Only Scan misestimates by a factor of ~1.5 million in every plan (estimated 4 rows per user, actual 128), because that error lives in a table's statistics and travels with it no matter where the table is joined. The leaf-level estimates are simply bad, and all three plans inherit them.
+What separates the plans is not the size of the individual errors but where they fall and how many rows pass through them. Trace the actual column down each plan. In the auto and good plans, the early joins stay small — the hash join emits 2,287 rows, the next nested loop 45,869 — and the catastrophic fan-out to 5.85 million only happens at the final node. In the forced bad order, the row count is already inflated much earlier: the first nested loop emits 12,371 rows, the second 292,650, and the underestimated index scans beneath them (q-errors of ~3e5 and ~9.7e5) are therefore executed across hundreds of thousands of loops rather than a few thousand. The same per-row estimation error costs far more when it sits under a node looping 292,650 times than one looping 2,287 times.
+This is the mechanism behind the timing differences. A bad order isn't slow by definition — it's slow because it forces the planner's already-wrong estimates to be paid out over much larger intermediate results. The planner costs each plan believing the top join will emit ~2,450 rows (it emits 5.85 million in all three), but in the bad-order plan that misestimate is compounded by every node beneath it also carrying a bloated row count. With accurate leaf statistics the planner would never have chosen a nested loop at the top at all; the cascading underestimate is what makes the expensive plan look cheap.
+
+It is also important to recognize that PostgreSQL's cardinality estimation methods are deeply flawed, and can sometimes produce catastrophic results on complex multi-table joins. Analysis of these methods goes beyond the scope of this project, but @Han2021 produced a study comparing the performance of existing cardinality estimation methods, including contemporary machine-learning and statistically motivated algorithms. It is a very interesting read and explains the deeper mechanics underlying query performance on real-world benchmark datasets. 
 
 ```{r}
 #| echo: false
@@ -395,4 +426,4 @@ dbDisconnect(con)
 
 
 ## Practical Takeaways
- First, **join order matters most for Nested Loops**: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner's choices flow directly from its **row estimates**, so accurate statistics (and thus low q-error) are what let it pick the right strategy and order on its own. Forcing these settings is useful for *understanding* the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the planner.
+ First, **join order matters most for Nested Loops**: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner's choices flow directly from its **row estimates**, so accurate statistics (and thus low q-error) are what let it pick the right strategy and order on its own. Forcing these settings is useful for *understanding* the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the optimizer.
