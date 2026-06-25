@@ -136,7 +136,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./SQL_Joins_Scrolly.html">
+    <a class="dropdown-item" href="./joins.html">
  <span class="dropdown-text">Joins</span></a>
   </li>  
         <li>
@@ -183,10 +183,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="./about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./references.html"> 
-<span class="menu-text">References</span></a>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-acknowledgments" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Acknowledgments</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-acknowledgments">    
+        <li>
+    <a class="dropdown-item" href="./references.html">
+ <span class="dropdown-text">References</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./packages.html">
+ <span class="dropdown-text">R Packages</span></a>
+  </li>  
+    </ul>
+  </li>
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -251,8 +262,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>The word “pivot” covers two different operations:</p>
 <ul>
-<li><strong>Pure reshaping</strong> — changing the <em>shape</em> of data (long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.</li>
-<li><strong>Cross-tabulation</strong> — reshaping <em>plus</em> aggregation. Multiple source rows sharing the same (row-group, column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).</li>
+<li><strong>Pure reshaping</strong> — changing the <em>shape</em> of data (e.g, long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.</li>
+<li><strong>Cross-tabulation</strong> — reshaping <em>plus</em> aggregation. Multiple source rows sharing the same (e.g, row-group or column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).</li>
 </ul>
 <p>We’ll demonstrate both using the <code>gapminder</code> dataset, which records country-level statistics at five-year intervals from 1952 to 2007. The variables we’ll use are:</p>
 <ul>
@@ -290,7 +301,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 <h2 class="anchored" data-anchor-id="part-1-pure-reshaping">Part 1: Pure Reshaping</h2>
 <section id="the-data-structure" class="level3">
 <h3 class="anchored" data-anchor-id="the-data-structure">The data structure</h3>
-<p>For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears <strong>exactly once</strong> in the source data. Thus there is nothing to aggregate, only redistribute.</p>
+<p>For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears <strong>exactly once</strong> in the source data. Thus, there is nothing to aggregate, only redistribute.</p>
 <p>In our first example:</p>
 <ul>
 <li><strong>Rows:</strong> country</li>
@@ -311,7 +322,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 # ℹ 3 variables: country &lt;fct&gt;, year &lt;int&gt;, n &lt;int&gt;</code></pre>
 </div>
 </div>
-<p>No rows — every country-year combination is unique. Pure reshaping is appropriate here.</p>
+<p>The output from above has no rows — every country-year combination is unique. Pure reshaping is appropriate here.</p>
 </section>
 <section id="approach-1-pivot_wider-in-r-tidyverse" class="level3">
 <h3 class="anchored" data-anchor-id="approach-1-pivot_wider-in-r-tidyverse">Approach 1: <code>pivot_wider()</code> in R (tidyverse)</h3>
@@ -356,7 +367,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 </section>
 <section id="approach-2-duckdb-pivot-without-using" class="level3">
 <h3 class="anchored" data-anchor-id="approach-2-duckdb-pivot-without-using">Approach 2: DuckDB <code>PIVOT</code> (without <code>USING</code>)</h3>
-<p>DuckDB’s <code>PIVOT</code> command without a <code>USING</code> clause performs pure reshaping. This is equivalent to <code>pivot_wider()</code>. No aggregation is specified; values are simply redistributed. The output below only shows 6 rows.</p>
+<p>DuckDB’s <code>PIVOT</code> command without a <code>USING</code> clause performs pure reshaping. This is equivalent to <code>pivot_wider()</code>. No aggregation is specified; values are simply redistributed. The output below shows the first 6 rows.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -396,7 +407,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 </section>
 <section id="approach-3-manual-reshaping-in-duckdb-case-when" class="level3">
 <h3 class="anchored" data-anchor-id="approach-3-manual-reshaping-in-duckdb-case-when">Approach 3: Manual reshaping in DuckDB (<code>CASE WHEN</code>)</h3>
-<p>The manual approach makes every column fully explicit, with no built-in pivot mechanism involved at all.</p>
+<p>The manual approach makes every column fully explicit, with no built-in pivot mechanism involved at all. Each <code>CASE WHEN</code> expression acts as a conditional value selector: for a given row, if the <code>year</code> column matches the specified value, it returns <code>lifeExp</code>; otherwise it returns <code>NULL</code>. Wrapping each expression in <code>MAX()</code> then collapses all rows for a given country into one, picking out the single <code>non-NULL</code> life expectancy value for each year.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -439,7 +450,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 6 78.830 80.370 81.235</code></pre>
 </div>
 </div>
-<p><code>MAX()</code> is used here not to aggregate multiple values, but because <code>GROUP BY country</code> requires an aggregate function around non-grouped columns, and since each group contains exactly one row per year, <code>MAX()</code> simply returns that single value.</p>
+<p><code>MAX()</code> is used here not to aggregate multiple values, but because <code>GROUP BY country</code> requires an aggregate function around non-grouped columns, and since each group contains exactly one row per year, <code>MAX()</code> simply returns that single value. The use of <code>MAX()</code> as a pseudo-aggregate function is similar to the use of <code>first()</code> as an aggregate function in Approach 2.</p>
 </section>
 <section id="verifying-all-three-outputs-match" class="level3">
 <h3 class="anchored" data-anchor-id="verifying-all-three-outputs-match">Verifying all three outputs match</h3>
@@ -473,11 +484,11 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 <pre><code>[1] TRUE</code></pre>
 </div>
 </div>
-<p>All three approaches produce identical results — the same countries, the same years as column headers, and the same life expectancy values in every cell.</p>
+<p>It is important to note that all three approaches produce identical results — the same countries, the same years as column headers, and the same life expectancy values in every cell.</p>
 </section>
 <section id="can-crosstab-do-pure-reshaping" class="level3">
 <h3 class="anchored" data-anchor-id="can-crosstab-do-pure-reshaping">Can <code>crosstab()</code> do pure reshaping?</h3>
-<p>Short answer: <strong>not cleanly.</strong> <code>crosstab()</code> always expects exactly one (row_id, category, value) triple per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you <em>can</em> technically pass <code>crosstab()</code> a query that produces those triples althought it is a little more complicated than the previous options:</p>
+<p>Short answer: <strong>not cleanly.</strong> <code>crosstab()</code> always expects exactly one triple (row_id, category, value) per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you <em>can</em> technically pass <code>crosstab()</code> a query that produces those triples although the code is slightly more complicated than the previous options.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -486,8 +497,8 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname   =</span> <span class="st">"postgres"</span>,</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host     =</span> <span class="st">"localhost"</span>,</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port     =</span> <span class="dv">5432</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user     =</span> <span class="st">"sebastianpollack"</span>,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"sup"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user     =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_USER"</span>),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_PWD"</span>)</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
@@ -539,7 +550,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 6 78.830 80.370 81.235</code></pre>
 </div>
 </div>
-<p>This will produce the same output — but notice that <code>crosstab()</code> is doing exactly what <code>pivot_wider()</code> and the manual <code>CASE WHEN</code> do: retrieving one existing value per cell. <code>crosstab()</code>’s mandatory output-column declaration makes it more verbose and more fragile than <code>pivot_wider()</code> for a pure reshaping task.</p>
+<p>While crosstab() does produce the same output, notice that <code>crosstab()</code> is doing exactly what <code>pivot_wider()</code> and the manual <code>CASE WHEN</code> do: retrieving one existing value per cell. <code>crosstab()</code>’s mandatory output-column declaration makes it more verbose and more fragile than <code>pivot_wider()</code> for a pure reshaping task.</p>
 <hr>
 </section>
 </section>
@@ -618,7 +629,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 5 80.72</code></pre>
 </div>
 </div>
-<p>Here <code>AVG()</code> is taking the average of life expectancy per year for every continent.</p>
+<p>Here <code>AVG()</code> is taking the average of life expectancy for every unique year-continent combination.</p>
 </section>
 <section id="approach-2-duckdb-pivot-with-using-avg" class="level3">
 <h3 class="anchored" data-anchor-id="approach-2-duckdb-pivot-with-using-avg">Approach 2: DuckDB <code>PIVOT</code> with <code>USING avg()</code></h3>
@@ -650,7 +661,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 5 80.72</code></pre>
 </div>
 </div>
-<p>The <code>USING avg(lifeExp)</code> clause is now performing averaging life expectancy given the specified conditions and formatting.</p>
+<p>The <code>USING avg(lifeExp)</code> clause is now performing averaging life expectancy given the specified conditions and formatting. The <code>PIVOT</code> keyword restructures the query result by taking the distinct values of the <code>ON</code> column (<code>year</code>) and turning each one into its own output column. The <code>USING</code> clause then defines what value to place in each of those new columns — in this case <code>ROUND(AVG(lifeExp), 2)</code>, which computes the average life expectancy across all rows that share the same continent and year combination.</p>
 </section>
 <section id="approach-3-crosstab-in-postgresql" class="level3">
 <h3 class="anchored" data-anchor-id="approach-3-crosstab-in-postgresql">Approach 3: <code>crosstab()</code> in PostgreSQL</h3>
@@ -677,7 +688,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 <span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>This is <code>crosstab()</code>’s main use case: the source query performs the <code>GROUP BY continent, year</code> aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure <code>crosstab()</code> requires. It then reshapes those triples into the wide format.</p>
+<p>Cross-tabulation is <code>crosstab()</code>’s main use case (good naming choice!): the source query performs the <code>GROUP BY continent, year</code> aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure <code>crosstab()</code> requires. It then reshapes those triples into the expected wide format.</p>
 </section>
 <section id="verifying-manual-and-duckdb-pivot-match" class="level3">
 <h3 class="anchored" data-anchor-id="verifying-manual-and-duckdb-pivot-match">Verifying manual and DuckDB PIVOT match</h3>
@@ -715,7 +726,7 @@ $ gdpPercap &lt;dbl&gt; 779.4453, 820.8530, 853.1007, 836.1971, 739.9811, 786.11
 <tr class="odd">
 <td><strong>Row count changes?</strong></td>
 <td>No</td>
-<td>Yes (fewer rows out)</td>
+<td>Yes (potentially fewer rows)</td>
 </tr>
 <tr class="even">
 <td><strong>Aggregation required?</strong></td>

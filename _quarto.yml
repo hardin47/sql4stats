@@ -17,17 +17,18 @@ website:
       - text: "Theory in Practice"
         menu:
           - href: native_v_direct.qmd
-            text: DuckDB Native vs. Direct Querying
+            text: Native DuckDB vs. Direct Querying
           - href: row_v_file.qmd
             text: Parquet Querying Time Exploration
           - href: join_optimization.qmd
-            text: Join Algorithms and Join Order
+            text: Join Algorithms and Order
       - text: "Tutorials"
         menu: 
-          - href: crosstab_pivot_comp.qmd
-            text: Pivoting + Crosstabs
           - href: sql_upload_guide.qmd
-            text: Data Upload Guide
+            text: SQL Upload Guide
+          - href: crosstab_pivot_comp.qmd
+            text: Pivot Types
+          
       - text: "About"
         href: about.qmd
       - text: "References"
