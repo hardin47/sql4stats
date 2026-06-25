@@ -9,7 +9,7 @@ format:
 
 # Charlie Coleman
 
-As of June 2026, I'm between my junior and senior years at <a href = "https.pomona.edu"> Pomona College</a>. I'm pursuing a double major in math and art--I work primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out my work <a href = "charliecoleman6.github.io/art_portfolio/"> here </a>), I love to cook, surf, and play guitar. 
+As of June 2026, I'm between my junior and senior years at <a href = "https.pomona.edu"> Pomona College</a>. I'm pursuing a double major in math and art--I work primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out my work <a href = "charliecoleman6.github.io/art_portfolio/">here</a>), I love to cook, surf, and play guitar. 
 
 
 
