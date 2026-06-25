@@ -14,30 +14,34 @@ execute:
 
 ## Introduction
 
-When you write a multi-table `JOIN`, you specify *which* tables connect and *on what columns* — but you do **not** specify *how* the database should physically combine them, nor *in what order*. Those two decisions belong to the query optimizer, and they are the most important influences  on how fast a join runs.
 
-This simulation isolates and measures two optimization decisions:
+When you write a multi-table `JOIN`, you specify which tables connect and on what columns — but you do not specify how the database should physically combine them, nor in what order. Normally, the query optimizer uses the distribution of data within the tables to estimate the size of intermediate results and create a query plan. 
+
+This simulation isolates and measures the impacts of two main optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
-For more information on these strategies, see the <a href="_site/joins.html">Joins page</a>.
+For more information on these strategies, see the <a href="https://sql4stats.netlify.app/joins">Joins page</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
-Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is purely a teaching device — in production you almost always let the planner decide.
+Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is mostly a teaching device — in production you almost always let the planner decide.
 
-We use the Stack Exchange `stats` dataset (the Cross Validated dump), which has four tables we can chain together: `votes`, `posts`, `users`, and `badges`.
+
 
 ### Setup
 
-We connect to the database, build indexes on the join columns, and confirm the connection with a trivial query. Indexes matter here: a Nested Loop join is only competitive when the inner side can be probed through an index rather than scanned in full.
+For this simulation, we'll be using a modified version of PostgreSQL 13.1 which @Han2021 used in their paper on cardinality estimation methods. Use <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">these instructions</a> to set up PostgreSQL on your own computer. 
+
 
 ```{r}
 #| label: setup
-#| eval: false
+#| output: false
 library(DBI)
 library(RPostgres)
 library(purrr)
 library(tidyverse)
+```
 
+```{r}
 con <- dbConnect(
   RPostgres::Postgres(),
   dbname = "stats",
@@ -46,28 +50,38 @@ con <- dbConnect(
   user   = Sys.info()[["user"]]
 )
 ```
-```{r}
 
-# Index the columns that appear in our JOIN ... ON clauses
+First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability. 
+
+We'll be using <a href ="https://relational.fit.cvut.cz/dataset/Stats"> STATS </a>, an anonymized dump of user-contributed content from the Stats StackExchange network, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by @Han2021 and included in the paper's <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. 
+
+For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="sql_upload_guide.qmd">Data Upload Tutorial</a>
+
+
+### Indexing the Tables
+
+First, we need to create indexes on the columns involved in the joins we're performing. This ensures that the nested loop algorithm will be as efficient as possible. For more information on how indexes are structured in SQL, see the <a href= "SQL_Scrolly_reformatted.qmd#sec-ch3"> indexes and b-trees page </a>.
+
+```{r}
+#| output: false
 dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)")
 dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)")
 dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)")
-
-dbGetQuery(con, "EXPLAIN ANALYZE SELECT COUNT(*) FROM votes")
 ```
 
 ## How the planner can be controlled
 
-PostgreSQL exposes a set of session variables that let us switch individual planner behaviours on and off. These are the knobs we use throughout:
+In PostgreSQL, session variables can be specifically controlled to simulate different optimizer decisions. 
 
-- `enable_nestloop`, `enable_hashjoin`, `enable_mergejoin` — turn each physical strategy on or off. By enabling exactly one at a time, we force the planner to use that strategy.
+- `enable_nestloop`, `enable_hashjoin`, `enable_mergejoin` — turn each physical algorithm on or off. By enabling exactly one at a time, we force the planner to use that strategy.
 - `join_collapse_limit` / `from_collapse_limit` — when set to `1`, the planner is forbidden from reordering the tables and must join them in the literal order written in the `FROM` clause. This is what lets us dictate join *order*.
 - `max_parallel_workers_per_gather` — set to `0` to turn off parallelism, so timing differences reflect the algorithm and not the number of workers.
 
 A key idea: because `join_collapse_limit = 1` makes the engine respect the written order, the *same logical query* written with its tables in a different sequence becomes a different physical plan.
 
 ```{r}
-#| label: planner-knobs
+#| echo: false
+#| output: false
 dbExecute(con, "SET max_parallel_workers_per_gather = 0")
 dbExecute(con, "SET join_collapse_limit = 1")
 dbExecute(con, "SET from_collapse_limit = 1")
@@ -77,12 +91,8 @@ dbExecute(con, "SET from_collapse_limit = 1")
 
 Both queries below answer the **exact same question** — count the rows produced by joining votes to their posts, those posts to their owners, and those owners to their badges, keeping only upvotes (`votetypeid = 2`) on well-scored posts (`score > 10`) owned by high-reputation users (`reputation > 1000`). They return identical results. The only difference is the order the tables are listed in.
 
-- **Good order** leads with `votes` and `posts`, where the `WHERE` filters are most selective, so the very first join already works on a shrunken set of rows.
-- **Bad order** leads with `badges` and `users`, the large tables whose filters don't bite until later, so early intermediate results stay huge.
 
 ```{r}
-#| label: define-queries
-# Good order: filtered/small tables first
 sql_good_order <- "
   SELECT COUNT(*)
   FROM votes v
@@ -107,11 +117,23 @@ sql_bad_order <- "
 "
 ```
 
+- **Good order** leads with `votes` and `posts`, where the `WHERE` filters are most selective, so the very first join already works on a much smaller set of rows.
+- **Bad order** leads with `badges` and `users`, the large tables which are never filtered, so early intermediate results stay huge.
+
+To verify this result, we can run both of the queries separately.
+
+```{r}
+dbGetQuery(con, sql_good_order)
+
+dbGetQuery(con, sql_bad_order)
+```
+
 ## A repeatable timing harness (warm cache)
 
-To get a stable measurement we wrap `EXPLAIN ANALYZE` in a small helper. It runs one throwaway query first to load the relevant data pages into PostgreSQL's buffer cache (a **warm-cache** measurement), then runs the query `n` more times, scraping the `Execution Time` and `Planning Time` lines out of each plan.
+To get a stable measurement we run one throwaway query first. This loads the relevant data pages into PostgreSQL's buffer cache (a **warm-cache** measurement). Then, we run the query `n` more times, scraping the `Execution Time` and `Planning Time` lines out of each query plan.
 
-`EXPLAIN ANALYZE` is the tool doing the real work here: it actually executes the query and reports how long each step took, as opposed to plain `EXPLAIN`, which only prints the planner's estimate.
+`EXPLAIN ANALYZE` is the tool doing the real work here: it actually executes the query and reports how long each step took, as opposed to plain `EXPLAIN`, which only prints the query plan. 
+
 
 ```{r}
 #| label: warm-harness
@@ -136,22 +158,39 @@ run_repeated_warm <- function(con, query, n = 10) {
 }
 ```
 
+
 ### Running all six combinations
 
 We now cross the two join orders with the three join strategies, forcing one strategy at a time by toggling the `enable_*` flags. That gives six timing distributions of ten runs each.
 
+
+Running the nested loop join: 
+
+First, we disable hash and merge join algorithms. 
 ```{r}
-#| label: warm-runs
-# --- Nested Loop ---
+#| output: false
 dbExecute(con, "SET enable_nestloop  = on")
 dbExecute(con, "SET enable_hashjoin  = off")
 dbExecute(con, "SET enable_mergejoin = off")
+
+```
+
+
+
+We'll run the query once to warm the cache, then extract the results of the next 10 repetitions. 
+
+```{r}
+
 results_nest_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Nested Loop", order = "good")
 results_nest_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Nested Loop", order = "bad")
 
-# --- Hash Join ---
+```
+
+Now, we'll go through the same process for hash join. 
+```{r}
+#| output: false
 dbExecute(con, "SET enable_nestloop  = off")
 dbExecute(con, "SET enable_hashjoin  = on")
 dbExecute(con, "SET enable_mergejoin = off")
@@ -159,8 +198,11 @@ results_hash_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Hash Join", order = "good")
 results_hash_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Hash Join", order = "bad")
+```
 
-# --- Merge Join ---
+Same for merge join:
+```{r}
+#| output: false
 dbExecute(con, "SET enable_nestloop  = off")
 dbExecute(con, "SET enable_hashjoin  = off")
 dbExecute(con, "SET enable_mergejoin = on")
@@ -170,6 +212,8 @@ results_merge_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Merge Join", order = "bad")
 ```
 
+
+### Results
 ```{r}
 #| label: warm-plot
 #| fig-cap: "Warm-cache execution time across the six strategy × order combinations."
@@ -189,24 +233,8 @@ bind_rows(
   theme_minimal()
 ```
 
-**What the plot shows.** Each strategy responds differently to a bad join order, and that is the whole point. A **Nested Loop** is the most order-sensitive: for every row from the outer side it probes the inner side, so if the outer side starts large (bad order) the probe count explodes. A **Hash Join** builds a hash table on one input and streams the other past it, which makes it far more forgiving of a bad starting order. A **Merge Join** requires both inputs sorted on the join key, so its cost is dominated by sorting and it sits somewhere in between. In short: a good join order helps every strategy, but it *rescues* the Nested Loop.
+**What the plot shows.** Each strategy responds differently to a bad join order. A **Nested Loop** is the most order-sensitive: for every row from the outer side it probes the inner side, so if the outer side starts large (bad order) the probe count explodes. A **Hash Join** builds a hash table on one input and streams the other past it, which makes it far more forgiving of a bad starting order. A **Merge Join** requires both inputs sorted on the join key, so its cost is dominated by sorting and it sits somewhere in between. In short: a good join order helps every strategy, but it *rescues* the Nested Loop.
 
-## Sanity check: the two orders return the same answer
-
-Before trusting the timings, we confirm that "good" and "bad" really are the same query logically — same count — and we list the indexes currently in place.
-
-```{r}
-#| label: verify-equal
-dbGetQuery(con, sql_good_order)
-dbGetQuery(con, sql_bad_order)
-
-dbGetQuery(con, "
-  SELECT tablename, indexname
-  FROM pg_indexes
-  WHERE schemaname = 'public'
-  ORDER BY tablename
-")
-```
 
 ## A note on cold cache
 
@@ -269,7 +297,6 @@ extract_estimates <- function(con, sql, label) {
       actual       = actual,
       loops        = loops,
       actual_total = actual * loops,
-      q_error      = round(pmax(estimated / actual, actual / estimated), 1)
     )
   }) |>
   list_rbind() |>
@@ -298,9 +325,11 @@ all_estimates <- bind_rows(good_estimates, bad_estimates, auto_estimates)
 all_estimates
 ```
 
-**Reading this table.** The `auto-optimized` rows show what the planner does when left alone (`join_collapse_limit = 8` lets it reorder up to eight tables freely). Comparing q-errors across the three labels shows where estimation breaks down: nodes deep in the bad-order plan tend to carry the largest q-errors, because each early misestimate compounds as it feeds the next join. This is the mechanism behind the timing differences — a bad order isn't slow by fiat, it's slow because the planner's row estimates drift further from reality at every step, and the `actual_total` (rows × loops) balloons.
+**Reading this table.** The `auto-optimized` rows show what the planner does when left alone (`join_collapse_limit = 8` lets it reorder up to eight tables freely). Comparing q-errors across the three labels shows where estimation breaks down: nodes deep in the bad-order plan tend to carry the largest q-errors, because each early misestimate compounds as it feeds the next join. This is the mechanism behind the timing differences — a bad order isn't slow by fiat, it's slow because the planner's row estimates drift further from reality at every step, and the `actual_total` (rows × loops) balloons. 
 
 ```{r}
+#| echo: false
+#| output: false
 #| label: cleanup
 dbDisconnect(con)
 ```
@@ -314,4 +343,6 @@ dbDisconnect(con)
 | **Sensitivity to join order**  | Very high                            | Low                                     | Moderate                            |
 | **Best when**                  | Outer side is small after filtering  | Inputs are large and unsorted          | Inputs already sorted on the key    |
 
-Two takeaways. First, **join order matters most for Nested Loops**: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner's choices flow directly from its **row estimates**, so accurate statistics (and thus low q-error) let the optimizer pick the right strategy and order on its own. Forcing these settings is useful for *understanding* the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the planner.
+
+## Practical Takeaways
+ First, **join order matters most for Nested Loops**: leading with your most-filtered tables keeps the outer row count — and therefore the probe count — small. Second, the planner's choices flow directly from its **row estimates**, so accurate statistics (and thus low q-error) are what let it pick the right strategy and order on its own. Forcing these settings is useful for *understanding* the engine, but in practice the lesson is to keep statistics fresh and write selective filters, then trust the planner.
