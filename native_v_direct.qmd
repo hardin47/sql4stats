@@ -19,7 +19,7 @@ suppress-bibliography: true
 
 This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data using the DuckDB package in R: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) [[@openpolicing2023]](references.qmd) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself. In both methods, DuckDB is used to execute the queries. Direct Parquet file querying means that DuckDB reads the .parquet files directly from disk on every query execution, without first loading the data into a database: the files remain as standalone compressed columnar files and DuckDB parses, decompresses, and queries them in place each time a query is run.
 
-For background on Parquet's internal structure and how DuckDB reads files directly, see the [Informational Resource on File Formats, Parquet & DuckDB](parquet.qmd). Also for an more on direct Parquet querying check out the [Theory in Practice Parquet Querying Time Exploration](row_v_file.qmd)
+For background on Parquet's internal structure and how DuckDB reads files directly, see the [Theoretical Foundations Resource on File Formats & DuckDB](parquet.qmd). Also for an more on direct Parquet querying check out the [Theory in Practice Parquet Querying Time Exploration](row_v_file.qmd)
 
 Six query types are benchmarked to represent a range of workloads, from simple counts to cross-table aggregations:
 
