@@ -22,7 +22,7 @@ When you write a multi-table `JOIN`, you specify which tables connect and on wha
 This simulation isolates and measures the impacts of two main optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
-For more information on these strategies, see the <a href="joins.qmd">Joins page in the Theoretical Foundations section of the site</a>.
+For more information on these strategies, see the <a href="joins.html">Joins page in the Theoretical Foundations section of the site</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
 Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is mostly a teaching device — in production you almost always let the planner decide.

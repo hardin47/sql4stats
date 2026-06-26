@@ -679,7 +679,7 @@ main.content, #quarto-content, .page-columns,
       <h3>Joins combine rows across tables</h3>
       <p>A <strong style="color:#2747b0;">join</strong> lets you query multiple tables at once, pulling related information into a single result set. Rather than duplicating data, relational databases keep information spread across tables and stitch it together at query time.</p>
       <p>Joins are most commonly executed using a <strong style="color:#2747b0;">key</strong> from both involved tables. Across tables, keys are often identical in their construction so that they can correctly identify matches between tables.</p>
-      <p>To learn more about keys and their structure — primary keys, foreign keys, and the indexes that make them fast — see the indexes and B-trees page.</p>
+      <p>To learn more about keys and their structure — primary keys, foreign keys, and the indexes that make them fast — see the <a href="SQL_Scrolly_reformatted.html">page on indexes and b-trees in the Theoretical Foundations section of the site</a>
       <div class="badge-row">
         <span class="badge bi">Multiple tables</span>
         <span class="badge bs">Shared key</span>
