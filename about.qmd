@@ -9,13 +9,13 @@ format:
 
 # Charlie Coleman
 
-As of June 2026, I'm between my junior and senior years at [Pomona College](https.pomona.edu). I'm pursuing a double major in math and art--I work primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out my work [here](charliecoleman6.github.io/art_portfolio/)), I love to cook, surf, and play guitar. 
+As of June 2026, I'm between my junior and senior years at [Pomona College](https://pomona.edu). I'm pursuing a double major in math and art--I work primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out my work [here](https://charliecoleman6.github.io/art_portfolio/)), I love to cook, surf, and play guitar. 
 
 
 
 # Sebastian Pollack
 
-Hi, I'm Sebastian, a rising sophomore at [Pomona College](https.pomona.edu) studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
+Hi, I'm Sebastian, a rising sophomore at [Pomona College](https://pomona.edu) studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
 
 
 # Support
