@@ -34,7 +34,7 @@ website:
       - text: "References"
         menu:
           - href: references.qmd
-            text: Informational Resources
+            text: Informational Sources
           - href: packages.qmd
             text: R Packages
 

@@ -156,7 +156,7 @@
   {
     "objectID": "references.html",
     "href": "references.html",
-    "title": "Informational Resources",
+    "title": "Informational Sources",
     "section": "",
     "text": "References\n\nApache Parquet. 2026. Compression — Parquet File Format. https://parquet.apache.org/docs/file-format/data-pages/compression/.\n\n\nHan, Yuxing, Ziniu Wu, Peizhi Wu, et al. 2021. “Cardinality Estimation in DBMS.” Proceedings VLDB Endowment 15 (4): 752–65.\n\n\nHilleckes, Hendrik, and Colin Morris. 2017. Snldb: A Saturday Night Live Database. https://github.com/hhllcks/snldb.\n\n\nMelnik, Sergey, Andrey Gubarev, Jing Jing Long, et al. 2010. “Dremel: Interactive Analysis of Web-Scale Datasets.” Proceedings of the VLDB Endowment 3. https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf.\n\n\nPierson, Emma, Sam Corbett-Davies, Sharad Goel, et al. 2023. The Stanford Open Policing Project. https://openpolicing.stanford.edu/.\n\n\nWickham, Hadley, and Jennifer Bryan. 2023. R Packages. 2nd ed. O’Reilly Media. https://r-pkgs.org.\n\n\nWinand, Markus. 2026. The Search Tree (b-Tree) Makes the Index Fast. https://use-the-index-luke.com/sql/anatomy/the-tree."
   }
