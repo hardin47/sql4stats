@@ -18,6 +18,6 @@ Hi! I'm Charlie, and I'm in the class of 2027 at [Pomona College](https://pomona
 Hi, I'm Sebastian, and I'm in the class of 2029 [Pomona College](https://pomona.edu) studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
 
 
-# Support
+# Acknowledgments
 
 This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible.

@@ -6,7 +6,7 @@ website:
   navbar:
     href: index.qmd
     left:
-      - text: "Informational Resources"
+      - text: "Theoretical Foundations"
         menu:
           - href: SQL_Scrolly_reformatted.qmd
             text: SQL:Indexing and B-Trees
@@ -32,7 +32,11 @@ website:
       - text: "About"
         href: about.qmd
       - text: "References"
-        href: references.qmd
+        menu:
+          - href: references.qmd
+            text: Informational Resources
+          - href: packages.qmd
+            text: R Packages
 
 bibliography: references.bib
 
