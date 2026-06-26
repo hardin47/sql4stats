@@ -253,7 +253,7 @@ A **primary key** is a column (or combination of columns) that uniquely identifi
 
 A **foreign key** is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental.
 
-For more information of keys along with indexing in SQL see the [Informational Resource on Relational aspect of SQL and Keys](SQL_Scrolly.qmd#relational-keys).
+For more information of keys along with indexing in SQL see the [Relational aspect of SQL and Keys page in the Theoretical Foundations section of the site.](SQL_Scrolly.qmd#relational-keys).
 
 
 ### Inspecting the Database Before Changing Anything
