@@ -66,6 +66,7 @@ library(dplyr)
 library(stringr)
 library(purrr)
 library(janitor)
+library(here)
 ```
 
 A practice worth adopting immediately, regardless of what data you're working with: **never write credentials directly into a script.** Store them as environment variables in a `.Renviron` file (which should never be committed to version control), and read them in using `Sys.getenv()` [@wickham2023rpkgs].
@@ -111,7 +112,7 @@ Before uploading anything, it’s worth building the habit of checking that your
 #| output: false
 #| warning: false
 #| message: false
-csv_folder <- "~/Desktop/Summer 2026/snldb/output"
+csv_folder <- here::here("output")
 
 csv_files <- list.files(
   path = csv_folder,

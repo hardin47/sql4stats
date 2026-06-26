@@ -127,10 +127,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-informational-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Informational Resources</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-theoretical-foundations" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Theoretical Foundations</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-informational-resources">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-theoretical-foundations">    
         <li>
     <a class="dropdown-item" href="./SQL_Scrolly_reformatted.html">
  <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
@@ -152,7 +152,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theory-in-practice">    
         <li>
     <a class="dropdown-item" href="./native_v_direct.html">
- <span class="dropdown-text">DuckDB Native vs.&nbsp;Direct Querying</span></a>
+ <span class="dropdown-text">Native DuckDB vs.&nbsp;Direct Querying</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./row_v_file.html">
@@ -160,7 +160,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
         <li>
     <a class="dropdown-item" href="./join_optimization.html">
- <span class="dropdown-text">Join Algorithms and Join Order</span></a>
+ <span class="dropdown-text">Join Algorithms and Order</span></a>
   </li>  
     </ul>
   </li>
@@ -170,12 +170,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="./crosstab_pivot_comp.html">
- <span class="dropdown-text">Pivoting + Crosstabs</span></a>
+    <a class="dropdown-item" href="./sql_upload_guide.html">
+ <span class="dropdown-text">SQL Upload Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./sql_upload_guide.html">
- <span class="dropdown-text">Data Upload Guide</span></a>
+    <a class="dropdown-item" href="./crosstab_pivot_comp.html">
+ <span class="dropdown-text">Pivot Types</span></a>
   </li>  
     </ul>
   </li>
@@ -184,13 +184,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-acknowledgments" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Acknowledgments</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-references" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">References</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-acknowledgments">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-references">    
         <li>
     <a class="dropdown-item" href="./references.html">
- <span class="dropdown-text">References</span></a>
+ <span class="dropdown-text">Informational Sources</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./packages.html">
@@ -278,7 +278,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>A practice worth adopting immediately, regardless of what data you’re working with: <strong>never write credentials directly into a script.</strong> Store them as environment variables in a <code>.Renviron</code> file (which should never be committed to version control), and read them in using <code>Sys.getenv()</code> <span class="citation" data-cites="wickham2023rpkgs">(Wickham and Bryan 2023)</span>.</p>
@@ -316,7 +317,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>csv_folder <span class="ot">&lt;-</span> <span class="st">"~/Desktop/Summer 2026/snldb/output"</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>csv_folder <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"output"</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>csv_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> csv_folder,</span>
@@ -469,7 +470,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="two-types-of-keys-in-sql">Two Types of Keys in SQL</h3>
 <p>A <strong>primary key</strong> is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed.</p>
 <p>A <strong>foreign key</strong> is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental.</p>
-<p>For more information of keys along with indexing in SQL see the <a href="./SQL_Scrolly.html#relational-keys">Informational Resource on Relational aspect of SQL and Keys</a>.</p>
+<p>For more information of keys along with indexing in SQL see the <a href="./SQL_Scrolly.html#relational-keys">Relational aspect of SQL and Keys page in the Theoretical Foundations section of the site.</a>.</p>
 </section>
 <section id="inspecting-the-database-before-changing-anything" class="level3">
 <h3 class="anchored" data-anchor-id="inspecting-the-database-before-changing-anything">Inspecting the Database Before Changing Anything</h3>
