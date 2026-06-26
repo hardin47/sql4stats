@@ -1,5 +1,5 @@
 ---
-title: "References"
+title: "R Packages"
 bibliography: packages.bib
 nocite: '@*'
 ---
