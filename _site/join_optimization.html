@@ -539,34 +539,34 @@ window.Quarto = {
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>auto_plan  <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Aggregate  (cost=2904.66..2904.67 rows=1 width=8) (actual time=1278.549..1278.551 rows=1 loops=1)"                                                
- [2] "  -&gt;  Nested Loop  (cost=805.26..2898.52 rows=2457 width=0) (actual time=13.766..1042.761 rows=5854758 loops=1)"                                  
+<pre><code> [1] "Aggregate  (cost=2904.66..2904.67 rows=1 width=8) (actual time=1306.231..1306.233 rows=1 loops=1)"                                                
+ [2] "  -&gt;  Nested Loop  (cost=805.26..2898.52 rows=2457 width=0) (actual time=14.653..1067.498 rows=5854758 loops=1)"                                  
  [3] "        Join Filter: (u.id = b.userid)"                                                                                                           
- [4] "        -&gt;  Nested Loop  (cost=804.97..2858.88 rows=71 width=8) (actual time=13.741..60.969 rows=45869 loops=1)"                                  
- [5] "              -&gt;  Hash Join  (cost=804.55..2773.90 rows=25 width=12) (actual time=13.682..23.857 rows=2287 loops=1)"                              
+ [4] "        -&gt;  Nested Loop  (cost=804.97..2858.88 rows=71 width=8) (actual time=14.633..64.863 rows=45869 loops=1)"                                  
+ [5] "              -&gt;  Hash Join  (cost=804.55..2773.90 rows=25 width=12) (actual time=14.572..25.090 rows=2287 loops=1)"                              
  [6] "                    Hash Cond: (p.owneruserid = u.id)"                                                                                            
- [7] "                    -&gt;  Seq Scan on posts p  (cost=0.00..1959.70 rows=3676 width=8) (actual time=0.017..9.211 rows=3552 loops=1)"                 
+ [7] "                    -&gt;  Seq Scan on posts p  (cost=0.00..1959.70 rows=3676 width=8) (actual time=0.015..9.450 rows=3552 loops=1)"                 
  [8] "                          Filter: (score &gt; 10)"                                                                                                   
  [9] "                          Rows Removed by Filter: 88424"                                                                                          
-[10] "                    -&gt;  Hash  (cost=801.06..801.06 rows=279 width=4) (actual time=13.650..13.651 rows=305 loops=1)"                               
+[10] "                    -&gt;  Hash  (cost=801.06..801.06 rows=279 width=4) (actual time=14.545..14.545 rows=305 loops=1)"                               
 [11] "                          Buckets: 1024  Batches: 1  Memory Usage: 19kB"                                                                          
-[12] "                          -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.007..13.474 rows=305 loops=1)"             
+[12] "                          -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.007..14.381 rows=305 loops=1)"             
 [13] "                                Filter: (reputation &gt; 1000)"                                                                                      
 [14] "                                Rows Removed by Filter: 40020"                                                                                    
-[15] "              -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.015 rows=20 loops=2287)"   
+[15] "              -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.016 rows=20 loops=2287)"   
 [16] "                    Index Cond: (postid = p.id)"                                                                                                  
 [17] "                    Filter: (votetypeid = 2)"                                                                                                     
 [18] "                    Rows Removed by Filter: 3"                                                                                                    
-[19] "        -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.002..0.012 rows=128 loops=45869)"
+[19] "        -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.002..0.013 rows=128 loops=45869)"
 [20] "              Index Cond: (userid = p.owneruserid)"                                                                                               
 [21] "              Heap Fetches: 0"                                                                                                                    
-[22] "Planning Time: 2.820 ms"                                                                                                                          
-[23] "Execution Time: 1278.635 ms"                                                                                                                      </code></pre>
+[22] "Planning Time: 2.597 ms"                                                                                                                          
+[23] "Execution Time: 1306.329 ms"                                                                                                                      </code></pre>
 </div>
 </div>
 <p>Following the rows from the bottom up: PostgreSQL begins with two filtered scans. It scans <code>posts</code> and keeps only the 3,552 rows with <code>score &gt; 10</code> (line 7, discarding 88,424), and scans <code>users</code> to keep the 305 with <code>reputation &gt; 1000</code> (line 12), building a hash table on those users (line 10). Those two filtered inputs meet at the <code>hash join</code> (line 5), which matches <code>posts</code> to their <code>owners</code> on <code>owneruserid</code> and emits 2,287 rows. From there the rows flow upward through two <code>nested loops</code>: the first probes <code>votes</code> by index once per post (line 15), growing the result to 45,869 rows, and the second probes <code>badges</code> by index once per user (line 19), ballooning it to 5,854,758. Those rows finally arrive at the <code>Aggregate</code> (line 1), which collapses them into a single count.</p>
 <p>Notice that we wrote the bad order in the <code>FROM</code> clause, but with reordering left enabled (<code>join_collapse_limit</code> at its default), the planner ignored our written order entirely. It led with <code>posts</code> and <code>users</code> — the two tables carrying the <code>WHERE</code> filters, and therefore the most selective — and pushed the unfiltered fan-out to the very end. Left to its own devices, the planner reconstructs something close to the good order on its own.</p>
-<p>Each node reports <code>actual time=startup..total</code>, where the total is cumulative and measured per loop. Reading these upward shows the cost concentrating in one place: everything through the hash join finishes early, the first nested loop shortly after, and then the top nested loop dominates the runtime. That final node is the whole query. It turns 45,869 input rows into 5,854,758 output rows because each user owns roughly 128 badges (<code>rows=128 loops=45869</code> on line 19), and pushing those 5.85 million rows through the join filter is where the bulk of the 1279 ms runtime lives.</p>
+<p>Each node reports <code>actual time=startup..total</code>, where the total is cumulative and measured per loop. Reading these upward shows the cost concentrating in one place: everything through the hash join finishes early, the first nested loop shortly after, and then the top nested loop dominates the runtime. That final node is the whole query. It turns 45,869 input rows into 5,854,758 output rows because each user owns roughly 128 badges (<code>rows=128 loops=45869</code> on line 19), and pushing those 5.85 million rows through the join filter is where the bulk of the 1306 ms runtime lives.</p>
 </section>
 <section id="manually-defined-inefficient-join" class="level4">
 <h4 class="anchored" data-anchor-id="manually-defined-inefficient-join">Manually Defined, Inefficient Join</h4>
@@ -595,30 +595,30 @@ window.Quarto = {
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>forced_plan  <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Aggregate  (cost=4672.77..4672.78 rows=1 width=8) (actual time=4987.490..4987.492 rows=1 loops=1)"                                                         
- [2] "  -&gt;  Nested Loop  (cost=1.01..4666.63 rows=2457 width=0) (actual time=0.030..4713.017 rows=5854758 loops=1)"                                              
- [3] "        -&gt;  Nested Loop  (cost=0.58..1719.61 rows=867 width=4) (actual time=0.023..1183.819 rows=292650 loops=1)"                                          
- [4] "              -&gt;  Nested Loop  (cost=0.29..1449.36 rows=552 width=8) (actual time=0.016..5.975 rows=12371 loops=1)"                                        
- [5] "                    -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.006..3.240 rows=305 loops=1)"                             
+<pre><code> [1] "Aggregate  (cost=4672.77..4672.78 rows=1 width=8) (actual time=5049.930..5049.931 rows=1 loops=1)"                                                         
+ [2] "  -&gt;  Nested Loop  (cost=1.01..4666.63 rows=2457 width=0) (actual time=0.049..4773.176 rows=5854758 loops=1)"                                              
+ [3] "        -&gt;  Nested Loop  (cost=0.58..1719.61 rows=867 width=4) (actual time=0.028..1199.344 rows=292650 loops=1)"                                          
+ [4] "              -&gt;  Nested Loop  (cost=0.29..1449.36 rows=552 width=8) (actual time=0.021..6.100 rows=12371 loops=1)"                                        
+ [5] "                    -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.009..3.284 rows=305 loops=1)"                             
  [6] "                          Filter: (reputation &gt; 1000)"                                                                                                     
  [7] "                          Rows Removed by Filter: 40020"                                                                                                   
  [8] "                    -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..2.28 rows=4 width=4) (actual time=0.002..0.006 rows=41 loops=305)"
  [9] "                          Index Cond: (userid = u.id)"                                                                                                     
 [10] "                          Heap Fetches: 0"                                                                                                                 
-[11] "              -&gt;  Index Scan using idx_posts_owneruserid on posts p  (cost=0.29..0.48 rows=1 width=8) (actual time=0.009..0.094 rows=24 loops=12371)"      
+[11] "              -&gt;  Index Scan using idx_posts_owneruserid on posts p  (cost=0.29..0.48 rows=1 width=8) (actual time=0.009..0.095 rows=24 loops=12371)"      
 [12] "                    Index Cond: (owneruserid = b.userid)"                                                                                                  
 [13] "                    Filter: (score &gt; 10)"                                                                                                                  
 [14] "                    Rows Removed by Filter: 246"                                                                                                           
-[15] "        -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.002..0.011 rows=20 loops=292650)"                
+[15] "        -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.011 rows=20 loops=292650)"                
 [16] "              Index Cond: (postid = p.id)"                                                                                                                 
 [17] "              Filter: (votetypeid = 2)"                                                                                                                    
 [18] "              Rows Removed by Filter: 2"                                                                                                                   
-[19] "Planning Time: 0.216 ms"                                                                                                                                   
-[20] "Execution Time: 4987.537 ms"                                                                                                                               </code></pre>
+[19] "Planning Time: 0.218 ms"                                                                                                                                   
+[20] "Execution Time: 5049.981 ms"                                                                                                                               </code></pre>
 </div>
 </div>
 <p>Following the rows from the bottom up: with reordering forbidden (<code>join_collapse_limit = 1</code>), the engine must honor the literal <code>FROM</code> order, so it starts where we told it to — the unfiltered tables. It scans <code>users</code>, keeping the 305 rows with <code>reputation &gt; 1000</code> (line 5), and for each one probes <code>badges</code> by index (line 8), producing 12,371 rows. That result drives a nested loop into <code>posts</code> (line 11), probed once per badge — 12,371 loops — which grows the result to 292,650 rows. Those in turn drive a nested loop into <code>votes</code> (line 15), probed 292,650 times, fanning out to 5,854,758 rows before the <code>Aggregate</code> (line 1) collapses them to a single count. Every join is a nested loop, and no hash table appears anywhere.</p>
-<p>Compare the intermediate row counts to the free plan. There, the engine led with the two filtered tables and kept early results tiny — the first join carried 2,287 rows, the next 45,869. Here, forbidden from leading with the selective filters, the engine carries 12,371 rows out of the very first join and 292,650 out of the second. The same 5.85 million rows arrive at the top in both plans, but the forced order hauls a far larger intermediate result through the back half of the tree, and pays for it one row at a time: the <code>votes</code> index scan (line 15) executes across 292,650 loops rather than the 2,287 loops of the free plan. The slowdown shows up directly in the totals — execution time rises from roughly 1279 ms to 4988 ms (line 20), a 3.9-fold penalty for a query returning the identical single number.</p>
+<p>Compare the intermediate row counts to the free plan. There, the engine led with the two filtered tables and kept early results tiny — the first join carried 2,287 rows, the next 45,869. Here, forbidden from leading with the selective filters, the engine carries 12,371 rows out of the very first join and 292,650 out of the second. The same 5.85 million rows arrive at the top in both plans, but the forced order hauls a far larger intermediate result through the back half of the tree, and pays for it one row at a time: the <code>votes</code> index scan (line 15) executes across 292,650 loops rather than the 2,287 loops of the free plan. The slowdown shows up directly in the totals — execution time rises from roughly 1306 ms to 5050 ms (line 20), a 3.9-fold penalty for a query returning the identical single number.</p>
 <p>This is the worst case the earlier boxplots only hinted at — a bad order and the most order-sensitive algorithm, combined, on a query the planner would otherwise have rescued. The top join still emits the same 5.85 million rows it always did, and the planner still expected only 2,457; what changed is that we stripped away its two best safeguards — the freedom to lead with the selective tables, and the option to use a hash join where a nested loop explodes. Left alone, it used both. Forced, it can use neither.</p>
 </section>
 </section>
