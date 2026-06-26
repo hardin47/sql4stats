@@ -32,7 +32,7 @@ library(duckdb)
 library(RPostgres)
 
 data(gapminder)
-glimpse(gapminder)
+gapminder
 ```
 
 ---
