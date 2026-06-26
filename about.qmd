@@ -18,6 +18,6 @@ As of June 2026, I'm between my junior and senior years at [Pomona College](http
 Hi, I'm Sebastian, a rising sophomore at [Pomona College](https://pomona.edu) studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
 
 
-# Support
+# Acknowledgments
 
 This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible.
