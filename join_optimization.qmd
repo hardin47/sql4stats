@@ -22,11 +22,10 @@ When you write a multi-table `JOIN`, you specify which tables connect and on wha
 This simulation isolates and measures the impacts of two main optimization decisions:
 
 - **Join strategy** — the physical algorithm used to match rows between two tables. PostgreSQL has three: **Nested Loop**, **Hash Join**, and **Merge Join**.
-For more information on these strategies, see the <a href="joins.qmd">Joins page</a>.
+For more information on these strategies, see the <a href="joins.qmd">Joins page in the Theoretical Foundations section of the site</a>.
 - **Join order** — the sequence in which tables are brought into the join. Starting from heavily-filtered small tables keeps intermediate results tiny; starting from large unfiltered tables forces the engine to carry millions of rows through every step.
 
 Normally the planner picks both automatically using table statistics and cost estimates.To *see* the effect of each choice, we override the planner with session-level `SET` commands, force one strategy and one order at a time, and time the result. This is mostly a teaching device — in production you almost always let the planner decide.
-
 
 
 ## Setup
@@ -406,7 +405,7 @@ Reading this table. The auto-optimized rows show what the planner does when left
 What separates the plans is not the size of the individual errors but where they fall and how many rows pass through them. Trace the actual column down each plan. In the auto and good plans, the early joins stay small — the hash join emits 2,287 rows, the next nested loop 45,869 — and the catastrophic fan-out to 5.85 million only happens at the final node. In the forced bad order, the row count is already inflated much earlier: the first nested loop emits 12,371 rows, the second 292,650, and the underestimated index scans beneath them (q-errors of ~3e5 and ~9.7e5) are therefore executed across hundreds of thousands of loops rather than a few thousand. The same per-row estimation error costs far more when it sits under a node looping 292,650 times than one looping 2,287 times.
 This is the mechanism behind the timing differences. A bad order isn't slow by definition — it's slow because it forces the planner's already-wrong estimates to be paid out over much larger intermediate results. The planner costs each plan believing the top join will emit ~2,450 rows (it emits 5.85 million in all three), but in the bad-order plan that misestimate is compounded by every node beneath it also carrying a bloated row count. With accurate leaf statistics the planner would never have chosen a nested loop at the top at all; the cascading underestimate is what makes the expensive plan look cheap.
 
-It is also important to recognize that PostgreSQL's cardinality estimation methods are deeply flawed, and can sometimes produce catastrophic results on complex multi-table joins. Analysis of these methods goes beyond the scope of this project, but @Han2021 produced a study comparing the performance of existing cardinality estimation methods, including contemporary machine-learning and statistically motivated algorithms. It is a very interesting read and explains the deeper mechanics underlying query performance on real-world benchmark datasets. 
+It is also important to recognize that PostgreSQL's cardinality estimation methods are deeply flawed, and can sometimes produce catastrophic results on complex multi-table joins. Analysis of these methods goes beyond the scope of this project, but [@Han2021](references.qmd) produced a study comparing the performance of existing cardinality estimation methods, including contemporary machine-learning and statistically motivated algorithms. It is a very interesting read and explains the deeper mechanics underlying query performance on real-world benchmark datasets. 
 
 ```{r}
 #| echo: false
