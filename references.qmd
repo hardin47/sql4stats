@@ -1,5 +1,5 @@
 ---
-title: "References"
+title: "Informational Resources"
 bibliography: references.bib
 nocite: '@*'
 ---
