@@ -15,7 +15,7 @@ execute:
 
 ## Introduction
 
-This page reports the results of two controlled benchmarking experiments examining how DuckDB query performance changes as a function of (1) the number of Parquet files queried and (2) the total number of rows in those files. Both experiments use DuckDB’s `read_parquet()` function to query files directly from disk without loading them into a native DuckDB database first. For background on Parquet’s internal structure and how DuckDB reads Parquet files, see the [File Formats, Parquet & DuckDB page in the Theoretical Foundations section of the site.](parquet.qmd).
+This page reports the results of two controlled benchmarking experiments examining how DuckDB query performance changes as a function of (1) the number of Parquet files queried and (2) the total number of rows in those files. Both experiments use DuckDB’s `read_parquet()` function to query files directly from disk without loading them into a native DuckDB database first. For background on Parquet’s internal structure and how DuckDB reads Parquet files, see the [File Formats, Parquet & DuckDB page in the Theoretical Foundations section of the site](parquet.qmd).
 
 Two query types are benchmarked throughout:
 
