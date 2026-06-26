@@ -20,4 +20,4 @@ Hi, I'm Sebastian, and I'm in the class of 2029 [Pomona College](https://pomona.
 
 # Acknowledgments
 
-This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible.
+This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible. Many thanks to Professor Hardin for her guidance and support in this project!
