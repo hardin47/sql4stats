@@ -71,16 +71,8 @@ library(here)
 
 A practice worth adopting immediately, regardless of what data you're working with: **never write credentials directly into a script.** Store them as environment variables in a `.Renviron` file (which should never be committed to version control), and read them in using `Sys.getenv()` [@wickham2023rpkgs].
 
-```{r}
-#| eval: true
-#| output: false
-#| warning: false
-#| message: false
-SQL_USER <- Sys.getenv("SQL_USER")
-SQL_PWD  <- Sys.getenv("SQL_PWD")
-SQL_HOST <- Sys.getenv("SQL_HOST")
-SQL_DB   <- "snl"
-```
+
+Note: to run the code below, you need to have a local MySQL server on your personal computer. On a Mac, the installation might be as straightforward as running `brew install mysql` in the terminal.
 
 ```{r}
 #| eval: true
@@ -91,10 +83,10 @@ Sys.setenv(MySQL_TLS_DISABLE_PEER_VERIFICATION = 1)
 
 con_snl <- DBI::dbConnect(
   RMySQL::MySQL(),
-  host = SQL_HOST,
-  user = SQL_USER,
-  password = SQL_PWD,
-  dbname = SQL_DB,
+  host = "127.0.0.1",
+  user = Sys.getenv("SQL_USER"),
+  password = Sys.getenv("SQL_PWD"),
+  dbname = "snl",
   load_data_local_infile = FALSE
 )
 
@@ -132,7 +124,7 @@ if (length(csv_files) == 0) {
 #| eval: true
 csv_check <- map_dfr(csv_files, function(file_path) {
   df <- read_csv(file_path, show_col_types = FALSE)
-  
+
   tibble(
     file = basename(file_path),
     rows = nrow(df),
@@ -150,7 +142,7 @@ The script above produces a small summary table — file name, row count, column
 SQL table names have stricter rules than file names: no spaces, no leading numbers, no arbitrary punctuation. Rather than handling an ad hoc for every file, it’s worth writing a small helper function that any future project can reuse:
 
 ```{r}
-#| eval: false
+#| eval: true
 clean_table_name <- function(file_path) {
   file_path |>
     basename() |>
@@ -166,59 +158,65 @@ clean_table_name <- function(file_path) {
 There is a temptation, with a clean CSV, to dump the whole thing into a database using a single `INSERT` statement. In practice, a single dump is often slower and less stable than chunking the upload — especially over a network connection to a remote server, where one enormous statement can often time out or simply get rejected outright. Therefore, the safest way to create a database is to upload data in chunks.
 
 ```{r}
-#| eval: false
+#| eval: true
 upload_csv_to_sql <- function(file_path) {
   table_name <- clean_table_name(file_path)
-  
+
   message("Reading ", basename(file_path), "...")
-  
+
   df <- readr::read_csv(file_path, show_col_types = FALSE) |>
     janitor::clean_names()
-  
+
   message("Rows in CSV: ", nrow(df))
   message("Columns in CSV: ", ncol(df))
-  
+
   if (nrow(df) == 0) {
     stop("CSV has 0 rows: ", basename(file_path))
   }
-  
+
   message("Uploading as table `", table_name, "`...")
-  
+
   DBI::dbExecute(con_snl, paste0("DROP TABLE IF EXISTS `", table_name, "`;"))
-  
+
   DBI::dbCreateTable(
     conn = con_snl,
     name = table_name,
     fields = df
   )
-  
+
   chunk_size <- 250
   n <- nrow(df)
   starts <- seq(1, n, by = chunk_size)
-  
+
   for (start in starts) {
     end <- min(start + chunk_size - 1, n)
     chunk <- df[start:end, ]
-    
+
     insert_sql <- DBI::sqlAppendTable(
       con_snl,
       table = DBI::Id(table = table_name),
       values = chunk,
       row.names = FALSE
     )
-    
+
     DBI::dbExecute(con_snl, insert_sql)
-    
+
     message("Uploaded rows ", start, " to ", end, " of ", n)
   }
-  
+
   row_count <- DBI::dbGetQuery(
     con_snl,
     paste0("SELECT COUNT(*) AS n_rows FROM `", table_name, "`;")
   )
-  
-  message("Finished uploading `", table_name, "` with ", row_count$n_rows, " rows.")
-  
+
+  message(
+    "Finished uploading `",
+    table_name,
+    "` with ",
+    row_count$n_rows,
+    " rows."
+  )
+
   tibble::tibble(
     table_name = table_name,
     uploaded_rows = row_count$n_rows
@@ -233,7 +231,7 @@ The function **drops and recreates the table** before uploading, rather than app
 The **row-count confirmation at the end** closes the loop. It is important to verify that the row count of the uploaded tables aligns with the known number of rows of the CSV file, from the earlier validation step.
 
 ```{r}
-#| eval: false
+#| eval: true
 upload_results <- purrr::map_dfr(csv_files, upload_csv_to_sql)
 upload_results
 ```
@@ -267,7 +265,7 @@ DBI::dbListTables(con_snl)
 ```
 
 ```{r}
-#| eval: false
+#| eval: true
 DBI::dbGetQuery(con_snl, "DESCRIBE actors;")
 DBI::dbGetQuery(con_snl, "DESCRIBE appearances;")
 DBI::dbGetQuery(con_snl, "DESCRIBE casts;")
@@ -306,16 +304,33 @@ Rather than trust that an ID column satisfies the three conditions above, it’s
 ```{r}
 #| eval: false
 check_key <- function(table, col) {
-  DBI::dbGetQuery(con_snl, paste0("
+  DBI::dbGetQuery(
+    con_snl,
+    paste0(
+      "
     SELECT 
-      '", table, "' AS table_name,
-      '", col, "' AS column_name,
+      '",
+      table,
+      "' AS table_name,
+      '",
+      col,
+      "' AS column_name,
       COUNT(*) AS total_rows,
-      COUNT(`", col, "`) AS non_missing,
-      COUNT(DISTINCT `", col, "`) AS distinct_values,
-      SUM(`", col, "` IS NULL) AS missing_values
-    FROM `", table, "`;
-  "))
+      COUNT(`",
+      col,
+      "`) AS non_missing,
+      COUNT(DISTINCT `",
+      col,
+      "`) AS distinct_values,
+      SUM(`",
+      col,
+      "` IS NULL) AS missing_values
+    FROM `",
+      table,
+      "`;
+  "
+    )
+  )
 }
 
 primary_key_checks <- dplyr::bind_rows(
@@ -346,23 +361,29 @@ A foreign key constraint, once created, *requires* that every value in the child
 
 ```{r}
 #| eval: false
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT c.*
   FROM casts c
   LEFT JOIN episodes e
     ON c.first_epid = e.epid
   WHERE c.first_epid IS NOT NULL
     AND e.epid IS NULL;
-")
+"
+)
 
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT h.*
   FROM hosts h
   LEFT JOIN actors a
     ON h.aid = a.aid
   WHERE h.aid IS NOT NULL
     AND a.aid IS NULL;
-")
+"
+)
 ```
 
 This `LEFT JOIN ... WHERE parent.key IS NULL` pattern directly answers "which rows in my child table don't have a matching parent?" regardless of what the entities actually are.
@@ -375,23 +396,29 @@ Once you’ve found orphan values, you have to decide what to do about them. Gen
 
 ```{r}
 #| eval: false
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   UPDATE casts c
   LEFT JOIN episodes e
     ON c.first_epid = e.epid
   SET c.first_epid = NULL
   WHERE c.first_epid IS NOT NULL
     AND e.epid IS NULL;
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   UPDATE hosts h
   LEFT JOIN actors a
     ON h.aid = a.aid
   SET h.aid = NULL
   WHERE h.aid IS NOT NULL
     AND a.aid IS NULL;
-")
+"
+)
 ```
 
 Setting the observed value to `NULL` here is a deliberately conservative choice: rather than guessing at what the "correct" episode or actor should have been (and risking a false relationship that looks valid but isn't), the missing-link information is preserved as openly missing.
@@ -403,16 +430,41 @@ The same orphan-check pattern from before doubles as a verification step after t
 ```{r}
 #| eval: false
 check_fk <- function(child_table, child_col, parent_table, parent_col) {
-  DBI::dbGetQuery(con_snl, paste0("
+  DBI::dbGetQuery(
+    con_snl,
+    paste0(
+      "
     SELECT 
-      '", child_table, ".", child_col, " -> ", parent_table, ".", parent_col, "' AS relationship,
+      '",
+      child_table,
+      ".",
+      child_col,
+      " -> ",
+      parent_table,
+      ".",
+      parent_col,
+      "' AS relationship,
       COUNT(*) AS orphan_count
-    FROM `", child_table, "` c
-    LEFT JOIN `", parent_table, "` p
-      ON c.`", child_col, "` = p.`", parent_col, "`
-    WHERE c.`", child_col, "` IS NOT NULL
-      AND p.`", parent_col, "` IS NULL;
-  "))
+    FROM `",
+      child_table,
+      "` c
+    LEFT JOIN `",
+      parent_table,
+      "` p
+      ON c.`",
+      child_col,
+      "` = p.`",
+      parent_col,
+      "`
+    WHERE c.`",
+      child_col,
+      "` IS NOT NULL
+      AND p.`",
+      parent_col,
+      "` IS NULL;
+  "
+    )
+  )
 }
 
 fk_checks <- dplyr::bind_rows(
@@ -422,21 +474,21 @@ fk_checks <- dplyr::bind_rows(
   check_fk("appearances", "impid", "impressions", "impid"),
   check_fk("appearances", "epid", "episodes", "epid"),
   check_fk("appearances", "sid", "seasons", "sid"),
-  
+
   check_fk("casts", "aid", "actors", "aid"),
   check_fk("casts", "sid", "seasons", "sid"),
   check_fk("casts", "first_epid", "episodes", "epid"),
   check_fk("casts", "last_epid", "episodes", "epid"),
-  
+
   check_fk("episodes", "sid", "seasons", "sid"),
-  
+
   check_fk("hosts", "epid", "episodes", "epid"),
   check_fk("hosts", "aid", "actors", "aid"),
-  
+
   check_fk("titles", "epid", "episodes", "epid"),
   check_fk("titles", "skid", "sketches", "skid"),
   check_fk("titles", "sid", "seasons", "sid"),
-  
+
   check_fk("tenure", "aid", "actors", "aid")
 )
 
@@ -533,10 +585,13 @@ Two of the primary key creations in the SNL database deserve a second look, beca
 
 ```{r}
 #| eval: false
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD COLUMN appearance_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-")
+"
+)
 ```
 
 `AUTO_INCREMENT` means the database assigns each new row the next sequential integer automatically. Surrogate keys are extremely common in practice; in fact, in many production database designs, *every* table gets an auto-incrementing surrogate key by default, specifically to sidestep the exact problem of no natural identifier before it ever comes up.
@@ -547,31 +602,40 @@ The original plan for `hosts` was a composite key of `(epid, aid)`: the same log
 
 ```{r}
 #| eval: false
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT
     SUM(epid IS NULL) AS missing_epid,
     SUM(aid IS NULL) AS missing_aid
   FROM hosts;
-")
+"
+)
 ```
 
 ```{r}
 #| eval: false
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT *
   FROM hosts
   WHERE aid IS NULL;
-")
+"
+)
 ```
 
 This check found exactly one row with a missing `aid`, likely a host who isn't (or wasn't, at the time of scraping) a cast member with an actor ID on file. Because of that single missing value, `(epid, aid)` is disqualified as a primary key outright; SQL would refuse to create it. The fix is the same surrogate-key pattern as before:
 
 ```{r}
 #| eval: false
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE hosts
   ADD COLUMN host_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-")
+"
+)
 ```
 
 **A key design that looks correct in theory can be invalidated by a single bad value in practice**, and it’s much better to discover that during a deliberate check than to discover it as a cryptic constraint-creation error later. Always verify potential keys before you commit to establishing the keys associated with the database.
@@ -583,112 +647,163 @@ With primary keys, type compatibility, and orphan values all resolved, the forei
 ```{r}
 #| eval: false
 # appearances foreign keys
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_actor
   FOREIGN KEY (aid) REFERENCES actors(aid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_title
   FOREIGN KEY (tid) REFERENCES titles(tid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_character
   FOREIGN KEY (charid) REFERENCES characters(charid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_impression
   FOREIGN KEY (impid) REFERENCES impressions(impid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_episode
   FOREIGN KEY (epid) REFERENCES episodes(epid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE appearances
   ADD CONSTRAINT fk_appearances_season
   FOREIGN KEY (sid) REFERENCES seasons(sid);
-")
+"
+)
 
 # casts foreign keys
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE casts
   ADD CONSTRAINT fk_casts_actor
   FOREIGN KEY (aid) REFERENCES actors(aid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE casts
   ADD CONSTRAINT fk_casts_season
   FOREIGN KEY (sid) REFERENCES seasons(sid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE casts
   ADD CONSTRAINT fk_casts_first_episode
   FOREIGN KEY (first_epid) REFERENCES episodes(epid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE casts
   ADD CONSTRAINT fk_casts_last_episode
   FOREIGN KEY (last_epid) REFERENCES episodes(epid);
-")
+"
+)
 
 # episodes foreign key
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE episodes
   ADD CONSTRAINT fk_episodes_season
   FOREIGN KEY (sid) REFERENCES seasons(sid);
-")
+"
+)
 
 # hosts foreign keys
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE hosts
   ADD CONSTRAINT fk_hosts_episode
   FOREIGN KEY (epid) REFERENCES episodes(epid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE hosts
   ADD CONSTRAINT fk_hosts_actor
   FOREIGN KEY (aid) REFERENCES actors(aid);
-")
+"
+)
 
 # titles foreign keys
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE titles
   ADD CONSTRAINT fk_titles_episode
   FOREIGN KEY (epid) REFERENCES episodes(epid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE titles
   ADD CONSTRAINT fk_titles_sketch
   FOREIGN KEY (skid) REFERENCES sketches(skid);
-")
+"
+)
 
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE titles
   ADD CONSTRAINT fk_titles_season
   FOREIGN KEY (sid) REFERENCES seasons(sid);
-")
+"
+)
 
 # tenure foreign key
-DBI::dbExecute(con_snl, "
+DBI::dbExecute(
+  con_snl,
+  "
   ALTER TABLE tenure
   ADD CONSTRAINT fk_tenure_actor
   FOREIGN KEY (aid) REFERENCES actors(aid);
-")
+"
+)
 ```
 
 After keys have been established is the moment the database actually becomes “relational” in the formal sense. From this point forward, the database itself, enforces the relationships
@@ -699,7 +814,9 @@ Finally, it’s worth confirming what was actually built, both as a sanity check
 
 ```{r}
 #| eval: false
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT 
     table_name,
     column_name,
@@ -709,12 +826,15 @@ DBI::dbGetQuery(con_snl, "
   FROM information_schema.key_column_usage
   WHERE table_schema = 'snl'
   ORDER BY table_name, constraint_name, ordinal_position;
-")
+"
+)
 ```
 
 ```{r}
 #| eval: false
-DBI::dbGetQuery(con_snl, "
+DBI::dbGetQuery(
+  con_snl,
+  "
   SELECT 
     table_name,
     GROUP_CONCAT(column_name ORDER BY ordinal_position SEPARATOR ', ') AS primary_key
@@ -723,7 +843,8 @@ DBI::dbGetQuery(con_snl, "
     AND constraint_name = 'PRIMARY'
   GROUP BY table_name
   ORDER BY table_name;
-")
+"
+)
 ```
 
 Querying `information_schema` on every standard SQL database shows its own structure through this same metadata schema, so the exact query pattern (perhaps with a different `table_schema`name) works for inspecting keys in any database you encounter, not just this one.

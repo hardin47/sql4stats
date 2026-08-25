@@ -47,17 +47,20 @@ library(knitr)
 con <- dbConnect(
   RPostgres::Postgres(),
   dbname = "stats",
-  host   = "127.0.0.1",
-  port   = 5432,
-  user   = Sys.info()[["user"]]
+  host = "127.0.0.1",
+  port = 5432,
+  user = Sys.getenv("PG_USER"),
+  password = Sys.getenv("PG_PWD")
 )
 ```
 
-First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability. 
+First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability. Note: to run the code below, you need to have a local PostgreSQL server on your personal computer. On a Mac, the installation might be as straightforward as running `brew install postgresql@16` in the terminal. We use the default / existing "postgres" database.
 
 We'll be using STATS-CEB, an anonymized dump of user-contributed content from the <a href ="https://stats.stackexchange.com/"> Stats StackExchange Network </a>, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by [@Han2021](references.qmd) and included in the paper's <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. Follow the instructions in the README for downloading PostgreSQL and the dataset. 
 
 For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="sql_upload_guide.qmd">Data Upload Tutorial</a>. 
+
+You will need to create a table in your local MySQL server called "stats" and add the STATS-CEB data from <a href = "https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark" target = "_blank">https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark</a>.  
 
 
 ### Indexing the Tables
@@ -66,9 +69,18 @@ First, we need to create indexes on the columns involved in the joins we're perf
 
 ```{r}
 #| output: false
-dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)")
-dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)")
-dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)")
+dbExecute(
+  con,
+  "CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)"
+)
+dbExecute(
+  con,
+  "CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)"
+)
+dbExecute(
+  con,
+  "CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)"
+)
 ```
 
 ### Simulation Settings
@@ -142,7 +154,6 @@ To get a stable measurement we run one throwaway query first. This loads the rel
 ```{r}
 #| label: warm-harness
 run_repeated_warm <- function(con, query, n = 10) {
-
   # Warm-up run: loads pages into cache, result discarded
   dbGetQuery(con, paste("EXPLAIN ANALYZE", query))
 
@@ -151,14 +162,16 @@ run_repeated_warm <- function(con, query, n = 10) {
     lines <- dbGetQuery(con, paste("EXPLAIN ANALYZE", query))[[1]]
 
     exec_time <- lines[grep("Execution Time", lines)] |>
-      str_extract("[0-9.]+") |> as.numeric()
+      str_extract("[0-9.]+") |>
+      as.numeric()
 
     plan_time <- lines[grep("Planning Time", lines)] |>
-      str_extract("[0-9.]+") |> as.numeric()
+      str_extract("[0-9.]+") |>
+      as.numeric()
 
     tibble(run = i, exec_ms = exec_time, plan_ms = plan_time)
   }) |>
-  list_rbind()
+    list_rbind()
 }
 ```
 
@@ -175,7 +188,6 @@ First, we enable the nested loop and disable hash and merge join algorithms.
 dbExecute(con, "SET enable_nestloop  = on")
 dbExecute(con, "SET enable_hashjoin  = off")
 dbExecute(con, "SET enable_mergejoin = off")
-
 ```
 
 We'll run the query once to warm the cache, then extract the results of the next 10 repetitions. 
@@ -184,9 +196,8 @@ We'll run the query once to warm the cache, then extract the results of the next
 
 results_nest_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Nested Loop", order = "good")
-results_nest_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
+results_nest_bad <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Nested Loop", order = "bad")
-
 ```
 
 Now, we'll go through the same process for hash join. 
@@ -197,7 +208,7 @@ dbExecute(con, "SET enable_hashjoin  = on")
 dbExecute(con, "SET enable_mergejoin = off")
 results_hash_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Hash Join", order = "good")
-results_hash_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
+results_hash_bad <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Hash Join", order = "bad")
 ```
 
@@ -209,7 +220,7 @@ dbExecute(con, "SET enable_hashjoin  = off")
 dbExecute(con, "SET enable_mergejoin = on")
 results_merge_good <- run_repeated_warm(con, sql_good_order, 10) |>
   mutate(join_type = "Merge Join", order = "good")
-results_merge_bad  <- run_repeated_warm(con, sql_bad_order, 10) |>
+results_merge_bad <- run_repeated_warm(con, sql_bad_order, 10) |>
   mutate(join_type = "Merge Join", order = "bad")
 
 dbExecute(con, "DISCARD ALL")
@@ -223,17 +234,20 @@ Here's a plot comparing execution times between different join orders and algori
 #| label: warm-plot
 #| fig-cap: "Warm-cache execution time across the six strategy × order combinations."
 bind_rows(
-  results_nest_good, results_nest_bad,
-  results_hash_good, results_hash_bad,
-  results_merge_good, results_merge_bad
+  results_nest_good,
+  results_nest_bad,
+  results_hash_good,
+  results_hash_bad,
+  results_merge_good,
+  results_merge_bad
 ) |>
   ggplot(aes(x = join_type, y = exec_ms, color = order)) +
   geom_boxplot() +
   labs(
-    title    = "Effect of join strategy on execution time",
+    title = "Effect of join strategy on execution time",
     subtitle = "4-table join: votes, posts, users, badges",
-    x        = "Join Strategy",
-    y        = "Execution time (ms)"
+    x = "Join Strategy",
+    y = "Execution time (ms)"
   ) +
   theme_minimal()
 ```
@@ -258,12 +272,16 @@ First, we'll run the query and allow the engine to optimize freely.
 #| label: auto-plan
 auto_plan <- dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))[[1]]
 
-auto_exec <- auto_plan |> str_subset("Execution Time") |>
-  str_extract("[0-9.]+") |> as.numeric()
-auto_plan_time <- auto_plan |> str_subset("Planning Time") |>
-  str_extract("[0-9.]+") |> as.numeric()
+auto_exec <- auto_plan |>
+  str_subset("Execution Time") |>
+  str_extract("[0-9.]+") |>
+  as.numeric()
+auto_plan_time <- auto_plan |>
+  str_subset("Planning Time") |>
+  str_extract("[0-9.]+") |>
+  as.numeric()
 
-auto_plan  # print the plan for the reader
+auto_plan # print the plan for the reader
 ```
 
 Following the rows from the bottom up: PostgreSQL begins with two filtered scans. It scans `posts` and keeps only the 3,552 rows with `score > 10` (line 7, discarding 88,424), and scans `users` to keep the 305 with `reputation > 1000` (line 12), building a hash table on those users (line 10). Those two filtered inputs meet at the `hash join` (line 5), which matches `posts` to their `owners` on `owneruserid` and emits 2,287 rows. From there the rows flow upward through two `nested loops`: the first probes `votes` by index once per post (line 15), growing the result to 45,869 rows, and the second probes `badges` by index once per user (line 19), ballooning it to 5,854,758. Those rows finally arrive at the `Aggregate` (line 1), which collapses them into a single count.
@@ -290,12 +308,16 @@ dbExecute(con, "SET enable_mergejoin = off")
 #| label: forced-plan
 forced_plan <- dbGetQuery(con, paste("EXPLAIN ANALYZE", sql_bad_order))[[1]]
 
-forced_exec <- forced_plan |> str_subset("Execution Time") |>
-  str_extract("[0-9.]+") |> as.numeric()
-forced_plan_time <- forced_plan |> str_subset("Planning Time") |>
-  str_extract("[0-9.]+") |> as.numeric()
+forced_exec <- forced_plan |>
+  str_subset("Execution Time") |>
+  str_extract("[0-9.]+") |>
+  as.numeric()
+forced_plan_time <- forced_plan |>
+  str_subset("Planning Time") |>
+  str_extract("[0-9.]+") |>
+  as.numeric()
 
-forced_plan  # print the plan for the reader
+forced_plan # print the plan for the reader
 ```
 
  Following the rows from the bottom up: with reordering forbidden (`join_collapse_limit = 1`), the engine must honor the literal `FROM` order, so it starts where we told it to — the unfiltered tables. It scans `users`, keeping the 305 rows with `reputation > 1000` (line 5), and for each one probes `badges` by index (line 8), producing 12,371 rows. That result drives a nested loop into `posts` (line 11), probed once per badge — 12,371 loops — which grows the result to 292,650 rows. Those in turn drive a nested loop into `votes` (line 15), probed 292,650 times, fanning out to 5,854,758 rows before the `Aggregate` (line 1) collapses them to a single count. Every join is a nested loop, and no hash table appears anywhere.
@@ -349,30 +371,38 @@ extract_estimates <- function(con, sql, label) {
   node_lines <- plan[grep("actual time", plan)]
 
   map(node_lines, function(line) {
-    operation <- str_extract(line,
-      "(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)")
+    operation <- str_extract(
+      line,
+      "(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"
+    )
 
     estimated <- str_extract(line, "rows=([0-9]+)\\s+width") |>
-      str_extract("[0-9]+") |> as.numeric()
+      str_extract("[0-9]+") |>
+      as.numeric()
 
-    actual <- str_extract(line, "actual time=[0-9.]+\\.\\.[0-9.]+ rows=([0-9]+)") |>
-      str_extract("[0-9]+$") |> as.numeric()
+    actual <- str_extract(
+      line,
+      "actual time=[0-9.]+\\.\\.[0-9.]+ rows=([0-9]+)"
+    ) |>
+      str_extract("[0-9]+$") |>
+      as.numeric()
 
     loops <- str_extract(line, "loops=([0-9]+)") |>
-      str_extract("[0-9]+") |> as.numeric()
+      str_extract("[0-9]+") |>
+      as.numeric()
 
     tibble(
-      label        = label,
-      operation    = operation,
-      estimated    = estimated,
-      actual       = actual,
-      loops        = loops,
+      label = label,
+      operation = operation,
+      estimated = estimated,
+      actual = actual,
+      loops = loops,
       actual_total = actual * loops,
-      q_error = max(estimated/actual_total, actual_total/estimated)
+      q_error = max(estimated / actual_total, actual_total / estimated)
     )
   }) |>
-  list_rbind() |>
-  filter(!is.na(operation), !is.na(estimated), !is.na(actual))
+    list_rbind() |>
+    filter(!is.na(operation), !is.na(estimated), !is.na(actual))
 }
 ```
 
@@ -384,7 +414,7 @@ dbExecute(con, "SET max_parallel_workers_per_gather = 0")
 # Forced orders: planner not allowed to reorder
 dbExecute(con, "SET join_collapse_limit = 1")
 good_estimates <- extract_estimates(con, sql_good_order, "forced good order")
-bad_estimates  <- extract_estimates(con, sql_bad_order,  "forced bad order")
+bad_estimates <- extract_estimates(con, sql_bad_order, "forced bad order")
 
 # Auto-optimized: planner free to choose its own order
 dbExecute(con, "SET join_collapse_limit = 8")
@@ -392,12 +422,11 @@ auto_estimates <- extract_estimates(con, sql_good_order, "auto-optimized")
 
 
 all_estimates <- bind_rows(good_estimates, bad_estimates, auto_estimates)
-
 ```
 
 ```{r}
 all_estimates |>
-  knitr:: kable()
+  knitr::kable()
 ```
 
 

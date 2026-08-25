@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -74,10 +77,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-3b131c22a8ecff6f91e3cb37a2824cbb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-f99a3f21629f021f470e5c746e28d329.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f7104779465153de3e46fc4686730ebe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-20bc9ff331f70e93dda8e15c7f15f903.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -174,8 +177,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">SQL Upload Guide</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./SQL3ways.html">
+ <span class="dropdown-text">SQL in R, 3 ways</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
  <span class="dropdown-text">Pivot Types</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./publicdata.html">
+ <span class="dropdown-text">Public SQL data</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./ggsql.html">
+ <span class="dropdown-text">ggsql as an Engine</span></a>
   </li>  
     </ul>
   </li>
@@ -265,7 +280,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Pure reshaping</strong> — changing the <em>shape</em> of data (e.g, long → wide) without performing any arithmetic on values. Data is redistributed into new columns; nothing is summarized or collapsed.</li>
 <li><strong>Cross-tabulation</strong> — reshaping <em>plus</em> aggregation. Multiple source rows sharing the same (e.g, row-group or column-group) combination are collapsed into a single cell via a summary function (mean, count, sum, etc.).</li>
 </ul>
-<p>We’ll demonstrate both using the <code>gapminder</code> dataset, which records country-level statistics at five-year intervals from 1952 to 2007. The variables we’ll use are:</p>
+<p>We’ll demonstrate both using the <code>gapminder</code> dataset (available in the <a href="https://jennybc.github.io/gapminder/articles/gapminder.html" target="_blank"><strong>gapminder</strong> R package</a>), which contains country-level statistics at five-year intervals from 1952 to 2007. The variables we’ll use are:</p>
 <ul>
 <li><code>country</code> — the unit of observation</li>
 <li><code>continent</code> — the geographic grouping</li>
@@ -344,8 +359,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>wide_tidyverse <span class="ot">&lt;-</span> gapminder <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country, year, lifeExp) <span class="sc">|&gt;</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">id_cols     =</span> country,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from  =</span> year,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">id_cols =</span> country,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from =</span> year,</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> lifeExp</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
@@ -381,16 +396,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>con_duck <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>())</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_duck, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT country, year, lifeExp FROM gapminder)</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">  USING first(lifeExp)</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort to match tidyverse output for comparison</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> wide_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(country)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  con_duck,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT country, year, lifeExp FROM gapminder)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="st">  USING first(lifeExp)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_duckdb, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort to match tidyverse output for comparison</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>wide_duckdb <span class="ot">&lt;-</span> wide_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(country)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_duckdb, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
@@ -417,27 +435,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wide_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">    country,</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1952 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1957 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1962 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1967 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1972 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1977 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1982 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1987 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1992 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1997 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2002 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2007 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY country</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY country</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_manual, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wide_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  con_duck,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">    country,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1952 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1957 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1962 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1967 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1972 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1977 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1982 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1987 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1992 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 1997 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2002 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">    MAX(CASE WHEN year = 2007 THEN lifeExp END) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY country</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY country</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_manual, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
@@ -477,7 +498,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(country) <span class="sc">|&gt;</span></span>
 <span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>country, as.numeric))</span>
 <span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(tidy_sorted, duck_sorted,   <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(tidy_sorted, duck_sorted, <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] TRUE</code></pre>
@@ -495,15 +516,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="can-crosstab-do-pure-reshaping" class="level3">
 <h3 class="anchored" data-anchor-id="can-crosstab-do-pure-reshaping">Can <code>crosstab()</code> do pure reshaping?</h3>
 <p>Short answer: <strong>not cleanly.</strong> <code>crosstab()</code> always expects exactly one triple (row_id, category, value) per row of the source query, where the value has already been aggregated. In the pure reshaping case (one value per country-year), you <em>can</em> technically pass <code>crosstab()</code> a query that produces those triples although the code is slightly more complicated than the previous options.</p>
+<p>Note: to run the code below, you need to have a local PostgreSQL server on your personal computer. On a Mac, the installation might be as straightforward as running <code>brew install postgresql@16</code> in the terminal. We use the default / existing “postgres” database.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>con_local <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  RPostgres<span class="sc">::</span><span class="fu">Postgres</span>(),</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname   =</span> <span class="st">"postgres"</span>,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host     =</span> <span class="st">"localhost"</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port     =</span> <span class="dv">5432</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user     =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_USER"</span>),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname =</span> <span class="st">"postgres"</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host =</span> <span class="st">"127.0.0.1"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_USER"</span>),</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_PWD"</span>)</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
@@ -521,23 +543,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <summary>Show the code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_local, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>wide_crosstab <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_local, <span class="st">'</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT country,</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="st">            "lifeExp"</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY country, year::text</span><span class="sc">\'</span><span class="st">,</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT DISTINCT year::text FROM gapminder ORDER BY year::text</span><span class="sc">\'</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="st">    country text,</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="st">    "1952" float, "1957" float, "1962" float, "1967" float,</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="st">    "1972" float, "1977" float, "1982" float, "1987" float,</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="st">    "1992" float, "1997" float, "2002" float, "2007" float</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="st">'</span>)</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_crosstab,<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>wide_crosstab <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  con_local,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">'</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT country,</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">            "lifeExp"</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY country, year::text</span><span class="sc">\'</span><span class="st">,</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\'</span><span class="st">SELECT DISTINCT year::text FROM gapminder ORDER BY year::text</span><span class="sc">\'</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="st">    country text,</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="st">    "1952" float, "1957" float, "1962" float, "1967" float,</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="st">    "1972" float, "1977" float, "1982" float, "1987" float,</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="st">    "1992" float, "1997" float, "2002" float, "2007" float</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wide_crosstab, <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>      country   1952   1957   1962   1967   1972   1977   1982   1987   1992
@@ -598,27 +623,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ct_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">    continent,</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1952 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1957 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1962 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1967 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1972 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1977 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1982 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1987 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1992 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1997 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2002 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2007 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>ct_manual</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ct_manual <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  con_duck,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">    continent,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1952 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1957 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1962 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1967 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1972 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1977 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1982 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1987 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1992 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 1997 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2002 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st">,</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="st">    ROUND(AVG(CASE WHEN year = 2007 THEN lifeExp END), 2) AS </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM gapminder</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>ct_manual</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>  continent  1952  1957  1962  1967  1972  1977  1982  1987  1992  1997  2002
@@ -642,15 +670,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ct_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con_duck, <span class="st">"</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT continent, year, lifeExp FROM gapminder)</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="st">  USING ROUND(AVG(lifeExp), 2)</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>ct_duckdb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ct_duckdb <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  con_duck,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="st">  PIVOT (SELECT continent, year, lifeExp FROM gapminder)</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="st">  ON year</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="st">  USING ROUND(AVG(lifeExp), 2)</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="st">  GROUP BY continent</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="st">  ORDER BY continent</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>ct_duckdb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>  continent  1952  1957  1962  1967  1972  1977  1982  1987  1992  1997  2002
@@ -676,22 +707,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <summary>Show the code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(con_local, <span class="st">"gapminder"</span>, gapminder, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con_local, <span class="st">"</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT continent,</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="st">            ROUND(AVG(</span><span class="sc">\"</span><span class="st">lifeExp</span><span class="sc">\"</span><span class="st">)::numeric, 2)</span></span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="st">     GROUP BY continent, year</span></span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY continent, year::text',</span></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT DISTINCT year::text FROM gapminder ORDER BY year::text'</span></span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="st">    continent text,</span></span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span><span class="st"> numeric</span></span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
-<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  con_local,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT * FROM crosstab(</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT continent,</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="st">            year::text,</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="st">            ROUND(AVG(</span><span class="sc">\"</span><span class="st">lifeExp</span><span class="sc">\"</span><span class="st">)::numeric, 2)</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="st">     FROM gapminder</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="st">     GROUP BY continent, year</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="st">     ORDER BY continent, year::text',</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="st">    'SELECT DISTINCT year::text FROM gapminder ORDER BY year::text'</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="st">  ) AS ct(</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="st">    continent text,</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1952</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1957</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1962</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1967</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1972</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1977</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1982</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1987</span><span class="sc">\"</span><span class="st"> numeric,</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\"</span><span class="st">1992</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">1997</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2002</span><span class="sc">\"</span><span class="st"> numeric, </span><span class="sc">\"</span><span class="st">2007</span><span class="sc">\"</span><span class="st"> numeric</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="st">  )</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>Cross-tabulation is <code>crosstab()</code>’s main use case (good naming choice!): the source query performs the <code>GROUP BY continent, year</code> aggregation first, producing one pre-aggregated (continent, year, avg_lifeExp) triple per row, which is the three-column structure <code>crosstab()</code> requires. It then reshapes those triples into the expected wide format.</p>
@@ -702,7 +736,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <details class="code-fold">
 <summary>Show the code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>manual_sorted_ct <span class="ot">&lt;-</span> ct_manual <span class="sc">|&gt;</span> <span class="fu">arrange</span>(continent)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>duck_sorted_ct   <span class="ot">&lt;-</span> ct_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(continent)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>duck_sorted_ct <span class="ot">&lt;-</span> ct_duckdb <span class="sc">|&gt;</span> <span class="fu">arrange</span>(continent)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(manual_sorted_ct, duck_sorted_ct, <span class="at">check.attributes =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>

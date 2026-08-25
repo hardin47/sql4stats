@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -39,10 +42,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-3b131c22a8ecff6f91e3cb37a2824cbb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-f99a3f21629f021f470e5c746e28d329.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f7104779465153de3e46fc4686730ebe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-20bc9ff331f70e93dda8e15c7f15f903.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -139,8 +142,20 @@ ul.task-list li input[type="checkbox"] {
  <span class="dropdown-text">SQL Upload Guide</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./SQL3ways.html">
+ <span class="dropdown-text">SQL in R, 3 ways</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
  <span class="dropdown-text">Pivot Types</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./publicdata.html">
+ <span class="dropdown-text">Public SQL data</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./ggsql.html">
+ <span class="dropdown-text">ggsql as an Engine</span></a>
   </li>  
     </ul>
   </li>
@@ -181,6 +196,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#charlie-coleman" id="toc-charlie-coleman" class="nav-link active" data-scroll-target="#charlie-coleman">Charlie Coleman</a></li>
   <li><a href="#sebastian-pollack" id="toc-sebastian-pollack" class="nav-link" data-scroll-target="#sebastian-pollack">Sebastian Pollack</a></li>
+  <li><a href="#jo-hardin" id="toc-jo-hardin" class="nav-link" data-scroll-target="#jo-hardin">Jo Hardin</a></li>
   <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments">Acknowledgments</a></li>
   </ul>
 </nav>
@@ -209,15 +225,19 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="charlie-coleman" class="level1">
 <h1>Charlie Coleman</h1>
-<p>Hi! I’m Charlie, and I’m in the class of 2027 at <a href="https://pomona.edu">Pomona College</a>. I study math and art, working primarily with Professors Jo Hardin and Michael O’Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I’m not in Estella (Pomona’s math building) or at the studio (check out my work <a href="https://charliecoleman6.github.io/art_portfolio/">here</a>), I love to cook, surf, and play guitar.</p>
+<p>Hi! I’m Charlie, and I’m in the class of 2027 at <a href="https://pomona.edu" target="_blank">Pomona College</a>. I study math and art, working primarily with Professors Jo Hardin and Michael O’Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I’m not in Estella (Pomona’s math building) or at the studio (check out <a href="https://charliecoleman6.github.io/art_portfolio/" target="_blank">my work</a>), I love to cook, surf, and play guitar.</p>
 </section>
 <section id="sebastian-pollack" class="level1">
 <h1>Sebastian Pollack</h1>
-<p>Hi, I’m Sebastian, a member of the class of 2029 at <a href="https://pomona.edu">Pomona College</a> studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.</p>
+<p>Hi, I’m Sebastian, a member of the class of 2029 at <a href="https://pomona.edu" target="_blank">Pomona College</a> studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.</p>
+</section>
+<section id="jo-hardin" class="level1">
+<h1>Jo Hardin</h1>
+<p>Hi, I’m Jo, and I teach at Pomona College in the <a href="https://www.pomona.edu/academics/departments/mathematics-statistics" target="_blank">Department of Mathematics and Statistics</a>. My research centers on deriving robust methods to analyze biological high throughput data. Additionally, I think a lot about trying to improve statistics and data science education. In my free time I love to run and read.</p>
 </section>
 <section id="acknowledgments" class="level1">
 <h1>Acknowledgments</h1>
-<p>This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible. Many thanks to Professor Hardin for her guidance and support in this project!</p>
+<p>This project was supported by the <a href="https://www.pomona.edu/administration/academic-dean/funding/student-research-opportunities/surp" target="_blank">Summer Undergraduate Research Program (SURP)</a> at Pomona College and the <a href="https://www.pomona.edu/academics/departments/mathematics-statistics/resources/kenneth-cooke-summer-research-fellowship" target="_blank">Kenneth Cooke Research Fellowship</a>, whose funding made this work possible.</p>
 
 
 </section>

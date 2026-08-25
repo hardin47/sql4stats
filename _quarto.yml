@@ -26,8 +26,14 @@ website:
         menu: 
           - href: sql_upload_guide.qmd
             text: SQL Upload Guide
+          - href: SQL3ways.qmd
+            text: SQL in R, 3 ways
           - href: crosstab_pivot_comp.qmd
             text: Pivot Types
+          - href: publicdata.qmd
+            text: Public SQL data
+          - href: ggsql.qmd
+            text: ggsql as an Engine
           
       - text: "About"
         href: about.qmd

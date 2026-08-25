@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -74,10 +77,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-3b131c22a8ecff6f91e3cb37a2824cbb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-f99a3f21629f021f470e5c746e28d329.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f7104779465153de3e46fc4686730ebe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-20bc9ff331f70e93dda8e15c7f15f903.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -107,7 +110,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -203,8 +206,20 @@ window.Quarto = {
  <span class="dropdown-text">SQL Upload Guide</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./SQL3ways.html">
+ <span class="dropdown-text">SQL in R, 3 ways</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
  <span class="dropdown-text">Pivot Types</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./publicdata.html">
+ <span class="dropdown-text">Public SQL data</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./ggsql.html">
+ <span class="dropdown-text">ggsql as an Engine</span></a>
   </li>  
     </ul>
   </li>
@@ -315,24 +330,35 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  RPostgres<span class="sc">::</span><span class="fu">Postgres</span>(),</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dbname =</span> <span class="st">"stats"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host   =</span> <span class="st">"127.0.0.1"</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port   =</span> <span class="dv">5432</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user   =</span> <span class="fu">Sys.info</span>()[[<span class="st">"user"</span>]]</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">host =</span> <span class="st">"127.0.0.1"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">user =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_USER"</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="fu">Sys.getenv</span>(<span class="st">"PG_PWD"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability.</p>
+<p>First, we connect to the database. A local PostgreSQL server connection is ideal for this simulation as it will have the least performance variability. Note: to run the code below, you need to have a local PostgreSQL server on your personal computer. On a Mac, the installation might be as straightforward as running <code>brew install postgresql@16</code> in the terminal. We use the default / existing “postgres” database.</p>
 <p>We’ll be using STATS-CEB, an anonymized dump of user-contributed content from the <a href="https://stats.stackexchange.com/"> Stats StackExchange Network </a>, a discussion board featuring questions about various topics in statistics. This database contains 8 tables: tags, comments, badges, posts, users, postLinks, postHistory, and votes. These tables are connected, all by primary keys such as post ID and user ID. For this simulation, a simplified version provided by <a href="./references.html"><span class="citation" data-cites="Han2021">Han et al. (2021)</span></a> and included in the paper’s <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/tree/master">GitHub repository</a> acts as a helpful benchmark for query performance assessment. Follow the instructions in the README for downloading PostgreSQL and the dataset.</p>
 <p>For a more in-depth tutorial on setting up a SQL connection in R, see the <a href="./sql_upload_guide.html">Data Upload Tutorial</a>.</p>
+<p>You will need to create a table in your local MySQL server called “stats” and add the STATS-CEB data from <a href="https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark" target="_blank">https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark</a>.</p>
 <section id="indexing-the-tables" class="level3">
 <h3 class="anchored" data-anchor-id="indexing-the-tables">Indexing the Tables</h3>
 <p>First, we need to create indexes on the columns involved in the joins we’re performing. This ensures that the nested loop algorithm will be as efficient as possible. For more information on how indexes are structured in SQL, see the <a href="./SQL_Scrolly_reformatted.html#sec-ch3"> indexes and b-trees page </a>.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)"</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  con,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"CREATE INDEX IF NOT EXISTS idx_votes_postid       ON votes(postid)"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  con,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"CREATE INDEX IF NOT EXISTS idx_posts_owneruserid  ON posts(owneruserid)"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  con,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"CREATE INDEX IF NOT EXISTS idx_badges_userid      ON badges(userid)"</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -411,24 +437,25 @@ window.Quarto = {
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>run_repeated_warm <span class="ot">&lt;-</span> <span class="cf">function</span>(con, query, <span class="at">n =</span> <span class="dv">10</span>) {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Warm-up run: loads pages into cache, result discarded</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Timed trials</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(i) {</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    lines <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))[[<span class="dv">1</span>]]</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    exec_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Execution Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Warm-up run: loads pages into cache, result discarded</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Timed trials</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(i) {</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    lines <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, query))[[<span class="dv">1</span>]]</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    exec_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Execution Time"</span>, lines)] <span class="sc">|&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>()</span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    plan_time <span class="ot">&lt;-</span> lines[<span class="fu">grep</span>(<span class="st">"Planning Time"</span>, lines)] <span class="sc">|&gt;</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(<span class="at">run =</span> i, <span class="at">exec_ms =</span> exec_time, <span class="at">plan_ms =</span> plan_time)</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>()</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>()</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(<span class="at">run =</span> i, <span class="at">exec_ms =</span> exec_time, <span class="at">plan_ms =</span> plan_time)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list_rbind</span>()</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -452,7 +479,7 @@ window.Quarto = {
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>results_nest_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>results_nest_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>results_nest_bad <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Nested Loop"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
@@ -465,7 +492,7 @@ window.Quarto = {
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = off"</span>)</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>results_hash_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>results_hash_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>results_hash_bad <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Hash Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
@@ -478,7 +505,7 @@ window.Quarto = {
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET enable_mergejoin = on"</span>)</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>results_merge_good <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_good_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"good"</span>)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>results_merge_bad  <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>results_merge_bad <span class="ot">&lt;-</span> <span class="fu">run_repeated_warm</span>(con, sql_bad_order, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">join_type =</span> <span class="st">"Merge Join"</span>, <span class="at">order =</span> <span class="st">"bad"</span>)</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"DISCARD ALL"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -493,19 +520,22 @@ window.Quarto = {
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  results_nest_good, results_nest_bad,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  results_hash_good, results_hash_bad,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  results_merge_good, results_merge_bad</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Effect of join strategy on execution time"</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="st">"Join Strategy"</span>,</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Execution time (ms)"</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  results_nest_good,</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  results_nest_bad,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  results_hash_good,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  results_hash_bad,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  results_merge_good,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  results_merge_bad</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> join_type, <span class="at">y =</span> exec_ms, <span class="at">color =</span> order)) <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Effect of join strategy on execution time"</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"4-table join: votes, posts, users, badges"</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Join Strategy"</span>,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Execution time (ms)"</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -531,42 +561,46 @@ window.Quarto = {
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>auto_plan <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql_bad_order))[[<span class="dv">1</span>]]</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>auto_exec <span class="ot">&lt;-</span> auto_plan <span class="sc">|&gt;</span> <span class="fu">str_subset</span>(<span class="st">"Execution Time"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>auto_plan_time <span class="ot">&lt;-</span> auto_plan <span class="sc">|&gt;</span> <span class="fu">str_subset</span>(<span class="st">"Planning Time"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>auto_plan  <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>auto_exec <span class="ot">&lt;-</span> auto_plan <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(<span class="st">"Execution Time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>auto_plan_time <span class="ot">&lt;-</span> auto_plan <span class="sc">|&gt;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(<span class="st">"Planning Time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>auto_plan <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Aggregate  (cost=2904.66..2904.67 rows=1 width=8) (actual time=1306.231..1306.233 rows=1 loops=1)"                                                
- [2] "  -&gt;  Nested Loop  (cost=805.26..2898.52 rows=2457 width=0) (actual time=14.653..1067.498 rows=5854758 loops=1)"                                  
- [3] "        Join Filter: (u.id = b.userid)"                                                                                                           
- [4] "        -&gt;  Nested Loop  (cost=804.97..2858.88 rows=71 width=8) (actual time=14.633..64.863 rows=45869 loops=1)"                                  
- [5] "              -&gt;  Hash Join  (cost=804.55..2773.90 rows=25 width=12) (actual time=14.572..25.090 rows=2287 loops=1)"                              
+<pre><code> [1] "Aggregate  (cost=2938.06..2938.07 rows=1 width=8) (actual time=940.212..940.215 rows=1 loops=1)"                                                  
+ [2] "  -&gt;  Nested Loop  (cost=805.43..2931.53 rows=2613 width=0) (actual time=4.076..737.032 rows=5854758 loops=1)"                                    
+ [3] "        Join Filter: (b.userid = u.id)"                                                                                                           
+ [4] "        -&gt;  Nested Loop  (cost=805.13..2891.45 rows=71 width=8) (actual time=4.036..37.408 rows=45869 loops=1)"                                   
+ [5] "              -&gt;  Hash Join  (cost=804.71..2803.67 rows=25 width=12) (actual time=3.980..9.917 rows=2287 loops=1)"                                
  [6] "                    Hash Cond: (p.owneruserid = u.id)"                                                                                            
- [7] "                    -&gt;  Seq Scan on posts p  (cost=0.00..1959.70 rows=3676 width=8) (actual time=0.015..9.450 rows=3552 loops=1)"                 
+ [7] "                    -&gt;  Seq Scan on posts p  (cost=0.00..1989.70 rows=3528 width=8) (actual time=0.019..5.244 rows=3552 loops=1)"                 
  [8] "                          Filter: (score &gt; 10)"                                                                                                   
  [9] "                          Rows Removed by Filter: 88424"                                                                                          
-[10] "                    -&gt;  Hash  (cost=801.06..801.06 rows=279 width=4) (actual time=14.545..14.545 rows=305 loops=1)"                               
+[10] "                    -&gt;  Hash  (cost=801.06..801.06 rows=292 width=4) (actual time=3.940..3.941 rows=305 loops=1)"                                 
 [11] "                          Buckets: 1024  Batches: 1  Memory Usage: 19kB"                                                                          
-[12] "                          -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.007..14.381 rows=305 loops=1)"             
+[12] "                          -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=292 width=4) (actual time=0.007..3.865 rows=305 loops=1)"              
 [13] "                                Filter: (reputation &gt; 1000)"                                                                                      
 [14] "                                Rows Removed by Filter: 40020"                                                                                    
-[15] "              -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.016 rows=20 loops=2287)"   
+[15] "              -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.45 rows=6 width=4) (actual time=0.001..0.011 rows=20 loops=2287)"   
 [16] "                    Index Cond: (postid = p.id)"                                                                                                  
 [17] "                    Filter: (votetypeid = 2)"                                                                                                     
 [18] "                    Rows Removed by Filter: 3"                                                                                                    
-[19] "        -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.002..0.013 rows=128 loops=45869)"
+[19] "        -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..0.51 rows=4 width=4) (actual time=0.001..0.006 rows=128 loops=45869)"
 [20] "              Index Cond: (userid = p.owneruserid)"                                                                                               
 [21] "              Heap Fetches: 0"                                                                                                                    
-[22] "Planning Time: 2.597 ms"                                                                                                                          
-[23] "Execution Time: 1306.329 ms"                                                                                                                      </code></pre>
+[22] "Planning Time: 1.242 ms"                                                                                                                          
+[23] "Execution Time: 940.307 ms"                                                                                                                       </code></pre>
 </div>
 </div>
 <p>Following the rows from the bottom up: PostgreSQL begins with two filtered scans. It scans <code>posts</code> and keeps only the 3,552 rows with <code>score &gt; 10</code> (line 7, discarding 88,424), and scans <code>users</code> to keep the 305 with <code>reputation &gt; 1000</code> (line 12), building a hash table on those users (line 10). Those two filtered inputs meet at the <code>hash join</code> (line 5), which matches <code>posts</code> to their <code>owners</code> on <code>owneruserid</code> and emits 2,287 rows. From there the rows flow upward through two <code>nested loops</code>: the first probes <code>votes</code> by index once per post (line 15), growing the result to 45,869 rows, and the second probes <code>badges</code> by index once per user (line 19), ballooning it to 5,854,758. Those rows finally arrive at the <code>Aggregate</code> (line 1), which collapses them into a single count.</p>
 <p>Notice that we wrote the bad order in the <code>FROM</code> clause, but with reordering left enabled (<code>join_collapse_limit</code> at its default), the planner ignored our written order entirely. It led with <code>posts</code> and <code>users</code> — the two tables carrying the <code>WHERE</code> filters, and therefore the most selective — and pushed the unfiltered fan-out to the very end. Left to its own devices, the planner reconstructs something close to the good order on its own.</p>
-<p>Each node reports <code>actual time=startup..total</code>, where the total is cumulative and measured per loop. Reading these upward shows the cost concentrating in one place: everything through the hash join finishes early, the first nested loop shortly after, and then the top nested loop dominates the runtime. That final node is the whole query. It turns 45,869 input rows into 5,854,758 output rows because each user owns roughly 128 badges (<code>rows=128 loops=45869</code> on line 19), and pushing those 5.85 million rows through the join filter is where the bulk of the 1306 ms runtime lives.</p>
+<p>Each node reports <code>actual time=startup..total</code>, where the total is cumulative and measured per loop. Reading these upward shows the cost concentrating in one place: everything through the hash join finishes early, the first nested loop shortly after, and then the top nested loop dominates the runtime. That final node is the whole query. It turns 45,869 input rows into 5,854,758 output rows because each user owns roughly 128 badges (<code>rows=128 loops=45869</code> on line 19), and pushing those 5.85 million rows through the join filter is where the bulk of the 940 ms runtime lives.</p>
 </section>
 <section id="manually-defined-inefficient-join" class="level4">
 <h4 class="anchored" data-anchor-id="manually-defined-inefficient-join">Manually Defined, Inefficient Join</h4>
@@ -587,38 +621,42 @@ window.Quarto = {
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>forced_plan <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(con, <span class="fu">paste</span>(<span class="st">"EXPLAIN ANALYZE"</span>, sql_bad_order))[[<span class="dv">1</span>]]</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>forced_exec <span class="ot">&lt;-</span> forced_plan <span class="sc">|&gt;</span> <span class="fu">str_subset</span>(<span class="st">"Execution Time"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>forced_plan_time <span class="ot">&lt;-</span> forced_plan <span class="sc">|&gt;</span> <span class="fu">str_subset</span>(<span class="st">"Planning Time"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>forced_plan  <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>forced_exec <span class="ot">&lt;-</span> forced_plan <span class="sc">|&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(<span class="st">"Execution Time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>forced_plan_time <span class="ot">&lt;-</span> forced_plan <span class="sc">|&gt;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(<span class="st">"Planning Time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_extract</span>(<span class="st">"[0-9.]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>forced_plan <span class="co"># print the plan for the reader</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Aggregate  (cost=4672.77..4672.78 rows=1 width=8) (actual time=5049.930..5049.931 rows=1 loops=1)"                                                         
- [2] "  -&gt;  Nested Loop  (cost=1.01..4666.63 rows=2457 width=0) (actual time=0.049..4773.176 rows=5854758 loops=1)"                                              
- [3] "        -&gt;  Nested Loop  (cost=0.58..1719.61 rows=867 width=4) (actual time=0.028..1199.344 rows=292650 loops=1)"                                          
- [4] "              -&gt;  Nested Loop  (cost=0.29..1449.36 rows=552 width=8) (actual time=0.021..6.100 rows=12371 loops=1)"                                        
- [5] "                    -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=279 width=4) (actual time=0.009..3.284 rows=305 loops=1)"                             
+<pre><code> [1] "Aggregate  (cost=4964.74..4964.75 rows=1 width=8) (actual time=2441.796..2441.798 rows=1 loops=1)"                                                         
+ [2] "  -&gt;  Nested Loop  (cost=1.01..4958.21 rows=2613 width=0) (actual time=0.034..2242.646 rows=5854758 loops=1)"                                              
+ [3] "        -&gt;  Nested Loop  (cost=0.58..1738.44 rows=917 width=4) (actual time=0.027..496.038 rows=292650 loops=1)"                                           
+ [4] "              -&gt;  Nested Loop  (cost=0.29..1454.59 rows=578 width=8) (actual time=0.021..3.842 rows=12371 loops=1)"                                        
+ [5] "                    -&gt;  Seq Scan on users u  (cost=0.00..801.06 rows=292 width=4) (actual time=0.009..1.605 rows=305 loops=1)"                             
  [6] "                          Filter: (reputation &gt; 1000)"                                                                                                     
  [7] "                          Rows Removed by Filter: 40020"                                                                                                   
- [8] "                    -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..2.28 rows=4 width=4) (actual time=0.002..0.006 rows=41 loops=305)"
+ [8] "                    -&gt;  Index Only Scan using idx_badges_userid on badges b  (cost=0.29..2.20 rows=4 width=4) (actual time=0.001..0.004 rows=41 loops=305)"
  [9] "                          Index Cond: (userid = u.id)"                                                                                                     
 [10] "                          Heap Fetches: 0"                                                                                                                 
-[11] "              -&gt;  Index Scan using idx_posts_owneruserid on posts p  (cost=0.29..0.48 rows=1 width=8) (actual time=0.009..0.095 rows=24 loops=12371)"      
+[11] "              -&gt;  Index Scan using idx_posts_owneruserid on posts p  (cost=0.29..0.48 rows=1 width=8) (actual time=0.003..0.038 rows=24 loops=12371)"      
 [12] "                    Index Cond: (owneruserid = b.userid)"                                                                                                  
 [13] "                    Filter: (score &gt; 10)"                                                                                                                  
 [14] "                    Rows Removed by Filter: 246"                                                                                                           
-[15] "        -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.34 rows=6 width=4) (actual time=0.003..0.011 rows=20 loops=292650)"                
+[15] "        -&gt;  Index Scan using idx_votes_postid on votes v  (cost=0.42..3.45 rows=6 width=4) (actual time=0.001..0.005 rows=20 loops=292650)"                
 [16] "              Index Cond: (postid = p.id)"                                                                                                                 
 [17] "              Filter: (votetypeid = 2)"                                                                                                                    
 [18] "              Rows Removed by Filter: 2"                                                                                                                   
-[19] "Planning Time: 0.218 ms"                                                                                                                                   
-[20] "Execution Time: 5049.981 ms"                                                                                                                               </code></pre>
+[19] "Planning Time: 0.202 ms"                                                                                                                                   
+[20] "Execution Time: 2441.835 ms"                                                                                                                               </code></pre>
 </div>
 </div>
 <p>Following the rows from the bottom up: with reordering forbidden (<code>join_collapse_limit = 1</code>), the engine must honor the literal <code>FROM</code> order, so it starts where we told it to — the unfiltered tables. It scans <code>users</code>, keeping the 305 rows with <code>reputation &gt; 1000</code> (line 5), and for each one probes <code>badges</code> by index (line 8), producing 12,371 rows. That result drives a nested loop into <code>posts</code> (line 11), probed once per badge — 12,371 loops — which grows the result to 292,650 rows. Those in turn drive a nested loop into <code>votes</code> (line 15), probed 292,650 times, fanning out to 5,854,758 rows before the <code>Aggregate</code> (line 1) collapses them to a single count. Every join is a nested loop, and no hash table appears anywhere.</p>
-<p>Compare the intermediate row counts to the free plan. There, the engine led with the two filtered tables and kept early results tiny — the first join carried 2,287 rows, the next 45,869. Here, forbidden from leading with the selective filters, the engine carries 12,371 rows out of the very first join and 292,650 out of the second. The same 5.85 million rows arrive at the top in both plans, but the forced order hauls a far larger intermediate result through the back half of the tree, and pays for it one row at a time: the <code>votes</code> index scan (line 15) executes across 292,650 loops rather than the 2,287 loops of the free plan. The slowdown shows up directly in the totals — execution time rises from roughly 1306 ms to 5050 ms (line 20), a 3.9-fold penalty for a query returning the identical single number.</p>
+<p>Compare the intermediate row counts to the free plan. There, the engine led with the two filtered tables and kept early results tiny — the first join carried 2,287 rows, the next 45,869. Here, forbidden from leading with the selective filters, the engine carries 12,371 rows out of the very first join and 292,650 out of the second. The same 5.85 million rows arrive at the top in both plans, but the forced order hauls a far larger intermediate result through the back half of the tree, and pays for it one row at a time: the <code>votes</code> index scan (line 15) executes across 292,650 loops rather than the 2,287 loops of the free plan. The slowdown shows up directly in the totals — execution time rises from roughly 940 ms to 2442 ms (line 20), a 2.6-fold penalty for a query returning the identical single number.</p>
 <p>This is the worst case the earlier boxplots only hinted at — a bad order and the most order-sensitive algorithm, combined, on a query the planner would otherwise have rescued. The top join still emits the same 5.85 million rows it always did, and the planner still expected only 2,457; what changed is that we stripped away its two best safeguards — the freedom to lead with the selective tables, and the option to use a hash join where a nested loop explodes. Left alone, it used both. Forced, it can use neither.</p>
 </section>
 </section>
@@ -642,31 +680,39 @@ window.Quarto = {
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  node_lines <span class="ot">&lt;-</span> plan[<span class="fu">grep</span>(<span class="st">"actual time"</span>, plan)]</span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(node_lines, <span class="cf">function</span>(line) {</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    operation <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line,</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"</span>)</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    estimated <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"rows=([0-9]+)</span><span class="sc">\\</span><span class="st">s+width"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    actual <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"actual time=[0-9.]+</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.[0-9.]+ rows=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+$"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    operation <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      line,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">"(Nested Loop|Hash Join|Merge Join|Seq Scan|Index Only Scan|Index Scan|Aggregate|Gather)"</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    estimated <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"rows=([0-9]+)</span><span class="sc">\\</span><span class="st">s+width"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>()</span>
 <span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    loops <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"loops=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">label        =</span> label,</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">operation    =</span> operation,</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimated    =</span> estimated,</span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual       =</span> actual,</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">loops        =</span> loops,</span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual_total =</span> actual <span class="sc">*</span> loops,</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">q_error =</span> <span class="fu">max</span>(estimated<span class="sc">/</span>actual_total, actual_total<span class="sc">/</span>estimated)</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span></span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(operation), <span class="sc">!</span><span class="fu">is.na</span>(estimated), <span class="sc">!</span><span class="fu">is.na</span>(actual))</span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    actual <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      line,</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>      <span class="st">"actual time=[0-9.]+</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">.[0-9.]+ rows=([0-9]+)"</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+$"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>()</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    loops <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(line, <span class="st">"loops=([0-9]+)"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(<span class="st">"[0-9]+"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>()</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>(</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">label =</span> label,</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">operation =</span> operation,</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimated =</span> estimated,</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual =</span> actual,</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">loops =</span> loops,</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">actual_total =</span> actual <span class="sc">*</span> loops,</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">q_error =</span> <span class="fu">max</span>(estimated <span class="sc">/</span> actual_total, actual_total <span class="sc">/</span> estimated)</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(operation), <span class="sc">!</span><span class="fu">is.na</span>(estimated), <span class="sc">!</span><span class="fu">is.na</span>(actual))</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
@@ -677,7 +723,7 @@ window.Quarto = {
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Forced orders: planner not allowed to reorder</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 1"</span>)</span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>good_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_good_order, <span class="st">"forced good order"</span>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>bad_estimates  <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_bad_order,  <span class="st">"forced bad order"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>bad_estimates <span class="ot">&lt;-</span> <span class="fu">extract_estimates</span>(con, sql_bad_order, <span class="st">"forced bad order"</span>)</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-optimized: planner free to choose its own order</span></span>
 <span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"SET join_collapse_limit = 8"</span>)</span>
@@ -691,7 +737,7 @@ window.Quarto = {
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>all_estimates <span class="sc">|&gt;</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -728,38 +774,38 @@ window.Quarto = {
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">2421</td>
+<td style="text-align: right;">2586</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">5854758</td>
-<td style="text-align: right;">2.418322e+03</td>
+<td style="text-align: right;">2.264021e+03</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">71</td>
+<td style="text-align: right;">72</td>
 <td style="text-align: right;">45869</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">45869</td>
-<td style="text-align: right;">6.460423e+02</td>
+<td style="text-align: right;">6.370694e+02</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">10416</td>
+<td style="text-align: right;">10054</td>
 <td style="text-align: right;">70198</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">70198</td>
-<td style="text-align: right;">6.739439e+00</td>
+<td style="text-align: right;">6.982097e+00</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">3676</td>
+<td style="text-align: right;">3528</td>
 <td style="text-align: right;">3552</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3552</td>
-<td style="text-align: right;">1.034910e+00</td>
+<td style="text-align: right;">1.006803e+00</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
@@ -774,10 +820,10 @@ window.Quarto = {
 <td style="text-align: left;">forced good order</td>
 <td style="text-align: left;">Index Scan</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">70198</td>
-<td style="text-align: right;">70198</td>
-<td style="text-align: right;">7.019800e+04</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1203</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">Inf</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced good order</td>
@@ -800,38 +846,38 @@ window.Quarto = {
 <tr class="even">
 <td style="text-align: left;">forced bad order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">2457</td>
+<td style="text-align: right;">2613</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">5854758</td>
-<td style="text-align: right;">2.382889e+03</td>
+<td style="text-align: right;">2.240627e+03</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced bad order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">867</td>
+<td style="text-align: right;">917</td>
 <td style="text-align: right;">292650</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">292650</td>
-<td style="text-align: right;">3.375433e+02</td>
+<td style="text-align: right;">3.191385e+02</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced bad order</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">552</td>
+<td style="text-align: right;">578</td>
 <td style="text-align: right;">12371</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">12371</td>
-<td style="text-align: right;">2.241123e+01</td>
+<td style="text-align: right;">2.140311e+01</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">forced bad order</td>
 <td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">279</td>
+<td style="text-align: right;">292</td>
 <td style="text-align: right;">305</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">305</td>
-<td style="text-align: right;">1.093190e+00</td>
+<td style="text-align: right;">1.044520e+00</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">forced bad order</td>
@@ -872,20 +918,20 @@ window.Quarto = {
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">2421</td>
+<td style="text-align: right;">2586</td>
 <td style="text-align: right;">5854758</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">5854758</td>
-<td style="text-align: right;">2.418322e+03</td>
+<td style="text-align: right;">2.264021e+03</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">auto-optimized</td>
 <td style="text-align: left;">Nested Loop</td>
-<td style="text-align: right;">71</td>
+<td style="text-align: right;">72</td>
 <td style="text-align: right;">45869</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">45869</td>
-<td style="text-align: right;">6.460423e+02</td>
+<td style="text-align: right;">6.370694e+02</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>
@@ -899,11 +945,11 @@ window.Quarto = {
 <tr class="odd">
 <td style="text-align: left;">auto-optimized</td>
 <td style="text-align: left;">Seq Scan</td>
-<td style="text-align: right;">279</td>
+<td style="text-align: right;">292</td>
 <td style="text-align: right;">305</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">305</td>
-<td style="text-align: right;">1.093190e+00</td>
+<td style="text-align: right;">1.044520e+00</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">auto-optimized</td>

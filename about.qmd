@@ -8,16 +8,14 @@ format:
 
 
 # Charlie Coleman
-
-Hi! I'm Charlie, and I'm in the class of 2027 at [Pomona College](https://pomona.edu). I study math and art, working primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out my work [here](https://charliecoleman6.github.io/art_portfolio/)), I love to cook, surf, and play guitar. 
-
-
+Hi! I'm Charlie, and I'm in the class of 2027 at <a href = "https://pomona.edu" target = "_blank">Pomona College</a>. I study math and art, working primarily with Professors Jo Hardin and Michael O'Malley. I grew up and went to school in Wellesley, Massachusetts, and I currently live in San Diego. When I'm not in Estella (Pomona's math building) or at the studio (check out <a href = "https://charliecoleman6.github.io/art_portfolio/" target = "_blank">my work</a>), I love to cook, surf, and play guitar. 
 
 # Sebastian Pollack
+Hi, I'm Sebastian, a member of the class of 2029 at <a href = "https://pomona.edu" target = "_blank">Pomona College</a> studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
 
-Hi, I'm Sebastian, a member of the class of 2029 at [Pomona College](https://pomona.edu) studying mathematics, computer science, and German. I grew up in San Carlos, California in the San Francisco Bay Area. Outside of academics, I play violin and viola, enjoy cooking, and love to play and watch soccer.
-
+#  Jo Hardin
+Hi, I'm Jo, and I teach at Pomona College in the <a href = "https://www.pomona.edu/academics/departments/mathematics-statistics" target = "_blank">Department of Mathematics and Statistics</a>. My research centers on deriving robust methods to analyze biological high throughput data. Additionally, I think a lot about trying to improve statistics and data science education. In my free time I love to run and read.
 
 # Acknowledgments
 
-This project was supported by the Summer Undergraduate Research Program (SURP) at Pomona College and the Kenneth Cooke Research Fellowship, whose funding made this work possible. Many thanks to Professor Hardin for her guidance and support in this project!
+This project was supported by the <a href = "https://www.pomona.edu/administration/academic-dean/funding/student-research-opportunities/surp" target = "_blank">Summer Undergraduate Research Program (SURP)</a> at Pomona College and the <a href = "https://www.pomona.edu/academics/departments/mathematics-statistics/resources/kenneth-cooke-summer-research-fellowship" target = "_blank">Kenneth Cooke Research Fellowship</a>, whose funding made this work possible. 

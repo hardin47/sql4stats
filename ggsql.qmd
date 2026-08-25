@@ -1,0 +1,15 @@
+---
+title: "Untitled"
+format: html
+---
+
+ggsql as an engine
+
+For ggsql, the use case is actually for folks who do NOT want to use either R or Python, but just the SQL on its own. You can do the SQL queries and make visualizations without having R running at all, like this:
+
+[](figs/ggsql.png)
+
+
+There is no R running at all in this situation. You can author Quarto documents that use ggsql as the kernel and do not use any R or Python kernel.
+
+

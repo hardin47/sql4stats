@@ -1,0 +1,29 @@
+---
+title: "Publicly Available SQL Data"
+format:
+  html:
+    embed-resources: true
+    theme: 
+      - cosmo
+      - global_style.scss
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show the code"
+bibliography: references.bib
+suppress-bibliography: true
+---
+
+check to see if embed resources works, and then add it to all the pages (maybe not scrolly???)
+
+add any R packages (check to make sure they are all in packages.bib?)
+
+check all URLs using a search of "](" ... change them to html tags so that they open new webpages
+
+
+MDSR
+
+auditory
+
+huge database: https://relational.fel.cvut.cz/
+

@@ -1,0 +1,24 @@
+---
+title: "SQL in R, 3 ways"
+format:
+  html:
+    embed-resources: true
+    theme: 
+      - cosmo
+      - global_style.scss
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show the code"
+bibliography: references.bib
+suppress-bibliography: true
+---
+
+see class notes
+
+also, make a distinction between `--|` and `#|`
+
+* `--` is the correct option because `--` is a comment in sql
+* in RStudio, sometimes `#|` still works
+* unfortunately, in Positron, SQL chunks are not able to run interactively
+
