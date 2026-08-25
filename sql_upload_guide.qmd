@@ -10,7 +10,7 @@ format:
     toc-depth: 2
     code-fold: true
     code-summary: "Show the code"
-
+    embed-resources: true  
 bibliography: references.bib
 suppress-bibliography: true
 ---
@@ -231,7 +231,7 @@ The function **drops and recreates the table** before uploading, rather than app
 The **row-count confirmation at the end** closes the loop. It is important to verify that the row count of the uploaded tables aligns with the known number of rows of the CSV file, from the earlier validation step.
 
 ```{r}
-#| eval: true
+#| eval: false
 upload_results <- purrr::map_dfr(csv_files, upload_csv_to_sql)
 upload_results
 ```
@@ -265,7 +265,7 @@ DBI::dbListTables(con_snl)
 ```
 
 ```{r}
-#| eval: true
+#| eval: false
 DBI::dbGetQuery(con_snl, "DESCRIBE actors;")
 DBI::dbGetQuery(con_snl, "DESCRIBE appearances;")
 DBI::dbGetQuery(con_snl, "DESCRIBE casts;")

@@ -4,6 +4,7 @@ format:
   html:
     code-fold: true
     code-summary: "Show the code"
+    embed-resources: true  
 ---
 
 ```{r setup, include=FALSE}

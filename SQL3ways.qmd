@@ -22,3 +22,4 @@ also, make a distinction between `--|` and `#|`
 * in RStudio, sometimes `#|` still works
 * unfortunately, in Positron, SQL chunks are not able to run interactively
 
+note the we are assuming that R is being used as the engine. in fact, it is necessary to have an engine to make the initial connection to the server. if you'd like to use SQL as the engine, Positron lets you do that through `gggsql` which is described in [ggsql as a Quarto engine](ggsql.qmd).

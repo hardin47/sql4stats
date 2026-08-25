@@ -14,16 +14,19 @@ bibliography: references.bib
 suppress-bibliography: true
 ---
 
-check to see if embed resources works, and then add it to all the pages (maybe not scrolly???)
+notes for cleaning up the website:
 
-add any R packages (check to make sure they are all in packages.bib?)
+* check to see if embed resources works, and then add it to all the pages (maybe not scrolly???) (I think this is done?)
 
-check all URLs using a search of "](" ... change them to html tags so that they open new webpages
+* add any R packages (check to make sure they are all in packages.bib?)
 
+* check all URLs using a search of "](" ... change them to html tags so that they open new webpages
 
-MDSR
+------
 
-auditory
+MDSR: https://mdsr-book.github.io/mdsr3e/15-sqlI.html#sec-dplyr-sql  (note, in the workshop last year, we used a lot of the MDSR ideas.  i think we should use a different example!)
+
+auditory: https://www.science.smith.edu/wai-database/
 
 huge database: https://relational.fel.cvut.cz/
 

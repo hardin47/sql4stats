@@ -70,15 +70,17 @@ Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = 1)
 
 con_traffic <- DBI::dbConnect(
   RMySQL::MySQL(),
-  dbname   = "traffic",
-  host     = Sys.getenv("TRAFFIC_HOST"),
-  user     = Sys.getenv("TRAFFIC_USER"),
+  dbname = "traffic",
+  host = Sys.getenv("TRAFFIC_HOST"),
+  user = Sys.getenv("TRAFFIC_USER"),
   password = Sys.getenv("TRAFFIC_PWD")
 )
 
-tables     <- c("ca_los_angeles_2020_04_01",
-                "ca_san_francisco_2020_04_01",
-                "ca_san_jose_2020_04_01")
+tables <- c(
+  "ca_los_angeles_2020_04_01",
+  "ca_san_francisco_2020_04_01",
+  "ca_san_jose_2020_04_01"
+)
 short_names <- c("la", "sf", "sj")
 
 # ── Write one Parquet file per city ──
@@ -86,11 +88,12 @@ dir.create(here::here("parquet_cities"), showWarnings = FALSE)
 
 for (i in seq_along(tables)) {
   cat("Reading", tables[i], "from MySQL...\n")
-  df      <- dbReadTable(con_traffic, tables[i])
+  df <- dbReadTable(con_traffic, tables[i])
   outfile <- here::here("parquet_cities", paste0(short_names[i], ".parquet"))
   write_parquet(df, outfile)
   cat("  Written:", outfile, "\n")
-  rm(df); gc()
+  rm(df)
+  gc()
 }
 
 # ── Build native DuckDB — one table per city ──
@@ -101,7 +104,8 @@ for (i in seq_along(tables)) {
   df <- dbReadTable(con_traffic, tables[i])
   dbWriteTable(con_native, short_names[i], df, overwrite = TRUE)
   cat("  Rows written:", nrow(df), "\n")
-  rm(df); gc()
+  rm(df)
+  gc()
 }
 
 cat("\nTables in native DuckDB:\n")
@@ -121,8 +125,11 @@ One concrete advantage of direct Parquet over native DuckDB is storage footprint
 ```{r}
 #| label: storage-size
 
-parquet_files <- list.files(here::here("parquet_cities"),
-                             pattern = "\\.parquet$", full.names = TRUE)
+parquet_files <- list.files(
+  here::here("parquet_cities"),
+  pattern = "\\.parquet$",
+  full.names = TRUE
+)
 parquet_size_mb <- round(sum(file.size(parquet_files)) / 1e6, 2)
 parquet_size_gb <- round(parquet_size_mb / 1000, 3)
 
@@ -132,15 +139,18 @@ duckdb_size_gb <- round(duckdb_size_mb / 1000, 3)
 ratio <- round(duckdb_size_mb / parquet_size_mb, 2)
 
 size_df <- data.frame(
-  Format        = c("Direct Parquet (3 files)", "Native DuckDB (1 file)"),
-  `Size (MB)`   = c(parquet_size_mb, duckdb_size_mb),
-  `Size (GB)`   = c(parquet_size_gb, duckdb_size_gb),
-  `Files`       = c(3, 1),
+  Format = c("Direct Parquet (3 files)", "Native DuckDB (1 file)"),
+  `Size (MB)` = c(parquet_size_mb, duckdb_size_mb),
+  `Size (GB)` = c(parquet_size_gb, duckdb_size_gb),
+  `Files` = c(3, 1),
   `Ratio vs Parquet` = c(1.00, ratio)
 )
 
-knitr::kable(size_df, align = "r",
-  caption = "Storage size comparison: direct Parquet vs native DuckDB")
+knitr::kable(
+  size_df,
+  align = "r",
+  caption = "Storage size comparison: direct Parquet vs native DuckDB"
+)
 ```
 
 Beyond storage size, direct Parquet also avoids the ingestion step entirely. The data can be queried immediately after the Parquet files are written, with no loading or database construction required. The trade-off is query performance, which the remainder of this page explores.
@@ -159,39 +169,41 @@ sf_parquet <- here::here("parquet_cities", "sf.parquet")
 sj_parquet <- here::here("parquet_cities", "sj.parquet")
 
 queries <- list(
-
   Q1 = list(
-    label  = "COUNT(*) — LA only",
+    label = "COUNT(*) — LA only",
     direct = sprintf("SELECT COUNT(*) FROM read_parquet('%s')", la_parquet),
     native = "SELECT COUNT(*) FROM la"
   ),
 
   Q2 = list(
-    label  = "GROUP BY subject_race — LA only",
+    label = "GROUP BY subject_race — LA only",
     direct = sprintf(
       "SELECT subject_race, COUNT(*) AS n FROM read_parquet('%s') GROUP BY subject_race ORDER BY n DESC",
-      la_parquet),
+      la_parquet
+    ),
     native = "SELECT subject_race, COUNT(*) AS n FROM la GROUP BY subject_race ORDER BY n DESC"
   ),
 
   Q3 = list(
-    label  = "GROUP BY type — LA only",
+    label = "GROUP BY type — LA only",
     direct = sprintf(
       "SELECT type, COUNT(*) AS n FROM read_parquet('%s') GROUP BY type ORDER BY n DESC",
-      la_parquet),
+      la_parquet
+    ),
     native = "SELECT type, COUNT(*) AS n FROM la GROUP BY type ORDER BY n DESC"
   ),
 
   Q4 = list(
-    label  = "String filter ILIKE — LA only",
+    label = "String filter ILIKE — LA only",
     direct = sprintf(
       "SELECT COUNT(*) FROM read_parquet('%s') WHERE raw_descent_description ILIKE '%%hispanic%%'",
-      la_parquet),
+      la_parquet
+    ),
     native = "SELECT COUNT(*) FROM la WHERE raw_descent_description ILIKE '%hispanic%'"
   ),
 
   Q5 = list(
-    label  = "Cross-table GROUP BY subject_race — all three cities",
+    label = "Cross-table GROUP BY subject_race — all three cities",
     direct = sprintf(
       "SELECT subject_race, COUNT(*) AS n FROM (
          SELECT subject_race FROM read_parquet('%s')
@@ -200,7 +212,10 @@ queries <- list(
          UNION ALL
          SELECT subject_race FROM read_parquet('%s')
        ) GROUP BY subject_race ORDER BY n DESC",
-      la_parquet, sf_parquet, sj_parquet),
+      la_parquet,
+      sf_parquet,
+      sj_parquet
+    ),
     native = "SELECT subject_race, COUNT(*) AS n FROM (
          SELECT subject_race FROM la
          UNION ALL
@@ -216,7 +231,9 @@ queries <- list(
 #| label: benchmark
 
 fresh_direct <- function() dbConnect(duckdb())
-fresh_native <- function() dbConnect(duckdb(), here::here("traffic_native.duckdb"))
+fresh_native <- function() {
+  dbConnect(duckdb(), here::here("traffic_native.duckdb"))
+}
 
 n_warmup <- 3
 n_trials <- 20
@@ -231,24 +248,28 @@ run_trials <- function(con_fn, sql, n_warmup, n_trials) {
   times_ms <- numeric(n_trials)
   for (i in seq_len(n_trials)) {
     con <- con_fn()
-    tryCatch({
-      times_ms[i] <- system.time(dbGetQuery(con, sql))["elapsed"] * 1000
-    }, error = function(e) {
-      times_ms[i] <<- NA
-    }, finally = {
-      try(dbDisconnect(con, shutdown = TRUE), silent = TRUE)
-    })
+    tryCatch(
+      {
+        times_ms[i] <- system.time(dbGetQuery(con, sql))["elapsed"] * 1000
+      },
+      error = function(e) {
+        times_ms[i] <<- NA
+      },
+      finally = {
+        try(dbDisconnect(con, shutdown = TRUE), silent = TRUE)
+      }
+    )
     gc()
   }
   times_ms
 }
 
 all_trials <- data.frame(
-  query_id   = character(),
-  label      = character(),
-  format     = character(),
-  trial      = integer(),
-  time_ms    = numeric()
+  query_id = character(),
+  label = character(),
+  format = character(),
+  trial = integer(),
+  time_ms = numeric()
 )
 
 for (qid in names(queries)) {
@@ -263,11 +284,22 @@ for (qid in names(queries)) {
   dt <- run_trials(fresh_direct, q$direct, n_warmup, n_trials)
   cat("  Direct mean:", round(mean(dt, na.rm = TRUE), 1), "ms\n")
 
-  all_trials <- rbind(all_trials,
-    data.frame(query_id = qid, label = q$label, format = "native",
-               trial = seq_len(n_trials), time_ms = round(nt, 3)),
-    data.frame(query_id = qid, label = q$label, format = "direct",
-               trial = seq_len(n_trials), time_ms = round(dt, 3))
+  all_trials <- rbind(
+    all_trials,
+    data.frame(
+      query_id = qid,
+      label = q$label,
+      format = "native",
+      trial = seq_len(n_trials),
+      time_ms = round(nt, 3)
+    ),
+    data.frame(
+      query_id = qid,
+      label = q$label,
+      format = "direct",
+      trial = seq_len(n_trials),
+      time_ms = round(dt, 3)
+    )
   )
 }
 ```
@@ -285,33 +317,47 @@ summary_df <- all_trials %>%
   group_by(query_id, label, format) %>%
   summarise(
     mean_ms = round(mean(time_ms, na.rm = TRUE), 1),
-    .groups   = "drop"
+    .groups = "drop"
   ) %>%
   pivot_wider(names_from = format, values_from = mean_ms) %>%
   mutate(
     diff_ms = round(direct - native, 1),
-    ratio   = round(direct / native, 2),
-    faster  = ifelse(native < direct, "Native", "Direct Parquet")
+    ratio = round(direct / native, 2),
+    faster = ifelse(native < direct, "Native", "Direct Parquet")
   )
 
 # Add significance test
-sig_col <- mapply(function(qid) {
-  nt <- all_trials %>% filter(query_id == qid, format == "native") %>% pull(time_ms)
-  dt <- all_trials %>% filter(query_id == qid, format == "direct") %>% pull(time_ms)
-  p  <- tryCatch(
-    wilcox.test(nt, dt, exact = FALSE)$p.value,
-    error = function(e) NA
-  )
-  ifelse(!is.na(p) & p < 0.05, "Yes", "No")
-}, summary_df$query_id)
+sig_col <- mapply(
+  function(qid) {
+    nt <- all_trials %>%
+      filter(query_id == qid, format == "native") %>%
+      pull(time_ms)
+    dt <- all_trials %>%
+      filter(query_id == qid, format == "direct") %>%
+      pull(time_ms)
+    p <- tryCatch(
+      wilcox.test(nt, dt, exact = FALSE)$p.value,
+      error = function(e) NA
+    )
+    ifelse(!is.na(p) & p < 0.05, "Yes", "No")
+  },
+  summary_df$query_id
+)
 
 summary_df$significant <- sig_col
 
 knitr::kable(
   summary_df %>%
     select(label, native, direct, diff_ms, ratio, faster, significant),
-  col.names = c("Query", "Native (ms)", "Direct (ms)",
-                "Diff (ms)", "Ratio (D/N)", "Faster", "Sig. (p < 0.05)"),
+  col.names = c(
+    "Query",
+    "Native (ms)",
+    "Direct (ms)",
+    "Diff (ms)",
+    "Ratio (D/N)",
+    "Faster",
+    "Sig. (p < 0.05)"
+  ),
   align = c("l", "r", "r", "r", "r", "l", "c"),
   caption = "Mean query time: native DuckDB vs direct Parquet. Ratio > 1 means direct Parquet is slower. Significance assessed via Wilcoxon rank-sum test."
 )
@@ -329,20 +375,31 @@ The chart below shows the direct/native ratio for each query type. A ratio above
 
 plot_df <- summary_df %>%
   mutate(
-    label     = factor(label, levels = rev(label)),
+    label = factor(label, levels = rev(label)),
     color_grp = ifelse(ratio > 1, "Native faster", "Direct faster")
   )
 
 ggplot(plot_df, aes(x = ratio, y = label, colour = color_grp)) +
-  geom_vline(xintercept = 1, linetype = "dashed", colour = "#94a3b8", linewidth = 0.8) +
-  geom_segment(aes(x = 1, xend = ratio, y = label, yend = label),
-               linewidth = 1.1) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    colour = "#94a3b8",
+    linewidth = 0.8
+  ) +
+  geom_segment(
+    aes(x = 1, xend = ratio, y = label, yend = label),
+    linewidth = 1.1
+  ) +
   geom_point(size = 5) +
-  geom_text(aes(label = sprintf("%.2f×", ratio)),
-            hjust = ifelse(plot_df$ratio > 1, -0.3, 1.3),
-            size = 3.5, fontface = "bold") +
-  scale_colour_manual(values = c("Native faster" = "#185FA5",
-                                 "Direct faster" = "#0F6E56")) +
+  geom_text(
+    aes(label = sprintf("%.2f×", ratio)),
+    hjust = ifelse(plot_df$ratio > 1, -0.3, 1.3),
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  scale_colour_manual(
+    values = c("Native faster" = "#185FA5", "Direct faster" = "#0F6E56")
+  ) +
   scale_x_continuous(
     limits = c(
       min(0.5, min(plot_df$ratio) * 0.85),
@@ -351,17 +408,17 @@ ggplot(plot_df, aes(x = ratio, y = label, colour = color_grp)) +
     breaks = seq(0, 10, by = 0.5)
   ) +
   labs(
-    x      = "Ratio (Direct / Native)",
-    y      = NULL,
+    x = "Ratio (Direct / Native)",
+    y = NULL,
     colour = NULL,
-    title  = "Direct Parquet vs Native DuckDB: Query Time Ratio",
+    title = "Direct Parquet vs Native DuckDB: Query Time Ratio",
     subtitle = "Dashed line at 1.0 = equal performance"
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    legend.position  = "top",
+    legend.position = "top",
     panel.grid.major.y = element_blank(),
-    panel.grid.minor   = element_blank()
+    panel.grid.minor = element_blank()
   )
 ```
 

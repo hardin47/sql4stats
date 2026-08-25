@@ -1,6 +1,17 @@
 ---
-title: "Untitled"
-format: html
+title: "ggsql as a Quarto engine"
+format:
+  html:
+    embed-resources: true
+    theme: 
+      - cosmo
+      - global_style.scss
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show the code"
+bibliography: references.bib
+suppress-bibliography: true
 ---
 
 ggsql as an engine
