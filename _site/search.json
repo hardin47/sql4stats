@@ -289,9 +289,9 @@
   {
     "objectID": "ggsql.html",
     "href": "ggsql.html",
-    "title": "ggsql as a Quarto engine",
+    "title": "ggsql as a Quarto kernel",
     "section": "",
-    "text": "ggsql as an engine\nFor ggsql, the use case is actually for folks who do NOT want to use either R or Python, but just the SQL on its own. You can do the SQL queries and make visualizations without having R running at all, like this:\n\nThere is no R running at all in this situation. You can author Quarto documents that use ggsql as the kernel and do not use any R or Python kernel."
+    "text": "i’m not consistent about bold/highlight of some of the words throughout: ggsql, R, Python, even CONSOLE vs Console…\nI wonder if it is worth creating a remote database via sqlite so that we can demo how ggsql would connect to a remote databse? Right now, all the public databases are mysql, and ggsql doesn’t connect to mysql.\nYou can use ggsql with the knitr kernel instead of the jupyter kernel. but then (i think!) you need to have some {r} cells to set up connections and whatnot. I’m not 100% sure about this, but I don’t know if it is a direction we want to go anyway. Here is why I don’t like the path: if you are happy using {r} (and knitr) then you can already use {sql} chunks (see our tutorial on SQL in R 3 ways). So why in the world would you even use ggsql? See the file I was playing around with in the repo called ggsql_wR.qmd.\nIf you want to use it in RStudio, you can use the ggsql R package with ggsql_execute() etc. See #3 above for why I don’t think we should go that direction. I think, although I haven’t tried it out, that if you use a Jupyter notebook in RStudio, then everything below will work (however, you can’t install the ggsql extension).\nAs far as I can tell, if you set up the Quarto doc to have a knitr engine, there is no connection to {ggsql} chunks at all.\n\n\nFor ggsql, the use case is actually for folks who do NOT want to use either R or Python, but just the SQL on its own. You can do the SQL queries and make visualizations without R or Python running at all, like this:\n\nThere is no R or Python running at all in the image above. You can author Quarto documents that use ggsql as the kernel and do not use either an R or a Python kernel.\n\n\nStart by installing ggsql: https://ggsql.org/get_started/installation.html\nYou’ll need to also install ggsql in the extensions view in Positron (the icon on the left sidebar that looks like four squares) and type “ggsql”.\n\n\nOnce ggsql is running in the extensions, ggsql should be an option in the CONSOLE. Along with the ability to run in the console, any .gsql file should render. For example, try running the following file (or type the code into the console!):\n\nNotice that the file looks similar to a .R or .py file. There is no narrative mixed in with the code, and when you run the code, the output and images will not render within the file.\n\n\n\nIn order to run ggsql in Quarto, you need to have a Jupyter engine running. (Unlike R in Quarto, which is handled by a knitr engine.) That is, the Jupyter engine via a Python virtual environment. Below, we’ve provided vocabulary and descriptions of the process, which might help understand what is happening with different kernels and engines in Positron.\nLayer 1. the language / kernel that actually exectues the code. R or Python or ggsql. These are called kernels.\nLayer 2. Quarto’s internal machinery for talking to the kernel. Quarto calls this an “execution engine” and there are only two of them.\n\nthe knitr engine which is used for {r} cells (also {bash}, {sql} and {python} via reticulate)\nthe Jupyter engine which is used for {python}, {ggsql}, {julia} etc. cells (or {r} via rpy2)\n\nLayer 3. Quarto which is the document / rendering tool itself. Quarto reads the .qmd file, decides which engine (from Layer 2) to execute, and brings together all the pieces of the analysis. Quarto can only get to Layer 1 via Layer 2. Quarto chooses exactly one Layer 2 engine per document (knitr or Jupyter but not both)."
   },
   {
     "objectID": "SQL3ways.html",
@@ -299,5 +299,89 @@
     "title": "SQL in R, 3 ways",
     "section": "",
     "text": "see class notes\nalso, make a distinction between --| and #|\n\n-- is the correct option because -- is a comment in sql\nin RStudio, sometimes #| still works\nunfortunately, in Positron, SQL chunks are not able to run interactively\n\nnote the we are assuming that R is being used as the engine. in fact, it is necessary to have an engine to make the initial connection to the server. if you’d like to use SQL as the engine, Positron lets you do that through gggsql which is described in ggsql as a Quarto engine."
+  },
+  {
+    "objectID": "qqsql_woR.html",
+    "href": "qqsql_woR.html",
+    "title": "trying ggsql",
+    "section": "",
+    "text": "VISUALISE bill_len AS x, bill_dep AS y, species AS fill FROM ggsql:penguins\nDRAW point\nSCALE x \n  RENAMING * =&gt; '{} mm'\nLABEL\n  title =&gt; 'Relationship between bill dimensions in 3 species of penguins',\n  x =&gt; 'Bill length',\n  y =&gt; 'Bill depth'"
+  },
+  {
+    "objectID": "ggsql.html#remote-connections",
+    "href": "ggsql.html#remote-connections",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Remote connections",
+    "text": "Remote connections\nRight now, ggsql connects only to duckdb, sqlite and odbc. There are no native connections available to mysql or mariadb.\n\n\nShow the code\nlibrary(tidyverse)\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.3     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\n\nShow the code\nlibrary(dbplyr)\n\n\n\nAttaching package: 'dbplyr'\n\nThe following objects are masked from 'package:dplyr':\n\n    ident, sql\n\n\n\n\nShow the code\nlibrary(ggsql)\nlibrary(openintro)\n\n\nWarning: package 'openintro' was built under R version 4.6.1\n\n\nLoading required package: airports\n\n\nLoading required package: cherryblossom\n\n\nLoading required package: usdata\n\n\nShow the code\ndata(lego_population)\n\n# Create an in-memory DuckDB reader\nreader &lt;- duckdb_reader()\n\n# Register a dataset in it\nggsql_register(reader, lego_population, \"legodata\")\n\n\n\nVisualize it with a query\n\n\nShow the code\nggsql_execute(\n  reader,\n  \"SELECT * FROM legodata\n   VISUALIZE price AS x, unique_pieces AS y, theme AS fill\n   DRAW point\n  \"\n)\n\n\nUser function panicked: execute_sql_ipc\n\n\n\n\nShow the code\nggsql_execute(\n  reader,\n  \"VISUALISE price AS x, unique_pieces AS y, theme AS fill FROM legodata\n   DRAW point\"\n)\n\n\nUser function panicked: execute_sql_ipc\n\n\n\n\nShow the code\nVISUALISE species AS fill\nFROM ggsql:penguins\nDRAW bar\n\n\n\n\n\n\nShow the code\nVISUALISE bill_len AS x, bill_dep AS y, species AS fill FROM ggsql:penguins\nDRAW point\nSCALE x \n  RENAMING * =&gt; '{} mm'\nLABEL\n  title =&gt; 'Relationship between bill dimensions in 3 species of penguins',\n  x =&gt; 'Bill length',\n  y =&gt; 'Bill depth'"
+  },
+  {
+    "objectID": "ggsql_woR.html",
+    "href": "ggsql_woR.html",
+    "title": "trying ggsql",
+    "section": "",
+    "text": "VISUALISE bill_len AS x, bill_dep AS y, species AS fill FROM ggsql:penguins\nDRAW point\nSCALE x \n  RENAMING * =&gt; '{} mm'\nLABEL\n  title =&gt; 'Relationship between bill dimensions in 3 species of penguins',\n  x =&gt; 'Bill length',\n  y =&gt; 'Bill depth'"
+  },
+  {
+    "objectID": "ggsql_woR.html#small-data-in-memory",
+    "href": "ggsql_woR.html#small-data-in-memory",
+    "title": "trying ggsql",
+    "section": "Small data in memory",
+    "text": "Small data in memory\nRather than connecting to an external file or database, DuckDB can build a table directly from literal values written into the query itself, using a VALUES list. This creates a small in-memory table with no CSV, no R, and no Python involved at all. Note that DuckDB is ggsql’s default reader (in-memory).\n\nCREATE OR REPLACE TABLE fruit_sales AS\nSELECT * FROM (\n  VALUES\n    ('apple',  12, 'west'),\n    ('apple',  9,  'east'),\n    ('banana', 18, 'west'),\n    ('banana', 7,  'east'),\n    ('cherry', 4,  'west'),\n    ('cherry', 15, 'east')\n) AS t(fruit, units_sold, region);\n \nVISUALISE fruit AS x, units_sold AS y, region AS fill FROM fruit_sales\nDRAW bar\n  SETTING position =&gt; 'dodge'\nLABEL\n  title =&gt; 'Units sold by fruit and region',\n  x =&gt; 'Fruit',\n  y =&gt; 'Units sold'"
+  },
+  {
+    "objectID": "ggsql_woR.html#using-local-duckdb",
+    "href": "ggsql_woR.html#using-local-duckdb",
+    "title": "trying ggsql",
+    "section": "Using local DuckDB",
+    "text": "Using local DuckDB\nAgain, DuckDB is the default reader, and we can load any csv file into a local DuckDB database.\n\nINSTALL httpfs;\nLOAD httpfs;\nCREATE OR REPLACE TABLE legodata AS\nSELECT * FROM read_csv_auto('https://www.openintro.org/data/csv/lego_population.csv',\ntypes = {'price': 'DOUBLE', 'unique_pieces': DOUBLE},\nnullstr = 'NA') \nWHERE theme IN ('City', 'Friends', 'Marvel')\n\n\nVISUALISE price AS x, unique_pieces AS y, theme AS color FROM legodata\nDRAW point\nLABEL\n  title =&gt; 'LEGO set price vs. unique pieces, by theme',\n  x =&gt; 'Price',\n  y =&gt; 'Unique pieces'"
+  },
+  {
+    "objectID": "ggsql.html#installing",
+    "href": "ggsql.html#installing",
+    "title": "ggsql as a Quarto kernel",
+    "section": "",
+    "text": "Start by installing ggsql: https://ggsql.org/get_started/installation.html\nYou’ll need to also install ggsql in the extensions view in Positron (the icon on the left sidebar that looks like four squares) and type “ggsql”.\n\n\nOnce ggsql is running in the extensions, ggsql should be an option in the CONSOLE. Along with the ability to run in the console, any .gsql file should render. For example, try running the following file (or type the code into the console!):\n\nNotice that the file looks similar to a .R or .py file. There is no narrative mixed in with the code, and when you run the code, the output and images will not render within the file.\n\n\n\nIn order to run ggsql in Quarto, you need to have a Jupyter engine running. (Unlike R in Quarto, which is handled by a knitr engine.) That is, the Jupyter engine via a Python virtual environment. Below, we’ve provided vocabulary and descriptions of the process, which might help understand what is happening with different kernels and engines in Positron.\nLayer 1. the language / kernel that actually exectues the code. R or Python or ggsql. These are called kernels.\nLayer 2. Quarto’s internal machinery for talking to the kernel. Quarto calls this an “execution engine” and there are only two of them.\n\nthe knitr engine which is used for {r} cells (also {bash}, {sql} and {python} via reticulate)\nthe Jupyter engine which is used for {python}, {ggsql}, {julia} etc. cells (or {r} via rpy2)\n\nLayer 3. Quarto which is the document / rendering tool itself. Quarto reads the .qmd file, decides which engine (from Layer 2) to execute, and brings together all the pieces of the analysis. Quarto can only get to Layer 1 via Layer 2. Quarto chooses exactly one Layer 2 engine per document (knitr or Jupyter but not both)."
+  },
+  {
+    "objectID": "ggsql.html#small-data-in-memory",
+    "href": "ggsql.html#small-data-in-memory",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Small data in memory",
+    "text": "Small data in memory\nRather than connecting to an external file or database, DuckDB can build a table directly from literal values written into the query itself, using a VALUES list. This creates a small in-memory table with no CSV, no R, and no Python involved at all. Note that DuckDB is ggsql’s default reader (in-memory).\n\n```{ggsql}\nCREATE OR REPLACE TABLE fruit_sales AS\nSELECT * FROM (\n  VALUES\n    ('apple',  12, 'west'),\n    ('apple',  9,  'east'),\n    ('banana', 18, 'west'),\n    ('banana', 7,  'east'),\n    ('cherry', 4,  'west'),\n    ('cherry', 15, 'east')\n) AS t(fruit, units_sold, region);\n \nVISUALISE fruit AS x, units_sold AS y, region AS fill FROM fruit_sales\nDRAW bar\n  SETTING position =&gt; 'dodge'\nLABEL\n  title =&gt; 'Units sold by fruit and region',\n  x =&gt; 'Fruit',\n  y =&gt; 'Units sold'\n```"
+  },
+  {
+    "objectID": "ggsql.html#using-local-duckdb-remote-connections",
+    "href": "ggsql.html#using-local-duckdb-remote-connections",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Using local DuckDB / remote connections",
+    "text": "Using local DuckDB / remote connections\nRight now, ggsql connects only to duckdb, sqlite, and odbc. There are no native connections available to mysql or mariadb. I don’t know of any publicly available remote data using sqlite or odbc. DuckDB is the default reader, and we can load any csv file into a local DuckDB database.\n\n```{ggsql}\nINSTALL httpfs;\nLOAD httpfs;\nCREATE OR REPLACE TABLE legodata AS\nSELECT * FROM read_csv_auto('https://www.openintro.org/data/csv/lego_population.csv',\ntypes = {'price': 'DOUBLE', 'unique_pieces': 'DOUBLE'},\nnullstr = 'NA') \nWHERE theme IN ('City', 'Friends', 'Marvel')\n```\n\n\n```{ggsql}\nVISUALISE price AS x, unique_pieces AS y, theme AS color FROM legodata\nDRAW point\nLABEL\n  title =&gt; 'LEGO set price vs. unique pieces, by theme',\n  x =&gt; 'Price',\n  y =&gt; 'Unique pieces'\n```"
+  },
+  {
+    "objectID": "ggsql.html#data-from-ggsql",
+    "href": "ggsql.html#data-from-ggsql",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Data from ggsql",
+    "text": "Data from ggsql\nThe first ggsql example runs SQL code in a {ggsql} cell chunk. Note that the data come directly (and automatically) from the ggsql kernel.\n\n```{ggsql}\nVISUALISE bill_len AS x, bill_dep AS y, species AS fill FROM ggsql:penguins\nDRAW point\nSCALE x \n  RENAMING * =&gt; '{} mm'\nLABEL\n  title =&gt; 'Relationship between bill dimensions in 3 species of penguins',\n  x =&gt; 'Bill length',\n  y =&gt; 'Bill depth'\n```"
+  },
+  {
+    "objectID": "ggsql.html#local-duckdb-connection",
+    "href": "ggsql.html#local-duckdb-connection",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Local DuckDB connection",
+    "text": "Local DuckDB connection\nRight now, ggsql connects only to duckdb, sqlite, and odbc. There are no native connections available to mysql or mariadb. I don’t know of any publicly available remote data using sqlite or odbc. DuckDB is the default reader, and we can load any csv file into a local DuckDB database.\n\n```{ggsql}\nINSTALL httpfs;\nLOAD httpfs;\nCREATE OR REPLACE TABLE legodata AS\nSELECT * FROM read_csv_auto('https://www.openintro.org/data/csv/lego_population.csv',\ntypes = {'price': 'DOUBLE', 'unique_pieces': 'DOUBLE'},\nnullstr = 'NA') \nWHERE theme IN ('City', 'Friends', 'Marvel')\n```\n\n\n```{ggsql}\nVISUALISE price AS x, unique_pieces AS y, theme AS color FROM legodata\nDRAW point\nLABEL\n  title =&gt; 'LEGO set price vs. unique pieces, by theme',\n  x =&gt; 'Price',\n  y =&gt; 'Unique pieces'\n```"
+  },
+  {
+    "objectID": "ggsql.html#remote-connection",
+    "href": "ggsql.html#remote-connection",
+    "title": "ggsql as a Quarto kernel",
+    "section": "Remote connection",
+    "text": "Remote connection\nWe need to find or set-up a sqlite public database!"
+  },
+  {
+    "objectID": "ggsql_wR.html",
+    "href": "ggsql_wR.html",
+    "title": "ggsql in Quarto with knitr engine",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(dbplyr)\n\n\nlibrary(ggsql)\nlibrary(openintro)\ndata(lego_population)\n\n# Create an in-memory DuckDB reader\nreader &lt;- duckdb_reader()\n\n# Register a dataset in it\nggsql_register(reader, lego_population, \"legodata\")\n\n\nVisualize it with a query\n\nggsql_execute(\n  reader,\n  \"VISUALISE price AS x, unique_pieces AS y, theme AS fill FROM (SELECT * FROM legodata\n  WHERE theme IN ('City', 'Friends', 'Marvel'))\n  DRAW point\"\n)"
   }
 ]

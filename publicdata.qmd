@@ -10,6 +10,8 @@ format:
     toc-depth: 2
     code-fold: true
     code-summary: "Show the code"
+    warning: false
+    message: false
 bibliography: references.bib
 suppress-bibliography: true
 ---

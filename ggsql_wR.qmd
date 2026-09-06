@@ -1,0 +1,45 @@
+---
+title: "ggsql in Quarto with knitr engine"
+format:
+  html:
+    embed-resources: true
+    theme: 
+      - cosmo
+      - global_style.scss
+    toc: true
+    toc-depth: 2
+    warning: false
+    message: false
+bibliography: references.bib
+suppress-bibliography: true
+---
+
+
+```{r}
+library(tidyverse)
+library(dbplyr)
+```
+
+```{r}
+library(ggsql)
+library(openintro)
+data(lego_population)
+
+# Create an in-memory DuckDB reader
+reader <- duckdb_reader()
+
+# Register a dataset in it
+ggsql_register(reader, lego_population, "legodata")
+```
+
+### Visualize it with a query
+
+
+```{r}
+ggsql_execute(
+  reader,
+  "VISUALISE price AS x, unique_pieces AS y, theme AS fill FROM (SELECT * FROM legodata
+  WHERE theme IN ('City', 'Friends', 'Marvel'))
+  DRAW point"
+)
+```
