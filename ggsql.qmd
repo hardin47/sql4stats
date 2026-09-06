@@ -16,7 +16,7 @@ jupyter: ggsql
 ---
 
 # NOTES TO SELF
-1. i'm not consistent about bold/highlight of some of the words throughout: ggsql, R, Python, even CONSOLE vs Console...
+1. i'm not consistent about bold/highlight of some of the words throughout: ggsql, R, Python, even CONSOLE vs Console...  Also, I need to add some attributions to the Posit folks. The image and the penguins code.
 
 2. I wonder if it is worth creating a remote database via sqlite so that we can demo how ggsql would connect to a remote databse?  Right now, all the public databases are mysql, and ggsql doesn't connect to mysql.
 
