@@ -20,11 +20,9 @@ jupyter: ggsql
 
 2. I wonder if it is worth creating a remote database via sqlite so that we can demo how ggsql would connect to a remote databse?  Right now, all the public databases are mysql, and ggsql doesn't connect to mysql.
 
-3. You can use ggsql with the knitr kernel instead of the jupyter kernel. but then (i think!) you need to have some `{r}` cells to set up connections and whatnot.  I'm not 100% sure about this, but I don't know if it is a direction we want to go anyway. Here is why I don't like the path: if you are happy using `{r}` (and knitr) then you can already use `{sql}` chunks (see our tutorial on SQL in R 3 ways). So why in the world would you even use ggsql?  See the file I was playing around with in the repo called ggsql_wR.qmd.
+3. With the knitr kernel (instead of the jupyter kernel), you can only use ggsql like you'd use dbplyr.  All `{r}` cells, no `{ggsql}` cells  (look in the repo at the file called "ggsql_wR.qmd"). I'm not 100% sure about this, but I don't know if it is a direction we want to go anyway. Here is why I don't like the path: if you are happy using `{r}` (and knitr) then you can already use `{sql}` chunks (see our tutorial on SQL in R 3 ways). So why in the world would you even use ggsql?  See the file I was playing around with in the repo called ggsql_wR.qmd.
 
 4. If you want to use it in RStudio, you can use the ggsql R package with `ggsql_execute()` etc. See #3 above for why I don't think we should go that direction.  I **think**, although I haven't tried it out, that if you use a Jupyter notebook in RStudio, then everything below will work (however, you can't install the ggsql extension).
-
-5. As far as I can tell, if you set up the Quarto doc to have a knitr engine, there is no connection to `{ggsql}` chunks at all.
 
 ----------------------
 
