@@ -1,6 +1,6 @@
 ---
-title: "SQL Upload Guide"
-subtitle: "Building and Keying a SQL Database, Worked Through a SNL Dataset"
+title: "SQL upload guide"
+subtitle: "Building and keying a SQL database, worked through a SNL dataset"
 format:
   html:
     theme: 
@@ -15,7 +15,7 @@ bibliography: references.bib
 suppress-bibliography: true
 ---
 
-## Why Should a Statistician Care About SQL Databases?
+## Why should a statistician care about SQL databases?
 
 If you do statistics or data science, your default instinct when handed a pile of CSVs is probably to load each one into R or Python and start joining data frames in memory. Working with separate files, however, may lead to issues including files that are too big to fit comfortably in RAM or re-running the same `read_csv()` calls every session.
 
@@ -35,11 +35,11 @@ We'll walk through all of this concretely, using a real dataset: every cast memb
 
 ---
 
-## Part 1: Getting Data Into a Database
+## Part 1: Getting data into a database
 
-### Where the Data Comes From
+### Where the data come from
 
-For this guide, the source data comes from the [snldb GitHub repository](https://github.com/hhllcks/snldb) [@hilleckes], which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of *this* scraper don't matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: **most real-world data starts out as scraped, exported, or otherwise messy flat files**, and getting it into a proper database is itself a meaningful step.
+For this guide, the source data comes from the <a href = "https://github.com/hhllcks/snldb" target = "_blank">snldb GitHub repository</a> [@hilleckes], which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of *this* scraper don't matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: **most real-world data starts out as scraped, exported, or otherwise messy flat files**, and getting it into a proper database is itself a meaningful step.
 
 ```{.bash}
 pip install -r requirements.txt
@@ -50,7 +50,7 @@ python convert_json_to_csv.py
 
 After running the Python code, you end up with a folder of `.csv` files, one per entity type (e.g., actors, episodes, sketches, etc.). A set of flat files is the starting point that most statisticians actually encounter: a pile of CSVs, related to each other in ways that exist only in your mind (or in a README) but not yet enforced anywhere
 
-### Connecting R to a SQL Server
+### Connecting R to a SQL server
 
 The general pattern for connecting to *any* SQL database from R is the same regardless of which database engine (e.g., MySQL, MariaDB, PostgreSQL, SQL Server) sits on the other end: you load a driver package, supply connection credentials, and get back a connection object that every subsequent query uses.
 
@@ -95,7 +95,7 @@ DBI::dbListTables(con_snl)
 
 `dbListTables()` is worth calling immediately after establishing a connection, regardless of context. It's the fastest way to confirm the connection actually succeeded and to see what already exists on the server before you touch anything.
 
-### Locating and Validating Source Files Before Upload
+### Locating and validating source files before upload
 
 Before uploading anything, it’s worth building the habit of checking that your source files are what you think they are. This step generalizes far beyond SNL data: any time you’re about to bulk-load files into a database, a quick sanity pass catches problems while they’re still cheap to fix.
 
@@ -137,7 +137,7 @@ csv_check
 
 The script above produces a small summary table — file name, row count, column count — for every file about to be uploaded. It seems like a small thing, but it’s the cheapest possible defense against uploading an empty file, a truncated file, or a file you grabbed from the wrong folder.
 
-### From File Names to Table Names
+### From file names to table names
 
 SQL table names have stricter rules than file names: no spaces, no leading numbers, no arbitrary punctuation. Rather than handling an ad hoc for every file, it’s worth writing a small helper function that any future project can reuse:
 
@@ -153,7 +153,7 @@ clean_table_name <- function(file_path) {
 
 `janitor::make_clean_names()` does the heavy lifting — lowercasing, replacing spaces and punctuation with underscores, and resolving duplicate names — which is exactly the kind of small, boring utility worth keeping in your personal toolkit across projects.
 
-### Uploading in Chunks, Not All at Once
+### Uploading in chunks, not all at once
 
 There is a temptation, with a clean CSV, to dump the whole thing into a database using a single `INSERT` statement. In practice, a single dump is often slower and less stable than chunking the upload — especially over a network connection to a remote server, where one enormous statement can often time out or simply get rejected outright. Therefore, the safest way to create a database is to upload data in chunks.
 
@@ -240,13 +240,13 @@ At this point, every CSV is now a SQL table, with column types automatically inf
 
 ---
 
-## Part 2: What Makes a Relational Database "Relational" — Keys
+## Part 2: What makes a relational database "relational" — keys
 
 Loading data into tables gets you tables in a SQL *server*, but not yet a SQL *relational database* in the meaningful sense. What turns a set of unrelated tables into an actual relational database is the presence of **keys**: the formal mechanism that encodes how tables relate to each other and what counts as a valid row.
 
 This is the part of the process most worth understanding deeply, because the concepts here — primary keys, foreign keys, referential integrity — apply identically whether you're working with SNL sketches, clinical trial data, survey panels, or financial transactions.
 
-### Two Types of Keys in SQL
+### Two types of keys in SQL
 
 A **primary key** is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed.
 
@@ -255,7 +255,7 @@ A **foreign key** is a column in one table that refers to the primary key of ano
 For more information of keys along with indexing in SQL see the [Relational aspect of SQL and Keys page in the Theoretical Foundations section of the site.](SQL_Scrolly.qmd#relational-keys).
 
 
-### Inspecting the Database Before Changing Anything
+### Inspecting the database before changing anything
 
 Before assigning any keys, the first move with any unfamiliar (or freshly uploaded) database is to look at what's actually there.
 
@@ -297,7 +297,7 @@ For a column to serve as a primary key, it must satisfy two conditions and ideal
 
 For the SNL data, the natural candidates were the existing ID columns scraped along with the data: `actors.aid`, `characters.charid`, `episodes.epid`, `impressions.impid`, `seasons.sid`, `sketches.skid`, and `titles.tid`^[The syntax represents `table.variable` where table is the table name and variable is the variable name. `actors.aid` means the column `aid` from the table `actors`.]. This is a common situation where *the data often arrives with implicit identifiers already in place*, and using them as keys is best practice.
 
-### Checking Candidates Before Committing
+### Checking candidates before committing
 
 Rather than trust that an ID column satisfies the three conditions above, it’s worth checking directly. This test of comparing total rows, non-missing values, and distinct values is a general-purpose validity check you can reuse for any candidate key, in any dataset:
 
@@ -348,14 +348,14 @@ primary_key_checks
 
 If `total_rows`, `non_missing`, and `distinct_values` are all equal, and `missing_values` is zero, the column passes the test. If any of those don’t line up, that’s valuable information for the user to have *before* committing to a key. That is, any column that fails the test should not become a primary key.
 
-### Identifying Foreign Key Relationships
+### Identifying foreign key relationships
 
 Once primary keys are established, the next question is: which columns in other tables refer back to a primary key? This is fundamentally a modeling question about your data’s structure, and answering it well requires understanding what each table actually represents. Oftentimes, you can identify columns that have the same name across tables.
 
 For the SNL database, the following connections were made: `appearances` links to actors, titles, characters, impressions, episodes, and seasons (an appearance is the intersection of all of these: a specific actor performing in a specific sketch, in a specific episode); `casts` links actors to seasons; `episodes` belongs to a season; `hosts` links hosts to episodes; `titles` links to episodes, seasons, and sketches; and `tenure` links back to actors.
 
 
-### Checking for Orphans Before Enforcing Anything
+### Checking for orphans before enforcing anything
 
 A foreign key constraint, once created, *requires* that every value in the child column exists in the parent table. Parent table contains the primary key and child column connects to that primary key. But real-world data is messy, and it’s common to have values that don’t satisfy the parent-child connection, called **orphan values**. SQL won’t let you create the foreign key constraint until the orphan values are resolved, so it is necessary to find them before trying to make a foreign key that won’t be accepted.
 
@@ -390,7 +390,7 @@ This `LEFT JOIN ... WHERE parent.key IS NULL` pattern directly answers "which ro
 
 In the SNL data, resolving orphan values surfaced two genuine problems: some `casts.first_epid` values didn't match any real episode, and one `hosts.aid` value didn't match any real actor. Scraped and merged data routinely has small inconsistencies like this, and finding them is the entire point of this check.
 
-### Deciding How to Handle Orphans
+### Deciding how to handle orphans
 
 Once you’ve found orphan values, you have to decide what to do about them. Generally, the options are: correct the value if you can determine what it *should* have been, delete the row if it's clearly invalid, or set the offending value to `NULL` if you can't confidently do either of the first two options.
 
@@ -423,7 +423,7 @@ DBI::dbExecute(
 
 Setting the observed value to `NULL` here is a deliberately conservative choice: rather than guessing at what the "correct" episode or actor should have been (and risking a false relationship that looks valid but isn't), the missing-link information is preserved as openly missing.
 
-### Verifying the Fix
+### Verifying the fix
 
 The same orphan-check pattern from before doubles as a verification step after the fix.
 
@@ -497,7 +497,7 @@ fk_checks
 
 The test is applied across every foreign key candidate relationship, now we can see if each foreign key relationship is valid.
 
-### A Required Technical Prerequisite: Storage Engine and Data Types
+### A required technical prerequisite: Storage engine and data types
 
 Before constraints or foreign keys can actually be created, two technical prerequisites in MySQL/MariaDB specifically need attention.
 
@@ -560,7 +560,7 @@ DBI::dbExecute(con_snl, "ALTER TABLE tenure MODIFY aid VARCHAR(255);")
 
 Notice that `actors.aid` is set to be a `VARCHAR`, not an integer — in the original scraped data, actor IDs are text-based codes rather than plain numbers. Every column referencing it (`appearances.aid`, `casts.aid`, `hosts.aid`, `tenure.aid`) must match that type exactly. This is a generalizable rule: **a foreign key's type is dictated by whatever the primary key it references actually is**.
 
-### Creating the Primary Keys
+### Creating primary keys
 
 With types corrected and orphans resolved, creating the primary keys themselves is mechanically simple:
 
@@ -596,7 +596,7 @@ DBI::dbExecute(
 
 `AUTO_INCREMENT` means the database assigns each new row the next sequential integer automatically. Surrogate keys are extremely common in practice; in fact, in many production database designs, *every* table gets an auto-incrementing surrogate key by default, specifically to sidestep the exact problem of no natural identifier before it ever comes up.
 
-### When the "Obvious" Key Doesn't Quite Work
+### When the "obvious" key doesn't quite work
 
 The original plan for `hosts` was a composite key of `(epid, aid)`: the same logic as `casts`. But a primary key, by definition, cannot contain missing values in *any* of its component columns. So before committing to that plan, it's worth checking:
 
@@ -640,7 +640,7 @@ DBI::dbExecute(
 
 **A key design that looks correct in theory can be invalidated by a single bad value in practice**, and it’s much better to discover that during a deliberate check than to discover it as a cryptic constraint-creation error later. Always verify potential keys before you commit to establishing the keys associated with the database.
 
-### Creating the Foreign Keys
+### Creating foreign keys
 
 With primary keys, type compatibility, and orphan values all resolved, the foreign key constraints themselves can finally be added:
 
@@ -808,7 +808,7 @@ DBI::dbExecute(
 
 After keys have been established is the moment the database actually becomes “relational” in the formal sense. From this point forward, the database itself, enforces the relationships
 
-### Confirming the Final Structure
+### Confirming the final structure
 
 Finally, it’s worth confirming what was actually built, both as a sanity check and as documentation you (or a collaborator) can return to later.
 

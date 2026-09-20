@@ -9,31 +9,33 @@ website:
       - text: "Theoretical Foundations"
         menu:
           - href: SQL_Scrolly_reformatted.qmd
-            text: SQL:Indexing and B-Trees
+            text: "SQL: indexing and B-trees"
           - href: joins.qmd
             text: Joins
           - href: parquet.qmd
-            text: File Formats and DuckDB
+            text: File formats and DuckDB
       - text: "Theory in Practice"
         menu:
           - href: native_v_direct.qmd
-            text: Native DuckDB vs. Direct Querying
+            text: Native DuckDB vs. direct querying
           - href: row_v_file.qmd
-            text: Parquet Querying Time Exploration
+            text: Parquet querying time exploration
           - href: join_optimization.qmd
-            text: Join Algorithms and Order
+            text: Join algorithms and order
       - text: "Tutorials"
         menu: 
           - href: sql_upload_guide.qmd
-            text: SQL Upload Guide
+            text: SQL upload guide
           - href: SQL3ways.qmd
             text: SQL in R, 3 ways
+          - href: parquet_example.qmd
+            text: Full parquet example
           - href: crosstab_pivot_comp.qmd
-            text: Pivot Types
+            text: Pivot types
           - href: publicdata.qmd
             text: Public SQL data
           - href: ggsql.qmd
-            text: ggsql as an Engine
+            text: ggsql as an engine
           
       - text: "About"
         href: about.qmd

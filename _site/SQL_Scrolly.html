@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>SQL, Keys, Indexes, and B+ Trees – sql4stats</title>
+<title>SQL, keys, indexes, and B+ trees – sql4stats</title>
 <style>
 
 span.smallcaps{font-variant: small-caps;}
@@ -4027,7 +4027,7 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theoretical-foundations">    
         <li>
     <a class="dropdown-item" href="./SQL_Scrolly_reformatted.html">
- <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
+ <span class="dropdown-text">SQL: indexing and B-trees</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./joins.html">
@@ -4035,7 +4035,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./parquet.html">
- <span class="dropdown-text">File Formats and DuckDB</span></a>
+ <span class="dropdown-text">File formats and DuckDB</span></a>
   </li>  
     </ul>
   </li>
@@ -4046,15 +4046,15 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theory-in-practice">    
         <li>
     <a class="dropdown-item" href="./native_v_direct.html">
- <span class="dropdown-text">Native DuckDB vs. Direct Querying</span></a>
+ <span class="dropdown-text">Native DuckDB vs. direct querying</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./row_v_file.html">
- <span class="dropdown-text">Parquet Querying Time Exploration</span></a>
+ <span class="dropdown-text">Parquet querying time exploration</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./join_optimization.html">
- <span class="dropdown-text">Join Algorithms and Order</span></a>
+ <span class="dropdown-text">Join algorithms and order</span></a>
   </li>  
     </ul>
   </li>
@@ -4065,15 +4065,19 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
         <li>
     <a class="dropdown-item" href="./sql_upload_guide.html">
- <span class="dropdown-text">SQL Upload Guide</span></a>
+ <span class="dropdown-text">SQL upload guide</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./SQL3ways.html">
  <span class="dropdown-text">SQL in R, 3 ways</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./parquet_example.html">
+ <span class="dropdown-text">Full parquet example</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
- <span class="dropdown-text">Pivot Types</span></a>
+ <span class="dropdown-text">Pivot types</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./publicdata.html">
@@ -4081,7 +4085,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./ggsql.html">
- <span class="dropdown-text">ggsql as an Engine</span></a>
+ <span class="dropdown-text">ggsql as an engine</span></a>
   </li>  
     </ul>
   </li>
@@ -4121,7 +4125,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">SQL, Keys, Indexes, and B+ Trees</h1>
+<h1 class="title">SQL, keys, indexes, and B+ trees</h1>
 </div>
 
 
@@ -4559,11 +4563,11 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <div class="hero-eyebrow">● SQL Database Essentials</div>
-    <h1>SQL, Keys,<br>Indexes &amp;<br><em>B+ Trees</em></h1>
+    <div class="hero-eyebrow">● SQL database essentials</div>
+    <h1>SQL, keys,<br>indexes &amp;<br><em>B+ trees</em></h1>
     <p class="hero-sub">What is SQL? What are its primary features? How does it Index? How does a tree structures power billions of queries per second.</p>
     <div class="hero-pills">
-      <span class="hero-pill hero-pill-1">SQL Foundations</span>
+      <span class="hero-pill hero-pill-1">SQL foundations</span>
       <span class="hero-pill hero-pill-2">Keys &amp; Constraints</span>
       <span class="hero-pill hero-pill-3">Index Structures</span>
       <span class="hero-pill hero-pill-4">B+ Tree Internals</span>
@@ -4758,7 +4762,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
     </div>
 
     <div class="step" data-panel="1-1" id="relational-keys">
-      <div class="step-tag">1.2 · Tables &amp; Relationships</div>
+      <div class="step-tag">1.2 · Tables &amp; relationships</div>
       <h3 class="anchored">Relational aspect of SQL and Keys</h3>
       <p>A <strong style="8a00c2;">table</strong> represents an entity — students, courses, orders. Each row is one record; each column is one attribute. A <strong style="color:#8a00c2;">primary key</strong> uniquely identifies each row.</p>
       <p>A <strong style="color:#8a00c2;">primary key</strong> must be unique and never NULL. Most tables have one primary key, though composite keys (multiple columns) are valid and identify rows through a composition of multiple columns.</p>
@@ -4773,7 +4777,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
     </div>
 
     <div class="step" data-panel="1-2">
-      <div class="step-tag">1.3 · Primary &amp; Foreign Keys</div>
+      <div class="step-tag">1.3 · Primary &amp; foreign keys</div>
       <h3 class="anchored">How to create keys in context</h3>
       <p>On the left is the SQL command for creating primary and foreign keys in a SQL database.</p><p>
       </p><p>The <code>CREATE TABLE</code> command is used when one creates the key at the same time as creating the SQL table itself.</p><p>
@@ -4818,7 +4822,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
 
   <div class="sticky-left" id="left-2">
 
-    <!-- Panel: physical vs index order -->
+    <!-- Panel: physical vs. index order -->
     <div class="sticky-panel active" id="panel-2-0">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#6366f1;font-weight:700;margin-bottom:0.8rem;">Physical rows vs. Index order</div>
@@ -4850,7 +4854,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
       </div>
     </div>
 
-    <!-- Panel: full scan vs index lookup -->
+    <!-- Panel: full scan vs. index lookup -->
     <div class="sticky-panel" id="panel-2-1">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#ef4444;font-weight:700;margin-bottom:0.6rem;">❌ Full table scan (no index)</div>
@@ -4949,7 +4953,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
 
     <div class="step" data-panel="2-2">
       <div class="step-tag">2.3 · Limitations &amp; Tradeoffs</div>
-      <h3 class="anchored">Indexes not always fast and beneficial</h3>
+      <h3 class="anchored">Indexes are not always fast and beneficial</h3>
       <p>Indexes speed up reads but slow down writes. Every <code>INSERT</code>, <code>UPDATE</code>, or <code>DELETE</code> must also update every relevant index which causes the structure of the index to alter. Too many indexes increase maintenance cost and storage of the database.</p>
       <p><strong style="color:#8a00c2;">Selectivity</strong> is critical. An index on a column with few distinct values (like a boolean <code>is_active</code> or <code>status</code>) may not help — too many rows match, and the database may choose a full scan anyway since that may be more efficient.</p>
       <p> Although primary keys must be unique by definition, a regular index (created with CREATE INDEX) has no uniqueness requirement at all. Sometimes, regular indexes can be helpful to speed up row retrieval and querying even if they aren&#39;t for primary keys. It is still important to consider selectivity or uniqueness when creating a regular index, as an index on a column with low selectivity may not provide performance benefits and can even degrade performance due to the overhead of maintaining the index and the potential for increased table lookups.
@@ -4982,7 +4986,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
   <div class="ch-num">03</div>
   <div class="ch-text">
     <div class="ch-tag">Data Structures</div>
-    <h2 class="anchored">B+ Trees</h2>
+    <h2 class="anchored">B+ trees</h2>
     <p>The tree structure that makes indexes fast and optimized in MySQL.</p>
   </div>
 </div>
@@ -5218,13 +5222,13 @@ box-shadow: 0 2px 8px rgba(37,99,235,0.06);
       </div>
     </div>
 
-    <!-- Panel: OLTP vs OLAP comparison -->
+    <!-- Panel: OLTP vs. OLAP comparison -->
     <div class="sticky-panel" id="panel-4-1">
       <div style="width:100%">
 
         <!-- Header -->
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2563eb;font-weight:700;margin-bottom:1rem;">
-          SQL indexes: OLTP vs OLAP
+          SQL indexes: OLTP vs. OLAP
         </div>
 
         <!-- Two column comparison -->

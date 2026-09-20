@@ -1,5 +1,5 @@
 ---
-title: "Native DuckDB vs Direct Parquet Querying Performance"
+title: "Native DuckDB vs. direct parquet querying performance"
 format:
   html:
     toc: true
@@ -17,7 +17,7 @@ suppress-bibliography: true
 
 ## Introduction
 
-This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data using the DuckDB package in R: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the [Stanford Open Policing Project](https://openpolicing.stanford.edu/) [[@openpolicing2023]](references.qmd) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself. In both methods, DuckDB is used to execute the queries. Direct Parquet file querying means that DuckDB reads the .parquet files directly from disk on every query execution, without first loading the data into a database: the files remain as standalone compressed columnar files and DuckDB parses, decompresses, and queries them in place each time a query is run.
+This page reports the results of a controlled benchmarking experiment comparing query performance between two approaches to storing and querying the same data using the DuckDB package in R: a **native DuckDB database** and **direct Parquet files** queried via `read_parquet()`. Both formats contain identical data drawn from three California city subsets of the <a href = "https://openpolicing.stanford.edu/" target = "_blank">Stanford Open Policing Project</a> [[@openpolicing2023]](references.qmd) — Los Angeles, San Francisco, and San Jose — sourced from the same MySQL database. The only difference between the two approaches is the storage format itself. In both methods, DuckDB is used to execute the queries. Direct Parquet file querying means that DuckDB reads the .parquet files directly from disk on every query execution, without first loading the data into a database: the files remain as standalone compressed columnar files and DuckDB parses, decompresses, and queries them in place each time a query is run.
 
 For background on Parquet's internal structure and how DuckDB reads files directly, see the [Theoretical Foundations Resource on File Formats & DuckDB](parquet.qmd). Also for an more on direct Parquet querying check out the [Theory in Practice Parquet Querying Time Exploration](row_v_file.qmd)
 
@@ -35,7 +35,7 @@ Note that Q2 - Q5 are also all `COUNT(*)` tasks, but with additional constraints
 
 Each timing result is the **mean of 20 timed runs**, preceded by 3 warmup runs. A fresh DuckDB connection is opened and closed for every trial to avoid connection-level caching effects.
 
-### Statistical Significance
+### Statistical significance
 
 Differences between native DuckDB and direct Parquet are tested using a **two-sided Wilcoxon rank-sum test** at α = 0.05. This non-parametric test is appropriate here because query times are non-negative, right-skewed, and not guaranteed to follow a normal distribution. A result marked **Yes** indicates the observed difference in timing distributions is statistically unlikely to have occurred by chance, and we can conclude the two approaches differ meaningfully in performance for that query. A result marked **No** means the difference is not statistically distinguishable from random variation.
 
@@ -58,7 +58,7 @@ library(RMySQL)
 
 ---
 
-## Step 1: Build Storage Formats {.unnumbered}
+## Step 1: Build storage formats {.unnumbered}
 
 One concrete advantage of direct Parquet over native DuckDB is storage footprint. Because Parquet files are written with columnar compression applied at the column level, they are typically substantially smaller than an equivalent DuckDB database, which stores data in its own internal format optimized for query performance rather than disk compactness.
 
@@ -118,7 +118,7 @@ cat("Done.\n")
 
 ---
 
-## Step 2: Storage Size Comparison
+## Step 2: Storage size comparison
 
 One concrete advantage of direct Parquet over native DuckDB is storage footprint and size. Because Parquet files are written with columnar compression applied at the column level, they are typically substantially smaller than an equivalent DuckDB database, which stores data in its own internal format optimized for query performance rather than disk compactness.
 
@@ -143,13 +143,13 @@ size_df <- data.frame(
   `Size (MB)` = c(parquet_size_mb, duckdb_size_mb),
   `Size (GB)` = c(parquet_size_gb, duckdb_size_gb),
   `Files` = c(3, 1),
-  `Ratio vs Parquet` = c(1.00, ratio)
+  `Ratio vs. Parquet` = c(1.00, ratio)
 )
 
 knitr::kable(
   size_df,
   align = "r",
-  caption = "Storage size comparison: direct Parquet vs native DuckDB"
+  caption = "Storage size comparison: direct Parquet vs. native DuckDB"
 )
 ```
 
@@ -308,7 +308,7 @@ for (qid in names(queries)) {
 
 ## Results
 
-### Summary Table
+### Summary table
 
 ```{r}
 #| label: results-table
@@ -359,11 +359,11 @@ knitr::kable(
     "Sig. (p < 0.05)"
   ),
   align = c("l", "r", "r", "r", "r", "l", "c"),
-  caption = "Mean query time: native DuckDB vs direct Parquet. Ratio > 1 means direct Parquet is slower. Significance assessed via Wilcoxon rank-sum test."
+  caption = "Mean query time: native DuckDB vs. direct Parquet. Ratio > 1 means direct Parquet is slower. Significance assessed via Wilcoxon rank-sum test."
 )
 ```
 
-### Visual Representation
+### Visual representation
 
 The chart below shows the direct/native ratio for each query type. A ratio above 1 (dashed line) means direct Parquet was slower than native DuckDB for that query; below 1 means direct Parquet was faster.
 
@@ -411,7 +411,7 @@ ggplot(plot_df, aes(x = ratio, y = label, colour = color_grp)) +
     x = "Ratio (Direct / Native)",
     y = NULL,
     colour = NULL,
-    title = "Direct Parquet vs Native DuckDB: Query Time Ratio",
+    title = "Direct Parquet vs. Native DuckDB: Query Time Ratio",
     subtitle = "Dashed line at 1.0 = equal performance"
   ) +
   theme_minimal(base_size = 13) +

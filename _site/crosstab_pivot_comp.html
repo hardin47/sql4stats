@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Pivot Types: Reshaping vs Cross-Tabulation – sql4stats</title>
+<title>Pivot types: Reshaping vs. cross-tabulation – sql4stats</title>
 <style>
 
 span.smallcaps{font-variant: small-caps;}
@@ -4062,7 +4062,7 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theoretical-foundations">    
         <li>
     <a class="dropdown-item" href="./SQL_Scrolly_reformatted.html">
- <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
+ <span class="dropdown-text">SQL: indexing and B-trees</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./joins.html">
@@ -4070,7 +4070,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./parquet.html">
- <span class="dropdown-text">File Formats and DuckDB</span></a>
+ <span class="dropdown-text">File formats and DuckDB</span></a>
   </li>  
     </ul>
   </li>
@@ -4081,15 +4081,15 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theory-in-practice">    
         <li>
     <a class="dropdown-item" href="./native_v_direct.html">
- <span class="dropdown-text">Native DuckDB vs. Direct Querying</span></a>
+ <span class="dropdown-text">Native DuckDB vs. direct querying</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./row_v_file.html">
- <span class="dropdown-text">Parquet Querying Time Exploration</span></a>
+ <span class="dropdown-text">Parquet querying time exploration</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./join_optimization.html">
- <span class="dropdown-text">Join Algorithms and Order</span></a>
+ <span class="dropdown-text">Join algorithms and order</span></a>
   </li>  
     </ul>
   </li>
@@ -4100,15 +4100,19 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
         <li>
     <a class="dropdown-item" href="./sql_upload_guide.html">
- <span class="dropdown-text">SQL Upload Guide</span></a>
+ <span class="dropdown-text">SQL upload guide</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./SQL3ways.html">
  <span class="dropdown-text">SQL in R, 3 ways</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./parquet_example.html">
+ <span class="dropdown-text">Full parquet example</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
- <span class="dropdown-text">Pivot Types</span></a>
+ <span class="dropdown-text">Pivot types</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./publicdata.html">
@@ -4116,7 +4120,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./ggsql.html">
- <span class="dropdown-text">ggsql as an Engine</span></a>
+ <span class="dropdown-text">ggsql as an engine</span></a>
   </li>  
     </ul>
   </li>
@@ -4156,7 +4160,7 @@ vertical-align: -.125em;
    
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#part-1-pure-reshaping" id="toc-part-1-pure-reshaping" class="nav-link" data-scroll-target="#part-1-pure-reshaping">Part 1: Pure Reshaping</a>
+  <li><a href="#part-1-pure-reshaping" id="toc-part-1-pure-reshaping" class="nav-link" data-scroll-target="#part-1-pure-reshaping">Part 1: Pure reshaping</a>
   <ul class="collapse">
   <li><a href="#the-data-structure" id="toc-the-data-structure" class="nav-link" data-scroll-target="#the-data-structure">The data structure</a></li>
   <li><a href="#approach-1-pivot_wider-in-r-tidyverse" id="toc-approach-1-pivot_wider-in-r-tidyverse" class="nav-link" data-scroll-target="#approach-1-pivot_wider-in-r-tidyverse">Approach 1: <code>pivot_wider()</code> in R (tidyverse)</a></li>
@@ -4165,7 +4169,7 @@ vertical-align: -.125em;
   <li><a href="#verifying-all-three-outputs-match" id="toc-verifying-all-three-outputs-match" class="nav-link" data-scroll-target="#verifying-all-three-outputs-match">Verifying all three outputs match</a></li>
   <li><a href="#can-crosstab-do-pure-reshaping" id="toc-can-crosstab-do-pure-reshaping" class="nav-link" data-scroll-target="#can-crosstab-do-pure-reshaping">Can <code>crosstab()</code> do pure reshaping?</a></li>
   </ul></li>
-  <li><a href="#part-2-cross-tabulation" id="toc-part-2-cross-tabulation" class="nav-link" data-scroll-target="#part-2-cross-tabulation">Part 2: Cross-Tabulation</a>
+  <li><a href="#part-2-cross-tabulation" id="toc-part-2-cross-tabulation" class="nav-link" data-scroll-target="#part-2-cross-tabulation">Part 2: Cross-tabulation</a>
   <ul class="collapse">
   <li><a href="#the-data-structure-1" id="toc-the-data-structure-1" class="nav-link" data-scroll-target="#the-data-structure-1">The data structure</a></li>
   <li><a href="#approach-1-manual-case-when-avg" id="toc-approach-1-manual-case-when-avg" class="nav-link" data-scroll-target="#approach-1-manual-case-when-avg">Approach 1: Manual (<code>CASE WHEN</code> + <code>AVG</code>)</a></li>
@@ -4182,7 +4186,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Pivot Types: Reshaping vs Cross-Tabulation</h1>
+<h1 class="title">Pivot types: Reshaping vs. cross-tabulation</h1>
 </div>
 
 
@@ -4245,7 +4249,7 @@ vertical-align: -.125em;
 <hr>
 </section>
 <section id="part-1-pure-reshaping" class="level2">
-<h2 class="anchored" data-anchor-id="part-1-pure-reshaping">Part 1: Pure Reshaping</h2>
+<h2 class="anchored" data-anchor-id="part-1-pure-reshaping">Part 1: Pure reshaping</h2>
 <section id="the-data-structure" class="level3">
 <h3 class="anchored" data-anchor-id="the-data-structure">The data structure</h3>
 <p>For pure reshaping, the requirement is that each combination of row-identifier and spreading-column value appears <strong>exactly once</strong> in the source data. Thus, there is nothing to aggregate, only redistribute.</p>
@@ -4512,7 +4516,7 @@ vertical-align: -.125em;
 </section>
 </section>
 <section id="part-2-cross-tabulation" class="level2">
-<h2 class="anchored" data-anchor-id="part-2-cross-tabulation">Part 2: Cross-Tabulation</h2>
+<h2 class="anchored" data-anchor-id="part-2-cross-tabulation">Part 2: Cross-tabulation</h2>
 <section id="the-data-structure-1" class="level3">
 <h3 class="anchored" data-anchor-id="the-data-structure-1">The data structure</h3>
 <p>Cross-tabulation is appropriate when <strong>multiple source rows share the same (row-group, column-group) combination</strong>, and those rows must be collapsed into a single cell via an aggregation function.</p>

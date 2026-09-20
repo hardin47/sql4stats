@@ -1,5 +1,5 @@
 ---
-title: "SQL Joins"
+title: "SQL joins"
 format:
   html:
     toc: false
@@ -569,7 +569,7 @@ main.content, #quarto-content, .page-columns,
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <h1>SQL<br><em>Joins</em></h1>
+    <h1>SQL<br><em>joins</em></h1>
     <p class="hero-sub">What is a join? How do logical join types differ from the physical strategies the optimizer actually runs — nested loops, sort-merge, and hash?</p>
     <div class="hero-pills">
       <span class="hero-pill hero-pill-1">Join Keys</span>
@@ -719,7 +719,7 @@ main.content, #quarto-content, .page-columns,
   </div>
 </div>
 <!-- ═══════════════════════════════════════════════════
-     CHAPTER 2 INTRO — Logical vs Physical
+     CHAPTER 2 INTRO — Logical vs. Physical
 ════════════════════════════════════════════════════ -->
 <div class="chapter-intro" id="sec-ch2">
   <div class="ch-num">02</div>
@@ -1209,7 +1209,7 @@ const navSections = [
   {id:'sec-hero',  label:'Hero'},
   {id:'sec-ch1',   label:'Ch 1: Joins & Keys'},
   {id:'scrolly-1', label:'Basics · Logical Types'},
-  {id:'sec-ch2',   label:'Ch 2: Logical vs Physical'},
+  {id:'sec-ch2',   label:'Ch 2: Logical vs. Physical'},
   {id:'scrolly-2', label:'Query Plans'},
   {id:'sec-ch3',   label:'Ch 3: Physical Joins'},
   {id:'scrolly-3', label:'Nested Loop'},

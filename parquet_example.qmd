@@ -1,0 +1,9 @@
+---
+title: "Full parquet example"
+format: html
+---
+
+
+Walk through a full example querying local parquet files using SQL.
+
+

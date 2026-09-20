@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>SQL Upload Guide – sql4stats</title>
+<title>SQL upload guide – sql4stats</title>
 <style>
 
 span.smallcaps{font-variant: small-caps;}
@@ -4062,7 +4062,7 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theoretical-foundations">    
         <li>
     <a class="dropdown-item" href="./SQL_Scrolly_reformatted.html">
- <span class="dropdown-text">SQL:Indexing and B-Trees</span></a>
+ <span class="dropdown-text">SQL: indexing and B-trees</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./joins.html">
@@ -4070,7 +4070,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./parquet.html">
- <span class="dropdown-text">File Formats and DuckDB</span></a>
+ <span class="dropdown-text">File formats and DuckDB</span></a>
   </li>  
     </ul>
   </li>
@@ -4081,15 +4081,15 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-theory-in-practice">    
         <li>
     <a class="dropdown-item" href="./native_v_direct.html">
- <span class="dropdown-text">Native DuckDB vs. Direct Querying</span></a>
+ <span class="dropdown-text">Native DuckDB vs. direct querying</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./row_v_file.html">
- <span class="dropdown-text">Parquet Querying Time Exploration</span></a>
+ <span class="dropdown-text">Parquet querying time exploration</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./join_optimization.html">
- <span class="dropdown-text">Join Algorithms and Order</span></a>
+ <span class="dropdown-text">Join algorithms and order</span></a>
   </li>  
     </ul>
   </li>
@@ -4100,15 +4100,19 @@ vertical-align: -.125em;
     <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
         <li>
     <a class="dropdown-item" href="./sql_upload_guide.html">
- <span class="dropdown-text">SQL Upload Guide</span></a>
+ <span class="dropdown-text">SQL upload guide</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./SQL3ways.html">
  <span class="dropdown-text">SQL in R, 3 ways</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="./parquet_example.html">
+ <span class="dropdown-text">Full parquet example</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./crosstab_pivot_comp.html">
- <span class="dropdown-text">Pivot Types</span></a>
+ <span class="dropdown-text">Pivot types</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./publicdata.html">
@@ -4116,7 +4120,7 @@ vertical-align: -.125em;
   </li>  
         <li>
     <a class="dropdown-item" href="./ggsql.html">
- <span class="dropdown-text">ggsql as an Engine</span></a>
+ <span class="dropdown-text">ggsql as an engine</span></a>
   </li>  
     </ul>
   </li>
@@ -4155,9 +4159,9 @@ vertical-align: -.125em;
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#why-should-a-statistician-care-about-sql-databases" id="toc-why-should-a-statistician-care-about-sql-databases" class="nav-link active" data-scroll-target="#why-should-a-statistician-care-about-sql-databases">Why Should a Statistician Care About SQL Databases?</a></li>
-  <li><a href="#part-1-getting-data-into-a-database" id="toc-part-1-getting-data-into-a-database" class="nav-link" data-scroll-target="#part-1-getting-data-into-a-database">Part 1: Getting Data Into a Database</a></li>
-  <li><a href="#part-2-what-makes-a-relational-database-relational-keys" id="toc-part-2-what-makes-a-relational-database-relational-keys" class="nav-link" data-scroll-target="#part-2-what-makes-a-relational-database-relational-keys">Part 2: What Makes a Relational Database “Relational” — Keys</a></li>
+  <li><a href="#why-should-a-statistician-care-about-sql-databases" id="toc-why-should-a-statistician-care-about-sql-databases" class="nav-link active" data-scroll-target="#why-should-a-statistician-care-about-sql-databases">Why should a statistician care about SQL databases?</a></li>
+  <li><a href="#part-1-getting-data-into-a-database" id="toc-part-1-getting-data-into-a-database" class="nav-link" data-scroll-target="#part-1-getting-data-into-a-database">Part 1: Getting data into a database</a></li>
+  <li><a href="#part-2-what-makes-a-relational-database-relational-keys" id="toc-part-2-what-makes-a-relational-database-relational-keys" class="nav-link" data-scroll-target="#part-2-what-makes-a-relational-database-relational-keys">Part 2: What makes a relational database “relational” — keys</a></li>
   </ul>
 </nav>
     </div>
@@ -4166,8 +4170,8 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">SQL Upload Guide</h1>
-<p class="subtitle lead">Building and Keying a SQL Database, Worked Through a SNL Dataset</p>
+<h1 class="title">SQL upload guide</h1>
+<p class="subtitle lead">Building and keying a SQL database, worked through a SNL dataset</p>
 </div>
 
 
@@ -4185,7 +4189,7 @@ vertical-align: -.125em;
 
 
 <section id="why-should-a-statistician-care-about-sql-databases" class="level2">
-<h2 class="anchored" data-anchor-id="why-should-a-statistician-care-about-sql-databases">Why Should a Statistician Care About SQL Databases?</h2>
+<h2 class="anchored" data-anchor-id="why-should-a-statistician-care-about-sql-databases">Why should a statistician care about SQL databases?</h2>
 <p>If you do statistics or data science, your default instinct when handed a pile of CSVs is probably to load each one into R or Python and start joining data frames in memory. Working with separate files, however, may lead to issues including files that are too big to fit comfortably in RAM or re-running the same <code>read_csv()</code> calls every session.</p>
 <p>A relational database solves these problems by moving the <em>structure</em> of your data out of your analysis script and into the data itself. Instead of a folder of CSVs that only mean something in light of whatever script last touched them, you get a single, queryable system where the relationships between tables, the rules about what counts as valid data, and the logic for combining tables all live in one place.</p>
 <p>Concretely, that gets you:</p>
@@ -4197,10 +4201,10 @@ vertical-align: -.125em;
 <hr>
 </section>
 <section id="part-1-getting-data-into-a-database" class="level2">
-<h2 class="anchored" data-anchor-id="part-1-getting-data-into-a-database">Part 1: Getting Data Into a Database</h2>
-<section id="where-the-data-comes-from" class="level3">
-<h3 class="anchored" data-anchor-id="where-the-data-comes-from">Where the Data Comes From</h3>
-<p>For this guide, the source data comes from the <a href="https://github.com/hhllcks/snldb">snldb GitHub repository</a> <span class="citation" data-cites="hilleckes">(Hilleckes and Morris 2017)</span>, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of <em>this</em> scraper don’t matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: <strong>most real-world data starts out as scraped, exported, or otherwise messy flat files</strong>, and getting it into a proper database is itself a meaningful step.</p>
+<h2 class="anchored" data-anchor-id="part-1-getting-data-into-a-database">Part 1: Getting data into a database</h2>
+<section id="where-the-data-come-from" class="level3">
+<h3 class="anchored" data-anchor-id="where-the-data-come-from">Where the data come from</h3>
+<p>For this guide, the source data comes from the <a href="https://github.com/hhllcks/snldb" target="_blank">snldb GitHub repository</a> <span class="citation" data-cites="hilleckes">(Hilleckes and Morris 2017)</span>, which contains a Python scraper for SNL cast, episode, sketch, and appearance data. The specifics of <em>this</em> scraper don’t matter much beyond getting the data necessary to walk through the ideas below. What matters is the general pattern: <strong>most real-world data starts out as scraped, exported, or otherwise messy flat files</strong>, and getting it into a proper database is itself a meaningful step.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_single_episode.sh</span>   <span class="co"># test run: one episode</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./crawl_all.sh</span>               <span class="co"># full crawl: every episode</span></span>
@@ -4208,7 +4212,7 @@ vertical-align: -.125em;
 <p>After running the Python code, you end up with a folder of <code>.csv</code> files, one per entity type (e.g., actors, episodes, sketches, etc.). A set of flat files is the starting point that most statisticians actually encounter: a pile of CSVs, related to each other in ways that exist only in your mind (or in a README) but not yet enforced anywhere</p>
 </section>
 <section id="connecting-r-to-a-sql-server" class="level3">
-<h3 class="anchored" data-anchor-id="connecting-r-to-a-sql-server">Connecting R to a SQL Server</h3>
+<h3 class="anchored" data-anchor-id="connecting-r-to-a-sql-server">Connecting R to a SQL server</h3>
 <p>The general pattern for connecting to <em>any</em> SQL database from R is the same regardless of which database engine (e.g., MySQL, MariaDB, PostgreSQL, SQL Server) sits on the other end: you load a driver package, supply connection credentials, and get back a connection object that every subsequent query uses.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4245,7 +4249,7 @@ vertical-align: -.125em;
 <p><code>dbListTables()</code> is worth calling immediately after establishing a connection, regardless of context. It’s the fastest way to confirm the connection actually succeeded and to see what already exists on the server before you touch anything.</p>
 </section>
 <section id="locating-and-validating-source-files-before-upload" class="level3">
-<h3 class="anchored" data-anchor-id="locating-and-validating-source-files-before-upload">Locating and Validating Source Files Before Upload</h3>
+<h3 class="anchored" data-anchor-id="locating-and-validating-source-files-before-upload">Locating and validating source files before upload</h3>
 <p>Before uploading anything, it’s worth building the habit of checking that your source files are what you think they are. This step generalizes far beyond SNL data: any time you’re about to bulk-load files into a database, a quick sanity pass catches problems while they’re still cheap to fix.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4301,7 +4305,7 @@ vertical-align: -.125em;
 <p>The script above produces a small summary table — file name, row count, column count — for every file about to be uploaded. It seems like a small thing, but it’s the cheapest possible defense against uploading an empty file, a truncated file, or a file you grabbed from the wrong folder.</p>
 </section>
 <section id="from-file-names-to-table-names" class="level3">
-<h3 class="anchored" data-anchor-id="from-file-names-to-table-names">From File Names to Table Names</h3>
+<h3 class="anchored" data-anchor-id="from-file-names-to-table-names">From file names to table names</h3>
 <p>SQL table names have stricter rules than file names: no spaces, no leading numbers, no arbitrary punctuation. Rather than handling an ad hoc for every file, it’s worth writing a small helper function that any future project can reuse:</p>
 <div class="cell">
 <details class="code-fold">
@@ -4317,7 +4321,7 @@ vertical-align: -.125em;
 <p><code>janitor::make_clean_names()</code> does the heavy lifting — lowercasing, replacing spaces and punctuation with underscores, and resolving duplicate names — which is exactly the kind of small, boring utility worth keeping in your personal toolkit across projects.</p>
 </section>
 <section id="uploading-in-chunks-not-all-at-once" class="level3">
-<h3 class="anchored" data-anchor-id="uploading-in-chunks-not-all-at-once">Uploading in Chunks, Not All at Once</h3>
+<h3 class="anchored" data-anchor-id="uploading-in-chunks-not-all-at-once">Uploading in chunks, not all at once</h3>
 <p>There is a temptation, with a clean CSV, to dump the whole thing into a database using a single <code>INSERT</code> statement. In practice, a single dump is often slower and less stable than chunking the upload — especially over a network connection to a remote server, where one enormous statement can often time out or simply get rejected outright. Therefore, the safest way to create a database is to upload data in chunks.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4402,17 +4406,17 @@ vertical-align: -.125em;
 </section>
 </section>
 <section id="part-2-what-makes-a-relational-database-relational-keys" class="level2">
-<h2 class="anchored" data-anchor-id="part-2-what-makes-a-relational-database-relational-keys">Part 2: What Makes a Relational Database “Relational” — Keys</h2>
+<h2 class="anchored" data-anchor-id="part-2-what-makes-a-relational-database-relational-keys">Part 2: What makes a relational database “relational” — keys</h2>
 <p>Loading data into tables gets you tables in a SQL <em>server</em>, but not yet a SQL <em>relational database</em> in the meaningful sense. What turns a set of unrelated tables into an actual relational database is the presence of <strong>keys</strong>: the formal mechanism that encodes how tables relate to each other and what counts as a valid row.</p>
 <p>This is the part of the process most worth understanding deeply, because the concepts here — primary keys, foreign keys, referential integrity — apply identically whether you’re working with SNL sketches, clinical trial data, survey panels, or financial transactions.</p>
 <section id="two-types-of-keys-in-sql" class="level3">
-<h3 class="anchored" data-anchor-id="two-types-of-keys-in-sql">Two Types of Keys in SQL</h3>
+<h3 class="anchored" data-anchor-id="two-types-of-keys-in-sql">Two types of keys in SQL</h3>
 <p>A <strong>primary key</strong> is a column (or combination of columns) that uniquely identifies every row in a single table, with no duplicates and no missing values allowed.</p>
 <p>A <strong>foreign key</strong> is a column in one table that refers to the primary key of another table. This is what makes joins between tables meaningful rather than coincidental.</p>
 <p>For more information of keys along with indexing in SQL see the <a href="./SQL_Scrolly.html#relational-keys">Relational aspect of SQL and Keys page in the Theoretical Foundations section of the site.</a>.</p>
 </section>
 <section id="inspecting-the-database-before-changing-anything" class="level3">
-<h3 class="anchored" data-anchor-id="inspecting-the-database-before-changing-anything">Inspecting the Database Before Changing Anything</h3>
+<h3 class="anchored" data-anchor-id="inspecting-the-database-before-changing-anything">Inspecting the database before changing anything</h3>
 <p>Before assigning any keys, the first move with any unfamiliar (or freshly uploaded) database is to look at what’s actually there.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4464,7 +4468,7 @@ vertical-align: -.125em;
 <p>For the SNL data, the natural candidates were the existing ID columns scraped along with the data: <code>actors.aid</code>, <code>characters.charid</code>, <code>episodes.epid</code>, <code>impressions.impid</code>, <code>seasons.sid</code>, <code>sketches.skid</code>, and <code>titles.tid</code><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. This is a common situation where <em>the data often arrives with implicit identifiers already in place</em>, and using them as keys is best practice.</p>
 </section>
 <section id="checking-candidates-before-committing" class="level3">
-<h3 class="anchored" data-anchor-id="checking-candidates-before-committing">Checking Candidates Before Committing</h3>
+<h3 class="anchored" data-anchor-id="checking-candidates-before-committing">Checking candidates before committing</h3>
 <p>Rather than trust that an ID column satisfies the three conditions above, it’s worth checking directly. This test of comparing total rows, non-missing values, and distinct values is a general-purpose validity check you can reuse for any candidate key, in any dataset:</p>
 <div class="cell">
 <details class="code-fold">
@@ -4515,12 +4519,12 @@ vertical-align: -.125em;
 <p>If <code>total_rows</code>, <code>non_missing</code>, and <code>distinct_values</code> are all equal, and <code>missing_values</code> is zero, the column passes the test. If any of those don’t line up, that’s valuable information for the user to have <em>before</em> committing to a key. That is, any column that fails the test should not become a primary key.</p>
 </section>
 <section id="identifying-foreign-key-relationships" class="level3">
-<h3 class="anchored" data-anchor-id="identifying-foreign-key-relationships">Identifying Foreign Key Relationships</h3>
+<h3 class="anchored" data-anchor-id="identifying-foreign-key-relationships">Identifying foreign key relationships</h3>
 <p>Once primary keys are established, the next question is: which columns in other tables refer back to a primary key? This is fundamentally a modeling question about your data’s structure, and answering it well requires understanding what each table actually represents. Oftentimes, you can identify columns that have the same name across tables.</p>
 <p>For the SNL database, the following connections were made: <code>appearances</code> links to actors, titles, characters, impressions, episodes, and seasons (an appearance is the intersection of all of these: a specific actor performing in a specific sketch, in a specific episode); <code>casts</code> links actors to seasons; <code>episodes</code> belongs to a season; <code>hosts</code> links hosts to episodes; <code>titles</code> links to episodes, seasons, and sketches; and <code>tenure</code> links back to actors.</p>
 </section>
 <section id="checking-for-orphans-before-enforcing-anything" class="level3">
-<h3 class="anchored" data-anchor-id="checking-for-orphans-before-enforcing-anything">Checking for Orphans Before Enforcing Anything</h3>
+<h3 class="anchored" data-anchor-id="checking-for-orphans-before-enforcing-anything">Checking for orphans before enforcing anything</h3>
 <p>A foreign key constraint, once created, <em>requires</em> that every value in the child column exists in the parent table. Parent table contains the primary key and child column connects to that primary key. But real-world data is messy, and it’s common to have values that don’t satisfy the parent-child connection, called <strong>orphan values</strong>. SQL won’t let you create the foreign key constraint until the orphan values are resolved, so it is necessary to find them before trying to make a foreign key that won’t be accepted.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4554,7 +4558,7 @@ vertical-align: -.125em;
 <p>In the SNL data, resolving orphan values surfaced two genuine problems: some <code>casts.first_epid</code> values didn’t match any real episode, and one <code>hosts.aid</code> value didn’t match any real actor. Scraped and merged data routinely has small inconsistencies like this, and finding them is the entire point of this check.</p>
 </section>
 <section id="deciding-how-to-handle-orphans" class="level3">
-<h3 class="anchored" data-anchor-id="deciding-how-to-handle-orphans">Deciding How to Handle Orphans</h3>
+<h3 class="anchored" data-anchor-id="deciding-how-to-handle-orphans">Deciding how to handle orphans</h3>
 <p>Once you’ve found orphan values, you have to decide what to do about them. Generally, the options are: correct the value if you can determine what it <em>should</em> have been, delete the row if it’s clearly invalid, or set the offending value to <code>NULL</code> if you can’t confidently do either of the first two options.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4587,7 +4591,7 @@ vertical-align: -.125em;
 <p>Setting the observed value to <code>NULL</code> here is a deliberately conservative choice: rather than guessing at what the “correct” episode or actor should have been (and risking a false relationship that looks valid but isn’t), the missing-link information is preserved as openly missing.</p>
 </section>
 <section id="verifying-the-fix" class="level3">
-<h3 class="anchored" data-anchor-id="verifying-the-fix">Verifying the Fix</h3>
+<h3 class="anchored" data-anchor-id="verifying-the-fix">Verifying the fix</h3>
 <p>The same orphan-check pattern from before doubles as a verification step after the fix.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4661,7 +4665,7 @@ vertical-align: -.125em;
 <p>The test is applied across every foreign key candidate relationship, now we can see if each foreign key relationship is valid.</p>
 </section>
 <section id="a-required-technical-prerequisite-storage-engine-and-data-types" class="level3">
-<h3 class="anchored" data-anchor-id="a-required-technical-prerequisite-storage-engine-and-data-types">A Required Technical Prerequisite: Storage Engine and Data Types</h3>
+<h3 class="anchored" data-anchor-id="a-required-technical-prerequisite-storage-engine-and-data-types">A required technical prerequisite: Storage engine and data types</h3>
 <p>Before constraints or foreign keys can actually be created, two technical prerequisites in MySQL/MariaDB specifically need attention.</p>
 <p><strong>Storage engine.</strong> Foreign keys require a storage engine that supports them: InnoDB, in MySQL/MariaDB’s case. Tables created through bulk CSV import sometimes default to a different engine, so the key storage needs to be checked and corrected:</p>
 <div class="cell">
@@ -4723,8 +4727,8 @@ vertical-align: -.125em;
 </div>
 <p>Notice that <code>actors.aid</code> is set to be a <code>VARCHAR</code>, not an integer — in the original scraped data, actor IDs are text-based codes rather than plain numbers. Every column referencing it (<code>appearances.aid</code>, <code>casts.aid</code>, <code>hosts.aid</code>, <code>tenure.aid</code>) must match that type exactly. This is a generalizable rule: <strong>a foreign key’s type is dictated by whatever the primary key it references actually is</strong>.</p>
 </section>
-<section id="creating-the-primary-keys" class="level3">
-<h3 class="anchored" data-anchor-id="creating-the-primary-keys">Creating the Primary Keys</h3>
+<section id="creating-primary-keys" class="level3">
+<h3 class="anchored" data-anchor-id="creating-primary-keys">Creating primary keys</h3>
 <p>With types corrected and orphans resolved, creating the primary keys themselves is mechanically simple:</p>
 <div class="cell">
 <details class="code-fold">
@@ -4758,7 +4762,7 @@ vertical-align: -.125em;
 <p><code>AUTO_INCREMENT</code> means the database assigns each new row the next sequential integer automatically. Surrogate keys are extremely common in practice; in fact, in many production database designs, <em>every</em> table gets an auto-incrementing surrogate key by default, specifically to sidestep the exact problem of no natural identifier before it ever comes up.</p>
 </section>
 <section id="when-the-obvious-key-doesnt-quite-work" class="level3">
-<h3 class="anchored" data-anchor-id="when-the-obvious-key-doesnt-quite-work">When the “Obvious” Key Doesn’t Quite Work</h3>
+<h3 class="anchored" data-anchor-id="when-the-obvious-key-doesnt-quite-work">When the “obvious” key doesn’t quite work</h3>
 <p>The original plan for <code>hosts</code> was a composite key of <code>(epid, aid)</code>: the same logic as <code>casts</code>. But a primary key, by definition, cannot contain missing values in <em>any</em> of its component columns. So before committing to that plan, it’s worth checking:</p>
 <div class="cell">
 <details class="code-fold">
@@ -4802,8 +4806,8 @@ vertical-align: -.125em;
 </div>
 <p><strong>A key design that looks correct in theory can be invalidated by a single bad value in practice</strong>, and it’s much better to discover that during a deliberate check than to discover it as a cryptic constraint-creation error later. Always verify potential keys before you commit to establishing the keys associated with the database.</p>
 </section>
-<section id="creating-the-foreign-keys" class="level3">
-<h3 class="anchored" data-anchor-id="creating-the-foreign-keys">Creating the Foreign Keys</h3>
+<section id="creating-foreign-keys" class="level3">
+<h3 class="anchored" data-anchor-id="creating-foreign-keys">Creating foreign keys</h3>
 <p>With primary keys, type compatibility, and orphan values all resolved, the foreign key constraints themselves can finally be added:</p>
 <div class="cell">
 <details class="code-fold">
@@ -4971,7 +4975,7 @@ vertical-align: -.125em;
 <p>After keys have been established is the moment the database actually becomes “relational” in the formal sense. From this point forward, the database itself, enforces the relationships</p>
 </section>
 <section id="confirming-the-final-structure" class="level3">
-<h3 class="anchored" data-anchor-id="confirming-the-final-structure">Confirming the Final Structure</h3>
+<h3 class="anchored" data-anchor-id="confirming-the-final-structure">Confirming the final structure</h3>
 <p>Finally, it’s worth confirming what was actually built, both as a sanity check and as documentation you (or a collaborator) can return to later.</p>
 <div class="cell">
 <details class="code-fold">

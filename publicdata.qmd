@@ -22,7 +22,7 @@ notes for cleaning up the website:
 
 * add any R packages (check to make sure they are all in packages.bib?)
 
-* check all URLs using a search of "](" ... change them to html tags so that they open new webpages
+* make all the titles lowercase (check all sections, etc.)
 
 ------
 

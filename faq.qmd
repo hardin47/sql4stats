@@ -1,0 +1,40 @@
+---
+title: "FAQ"
+format:
+  html:
+    embed-resources: true
+    theme: 
+      - cosmo
+      - global_style.scss
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show the code"
+    warning: false
+    message: false
+bibliography: references.bib
+suppress-bibliography: true
+---
+
+
+these need to be sorted into groups and ordered within group.
+
+1. Do parquet files have keys?
+
+> No. Parquet files are stored by column in a columnar layout. They are not stored by rows. So indexing with keys would not make the column storage more efficient.
+
+2. Can you make a relational database with parquet files?
+
+> You can certainly join two parquet files using a variable of interest. However, there will not be any key constraints (nothing stops one file from referencing an ID that doesn't exist in the other file). And there is no built in indexing that makes the join more efficient.
+
+3. When a parquet file is loaded into DuckDB, does the storage mechanism switch from columns to rows?
+
+> DuckDB is also a columnar database, so both mechanisms store the data as columns. This is one reason why DuckDB databases pair so nicely with parquet files.
+
+4. When a parquet file is loaded into MySQL, does the storage mechanism switch from columns to rows?
+
+> Yes, but note that parquet files cannot be loaded direcly into MySQL. Typically, a parquet file would need to be converted to a csv file before being loaded into MySQL.  After being loaded into MySQL, the data would be stored as rows.
+
+5. How does filtering work with parquet files?
+
+> First of all, when filtering, the query looks only at the columns of interest (in the SELECT or WHERE). Parquet files also have row chunks (groups of 100k - 1M rows) which include meta data per column (e.g., min, max, and null count). Sometimes there is additional meta data (e.g., at the file level). After those steps, the parquet file filtering is done by looking at the individual rows.

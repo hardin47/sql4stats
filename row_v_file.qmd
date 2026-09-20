@@ -1,5 +1,5 @@
 ---
-title: "Parquet Querying Time Exploration"
+title: "Parquet querying time exploration"
 format:
   html:
     toc: true
@@ -26,9 +26,9 @@ Each timing result is the mean of 100 timed runs (Test 1) or 25 timed runs (Test
 
 ---
 
-## Test 1: Fixed Row Count, Varying File Count
+## Test 1: Fixed row count, varying file count
 
-### Research Question
+### Research question
 
 When the total number of rows is held constant, does splitting that data across more Parquet files increase query time?
 
@@ -272,7 +272,7 @@ ggplot(
   labs(
     x = "Number of Parquet files",
     colour = NULL,
-    title = "COUNT(*) vs SELECT c5 — file count overhead",
+    title = "COUNT(*) vs. SELECT c5 — file count overhead",
     subtitle = "1,000,000 rows held constant across all splits"
   ) +
   theme_minimal(base_size = 13) +
@@ -295,9 +295,9 @@ unlink(PARQUET_DIR, recursive = TRUE)
 
 ---
 
-## Test 2: Fixed File Count, Varying Row Count
+## Test 2: Fixed file count, varying row count
 
-### Research Question
+### Research question
 
 When the number of Parquet files is held constant at 50, how does query time scale with total row count? Does splitting data across multiple files provide any advantage over a single file as row counts grow?
 
@@ -446,7 +446,7 @@ results_df2 |>
   select(6:10) |>
   knitr::kable(
     align = "r",
-    caption = "Mean query time by row count (file count fixed at 1 vs 50)"
+    caption = "Mean query time by row count (file count fixed at 1 vs. 50)"
   )
 ```
 
@@ -492,7 +492,7 @@ ggplot(
     x = "Total rows (log scale)",
     y = "Mean time (ms)",
     colour = NULL,
-    title = "COUNT(*) — 1 file vs 50 files",
+    title = "COUNT(*) — 1 file vs. 50 files",
     subtitle = "File count fixed; row count varies"
   ) +
   theme_minimal(base_size = 13) +
@@ -541,7 +541,7 @@ ggplot(
     x = "Total rows (log scale)",
     y = "Mean time (ms)",
     colour = NULL,
-    title = "SELECT c5 — 1 file vs 50 files",
+    title = "SELECT c5 — 1 file vs. 50 files",
     subtitle = "File count fixed; row count varies"
   ) +
   theme_minimal(base_size = 13) +

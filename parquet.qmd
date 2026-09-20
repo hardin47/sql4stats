@@ -1,5 +1,5 @@
 ---
-title: "File Formats, Parquet & DuckDB"
+title: "File formats, parquet & DuckDB"
 format:
   html:
     toc: false
@@ -271,7 +271,7 @@ main.content, #quarto-content, .page-columns,
 .cell-mid  { color: #b9692a; font-weight: 600; }
 
 /* ══════════════════════════════════════════════
-   ROW vs COLUMN vs HYBRID VISUAL
+   ROW vs. COLUMN vs. HYBRID VISUAL
 ══════════════════════════════════════════════ */
 .layout-compare {
   display: flex; flex-direction: column; gap: 1rem; width: 100%;
@@ -404,7 +404,7 @@ main.content, #quarto-content, .page-columns,
 .arch-arrow { text-align: center; color: #8595b0; font-size: 0.9rem; }
 
 /* ══════════════════════════════════════════════
-   OLTP vs OLAP SPLIT VISUAL
+   OLTP vs. OLAP SPLIT VISUAL
 ══════════════════════════════════════════════ */
 .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; width: 100%; }
 .trade-card { border-radius: 8px; padding: 1rem 1.1rem; border: 1px solid; background: #ffffff; }
@@ -551,7 +551,7 @@ main.content, #quarto-content, .page-columns,
   <div class="hero-glow"></div>
   <div class="hero-inner">
     <div class="hero-eyebrow">● Data Storage Essentials</div>
-    <h1>File Formats<br><em> and DuckDB</em></h1>
+    <h1>File formats<br><em> and DuckDB</em></h1>
     <p class="hero-sub">How data is stored on disk shapes how fast you can query it along with the space it takes up on the disk. From row-based CSVs to columnar Parquet files to embedded analytical databases every format has benefits and trade-offs.</p>
     <div class="hero-pills">
       <span class="hero-pill hero-pill-1">Storage Layouts</span>
@@ -582,7 +582,7 @@ main.content, #quarto-content, .page-columns,
 
   <div class="sticky-left" id="left-1">
 
-    <!-- Panel A: row vs column vs hybrid diagram -->
+    <!-- Panel A: row vs. column vs. hybrid diagram -->
     <div class="sticky-panel active" id="panel-1-0">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#6366f1;font-weight:700;margin-bottom:0.8rem;">Storage layout comparison</div>
@@ -1106,7 +1106,7 @@ main.content, #quarto-content, .page-columns,
       </div>
     </div>
 
-    <!-- Panel: DuckDB vs MySQL vs PostgreSQL comparison -->
+    <!-- Panel: DuckDB vs. MySQL vs. PostgreSQL comparison -->
     <div class="sticky-panel" id="panel-3-1">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#3b62db;font-weight:700;margin-bottom:0.8rem;">DuckDB vs. MySQL vs. PostgreSQL</div>
@@ -1263,9 +1263,9 @@ const navSections = [
   {id:'sec-ch2',     label:'Ch 2: Parquet Internals'},
   {id:'scrolly-2',   label:'Structure · Skipping · Use Cases'},
   {id:'sec-ch3',     label:'Ch 3: DuckDB'},
-  {id:'scrolly-3',   label:'Architecture · vs SQL · Files'},
+  {id:'scrolly-3',   label:'Architecture · vs. SQL · Files'},
   {id:'sec-ch4',     label:'Ch 4: Experiments'},
-  {id:'scrolly-4',   label:'Source Format · Native vs Direct'},
+  {id:'scrolly-4',   label:'Source Format · Native vs. Direct'},
   {id:'sec-summary', label:'Summary'},
 ];
 const nav = document.getElementById('side-nav');

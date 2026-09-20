@@ -730,7 +730,7 @@ main.content, #quarto-content, .page-columns,
 
   <div class="sticky-left" id="left-2">
 
-    <!-- Panel: physical vs index order -->
+    <!-- Panel: physical vs. index order -->
     <div class="sticky-panel active" id="panel-2-0">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2747b0;font-weight:700;margin-bottom:0.8rem;">Physical rows vs. Index order</div>
@@ -762,7 +762,7 @@ main.content, #quarto-content, .page-columns,
       </div>
     </div>
 
-    <!-- Panel: full scan vs index lookup -->
+    <!-- Panel: full scan vs. index lookup -->
     <div class="sticky-panel" id="panel-2-1">
       <div style="width:100%">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#b9692a;font-weight:700;margin-bottom:0.6rem;">❌ Full table scan (no index)</div>
@@ -1134,13 +1134,13 @@ main.content, #quarto-content, .page-columns,
       </div>
     </div>
 
-    <!-- Panel: OLTP vs OLAP comparison -->
+    <!-- Panel: OLTP vs. OLAP comparison -->
     <div class="sticky-panel" id="panel-4-1">
       <div style="width:100%">
 
         <!-- Header -->
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.14em;color:#2747b0;font-weight:700;margin-bottom:1rem;">
-          SQL indexes: OLTP vs OLAP
+          SQL indexes: OLTP vs. OLAP
         </div>
 
         <!-- Two column comparison -->
