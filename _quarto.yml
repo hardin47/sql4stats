@@ -45,6 +45,8 @@ website:
             text: Informational Sources
           - href: packages.qmd
             text: R Packages
+          - href: faq.qmd
+            text: FAQ about data technologies
 
 bibliography: references.bib
 
