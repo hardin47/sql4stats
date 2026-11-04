@@ -1,2 +1,7 @@
 # sql4stats
-repository for website summer 2026 SQL project
+
+repository for SQL project website
+
+See https://sql4stats.netlify.app
+
+Initial work began in Summer 2026
