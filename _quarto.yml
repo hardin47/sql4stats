@@ -33,9 +33,9 @@ website:
           - href: crosstab_pivot_comp.qmd
             text: Pivot types
           - href: publicdata.qmd
-            text: Public SQL data
+            text: Publicly available data
           - href: ggsql.qmd
-            text: ggsql as an engine
+            text: ggsql as a kernel
           
       - text: "About"
         href: about.qmd

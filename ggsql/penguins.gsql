@@ -1,0 +1,6 @@
+VISUALIZE bill_len AS x, bill_dep AS y FROM ggsql:penguins
+DRAW point
+LABEL
+  title => 'Penguin Bill Dimensions',
+  x => 'Bill Length (mm)',
+  y => 'Bill Depth (mm)'

@@ -1,5 +1,5 @@
 ---
-title: "Publicly Available SQL Data"
+title: "Publicly Available SQL and Parquet Data"
 format:
   html:
     embed-resources: true
@@ -16,19 +16,19 @@ bibliography: references.bib
 suppress-bibliography: true
 ---
 
-notes for cleaning up the website:
-
-* check to see if embed resources works, and then add it to all the pages (maybe not scrolly???) (I think this is done?)
-
-* add any R packages (check to make sure they are all in packages.bib?)
-
-* make all the titles lowercase (check all sections, etc.)
-
-------
+## Public SQL data
 
 MDSR: https://mdsr-book.github.io/mdsr3e/15-sqlI.html#sec-dplyr-sql  (note, in the workshop last year, we used a lot of the MDSR ideas.  i think we should use a different example!)
 
 auditory: https://www.science.smith.edu/wai-database/
 
 huge database: https://relational.fel.cvut.cz/
+
+## Public parquet files
+
+* NYC 311 calls (these are not parquet files!) -- https://www.nyc.gov/opendata/news/all-news/311-Service-Requests-Updates
+
+* full airline database -- https://community.amstat.org/jointscsg-section/dataexpo/dataexpo202136710288
+
+
 
